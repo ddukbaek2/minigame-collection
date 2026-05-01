@@ -2,12 +2,8 @@
 	"files.exclude": {
 		"**/.git": true,
 		"**/.claude": true,
-		"**/.granite": true,
-		"**/docs": true,
 		"**/.DS_Store": true,
 		"**/node_modules": true,
-		"**/LICENSE": true,
-		"**/CLAUDE.md": true,
 		"**/package-lock.json": true,
 	},
 
@@ -39,7 +35,7 @@
 		".venv/**",
 	],
 
-	"editor.insertSpaces": true,
+	"editor.insertSpaces": false,
 	"editor.tabSize": 4,
 
 	"terminal.integrated.showExitAlert": false,

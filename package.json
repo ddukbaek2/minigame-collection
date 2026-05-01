@@ -1,7 +1,7 @@
 {
-	"name": "playablegames-template",
+	"name": "minigame-collection",
 	"version": "1.0.0",
-	"description": "플레이어블 게임 단일 프로젝트 템플릿",
+	"description": "미니게임모음",
 	"main": "src/main.js",
 	"scripts": {
 		"postinstall": "git submodule update --init --recursive && npm install --prefix platforms/appintoss && npm install --prefix platforms/onestore && npm install --prefix platforms/backendforfrontend",
@@ -25,7 +25,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ddukbaek2/playablegames-template.git"
+		"url": "git+https://github.com/ddukbaek2/minigame-collection.git"
 	},
 	"keywords": [],
 	"author": "",
