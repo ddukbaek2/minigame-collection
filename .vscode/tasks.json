@@ -4,11 +4,27 @@
 		{
 			"label": "Packaging Web",
 			"type": "shell",
-			"command": "npm run build",
+			"command": "npm run build:web",
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Web",
+			"type": "shell",
+			"windows": {
+				"command": "powershell",
+				"args": [
+					"-NoProfile",
+					"-ExecutionPolicy", "Bypass",
+					"-Command",
+					"$ErrorActionPreference='Stop'; $dst = '\\\\DS216PLUSII\\web\\minigame-collection'; New-Item -ItemType Directory -Path $dst -Force | Out-Null; robocopy '${workspaceFolder}\\build\\web' $dst /E /NFL /NDL /NJH /NJS /NP; if ($LASTEXITCODE -lt 8) { Write-Host '[Deploy Web] OK ->' $dst; exit 0 } else { Write-Host '[Deploy Web] FAILED with exit' $LASTEXITCODE; exit $LASTEXITCODE }"
+				]
+			},
+			"dependsOn": "Packaging Web",
+			"group": "build",
 			"problemMatcher": []
 		},
 		{

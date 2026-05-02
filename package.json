@@ -7,6 +7,7 @@
 		"postinstall": "git submodule update --init --recursive && npm install --prefix platforms/appintoss && npm install --prefix platforms/onestore && npm install --prefix platforms/backendforfrontend",
 		"install:all": "git submodule update --init --recursive && npm install && npm install --prefix platforms/appintoss && npm install --prefix platforms/onestore && npm install --prefix platforms/backendforfrontend",
 		"build": "node libs/vanilla.js/tools/project.cjs build --script src/main.js --input . --output build/web",
+		"build:web": "node tools/manifest.cjs web buildtemplate/css/style.css -- node libs/vanilla.js/tools/project.cjs build --script src/main.js --input . --output build/web -t buildtemplate",
 		"check": "node libs/vanilla.js/tools/project.cjs check --input .",
 		"atlas": "node libs/vanilla.js/tools/atlas.cjs",
 		"webm": "node libs/vanilla.js/tools/webm.cjs",

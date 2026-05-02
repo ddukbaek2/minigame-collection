@@ -6,6 +6,7 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Part, PartId } from "./part.js";
 import { createButtonNode, createLabelNode } from "./uihelper.js";
 
@@ -13,10 +14,15 @@ import { createButtonNode, createLabelNode } from "./uihelper.js";
 //==============================================================================
 // 타이틀 파트.
 // - 메인 메뉴.
+// - 타이틀 영역(상단 고정 높이) + 버튼 영역(나머지 컨텐트). 두 영역은 독립적으로 가운데 정렬된다.
 //==============================================================================
-const BUTTON_WIDTH = 720;
-const BUTTON_HEIGHT = 160;
-const BUTTON_GAP = 40;
+const TITLE_FONT_SIZE = 130;
+const TITLE_AREA_HEIGHT = 400;
+const TITLE_BOTTOM_PADDING = 24;
+const BUTTON_WIDTH = 560;
+const BUTTON_HEIGHT = 110;
+const BUTTON_FONT_SIZE = 44;
+const BUTTON_GAP = 24;
 
 export class TitlePart extends Part {
 	//==============================================================================
@@ -50,8 +56,10 @@ export class TitlePart extends Part {
 		const background = this.addComponent(Paint);
 		background.setColor(Color.createFromHEX("#262a3f"));
 
-		// 게임 이름.
-		this.#titleLabelNode = createLabelNode("미니게임 컬렉션", 80, Color.createFromHEX("#ffe9a8"));
+		// 게임 이름. (영역 하단 정렬)
+		this.#titleLabelNode = createLabelNode("미니게임 컬렉션", TITLE_FONT_SIZE, Color.createFromHEX("#ffe9a8"));
+		const titleLabel = this.#titleLabelNode.getComponent(Label);
+		titleLabel.setTextBaseline("bottom");
 		this.addChild(this.#titleLabelNode);
 
 		// 메뉴 버튼들. (시작, 일일미션, 업적, 설정, 종료 순)
@@ -70,7 +78,7 @@ export class TitlePart extends Part {
 				Vector2.create(BUTTON_WIDTH, BUTTON_HEIGHT),
 				Color.createFromHEX(item.color),
 				Color.createFromHEX("#ffffff"),
-				64,
+				BUTTON_FONT_SIZE,
 				item.onClick,
 			);
 			this.addChild(node);
@@ -97,15 +105,18 @@ export class TitlePart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
+
+		// 타이틀: 상단 0 ~ TITLE_AREA_HEIGHT 영역의 하단 정렬. (세로가 늘어나도 상단 고정)
+		this.#titleLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, TITLE_AREA_HEIGHT - TITLE_BOTTOM_PADDING));
+
+		// 버튼: 타이틀 아래 나머지 영역의 가운데. (세로가 늘어나면 그 가운데로 따라감)
+		const buttonAreaTop = TITLE_AREA_HEIGHT;
+		const buttonAreaHeight = contentSize.y - buttonAreaTop;
 		const buttonCount = this.#buttonNodes.length;
 		const totalButtonsHeight = buttonCount * BUTTON_HEIGHT + (buttonCount - 1) * BUTTON_GAP;
-		const titleAreaHeight = 240;
-		const contentBlockHeight = titleAreaHeight + totalButtonsHeight;
-		const top = (contentSize.y - contentBlockHeight) * 0.5;
+		const buttonsTop = buttonAreaTop + (buttonAreaHeight - totalButtonsHeight) * 0.5;
 
-		this.#titleLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + titleAreaHeight * 0.5));
-
-		let y = top + titleAreaHeight + BUTTON_HEIGHT * 0.5;
+		let y = buttonsTop + BUTTON_HEIGHT * 0.5;
 		for (const node of this.#buttonNodes) {
 			node.setLocalPosition(Vector2.create(contentSize.x * 0.5, y));
 			y += BUTTON_HEIGHT + BUTTON_GAP;

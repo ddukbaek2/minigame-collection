@@ -11,6 +11,35 @@ import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
 
 
 //==============================================================================
+// 기본 폰트.
+//==============================================================================
+/** @type { FontFace | null } */
+let defaultFontFace = null;
+
+
+//==============================================================================
+// 기본 폰트 설정. (메인 씬에서 폰트 로드 후 호출)
+//==============================================================================
+/**
+ * @param { FontFace | null } fontFace
+ */
+export function setDefaultFontFace(fontFace) {
+	defaultFontFace = fontFace;
+}
+
+
+//==============================================================================
+// 기본 폰트 반환.
+//==============================================================================
+/**
+ * @returns { FontFace | null }
+ */
+export function getDefaultFontFace() {
+	return defaultFontFace;
+}
+
+
+//==============================================================================
 // 단순 라벨 노드 생성.
 //==============================================================================
 /**
@@ -29,6 +58,9 @@ export function createLabelNode(text, fontSize, color) {
 	label.setTextColor(color);
 	label.setTextAlign("center");
 	label.setTextBaseline("middle");
+	if (defaultFontFace) {
+		label.setFont(defaultFontFace);
+	}
 	return node;
 }
 
@@ -62,6 +94,9 @@ export function createButtonNode(text, size, backgroundColor, textColor, fontSiz
 	label.setTextColor(textColor);
 	label.setTextAlign("center");
 	label.setTextBaseline("middle");
+	if (defaultFontFace) {
+		label.setFont(defaultFontFace);
+	}
 
 	const button = node.addComponent(UIButton);
 	button.setClickEvent(onClick);

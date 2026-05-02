@@ -16,6 +16,7 @@ import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
+import { setDefaultFontFace } from "./uihelper.js";
 import { PartId } from "./part.js";
 import { IntroPart } from "./intropart.js";
 import { TitlePart } from "./titlepart.js";
@@ -61,6 +62,31 @@ export class MainScene extends Scene {
 	/** @private @type { System.Map<string, import("./part.js").Part> } */ #parts;
 	/** @private @type { string[] } */ #partStack;
 	/** @private @type { Rect } */ #lastSafeAreaRect;
+	/** @private @type { FontFace | null } */ #defaultFontFace;
+
+	//==============================================================================
+	// 비동기 로드. (폰트)
+	//==============================================================================
+	/**
+	 * @override
+	 * @param { Engine } engine
+	 */
+	async load(engine) {
+		await super.load(engine);
+
+		// Cafe24Ssurround 폰트 로드.
+		this.#defaultFontFace = null;
+		try {
+			const fontFace = new System.FontFace("Cafe24Ssurround", `url("./assets/fonts/Cafe24Ssurround-v2.0.woff2")`);
+			await fontFace.load();
+			System.document.fonts.add(fontFace);
+			this.#defaultFontFace = fontFace;
+			setDefaultFontFace(fontFace);
+		}
+		catch (error) {
+			console.error("[MainScene] 폰트 로드 실패:", error);
+		}
+	}
 
 	//==============================================================================
 	// 초기화.
@@ -95,8 +121,37 @@ export class MainScene extends Scene {
 		// 파트 생성.
 		this.createParts();
 
+		// 모든 라벨에 기본 폰트 일괄 적용. (uihelper로 안 만든 라벨들 포함)
+		this.applyDefaultFontToAllLabels(this.getRoot());
+
 		// 인트로부터 시작.
 		this.replacePart(PartId.intro);
+	}
+
+	//==============================================================================
+	// 노드 트리에 있는 모든 라벨에 기본 폰트 적용.
+	//==============================================================================
+	/**
+	 * @param { WorldNode } node
+	 */
+	applyDefaultFontToAllLabels(node) {
+		if (!this.#defaultFontFace || !node) {
+			return;
+		}
+		if (typeof node.getAllComponents === "function") {
+			const components = node.getAllComponents();
+			for (const component of components) {
+				if (component instanceof Label) {
+					component.setFont(this.#defaultFontFace);
+				}
+			}
+		}
+		if (typeof node.getChildren === "function") {
+			const children = node.getChildren();
+			for (const child of children) {
+				this.applyDefaultFontToAllLabels(child);
+			}
+		}
 	}
 
 	//==============================================================================

@@ -1,11 +1,20 @@
 {
+	"web": {
+		"canvasMaxWidth": "800px"
+	},
 	"appintoss": {
 		"appName": "com.ddukbaek2.minigamecollection",
-		"displayName": "playablegames-template",
+		"displayName": "minigame-collection",
 		"icon": "./icons/icon.png"
 	},
 	"onestore": {
 		"appId": "com.ddukbaek2.minigamecollection",
-		"appName": "playablegames-template"
+		"appName": "minigame-collection"
+	},
+	"playstore": {
+
+	},
+	"appstore": {
+
 	}
 }
