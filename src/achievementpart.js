@@ -4,9 +4,10 @@
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Part, PartId } from "./part.js";
 import { createLabelNode } from "./uihelper.js";
+import { getTheme } from "./theme.js";
 
 
 //==============================================================================
@@ -38,11 +39,22 @@ export class AchievementPart extends Part {
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		const background = this.addComponent(Paint);
-		background.setColor(Color.createFromHEX("#2c2336"));
+		this.setupBackground();
 
-		this.#placeholderNode = createLabelNode("업적 (준비중)", 56, Color.createFromHEX("#d8c690"));
+		this.#placeholderNode = createLabelNode("업적 (준비중)", 56, Color.createFromHEX("#ffffff"));
 		this.addChild(this.#placeholderNode);
+
+		this.applyTheme(getTheme());
+	}
+
+	//==============================================================================
+	// 테마 색 갱신.
+	//==============================================================================
+	applyTheme(theme) {
+		super.applyTheme(theme);
+		if (this.#placeholderNode) {
+			this.#placeholderNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
 	}
 
 	//==============================================================================

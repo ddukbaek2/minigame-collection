@@ -14,11 +14,12 @@ import { TouchRaycaster } from "../libs/vanilla.js/src/core/touchraycaster.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
+import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
 import { setDefaultFontFace, isUseSystemFont, markUseSystemFont } from "./uihelper.js";
 import { MessagePopup } from "./messagepopup.js";
 import { PartId } from "./part.js";
+import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { IntroPart } from "./intropart.js";
 import { TitlePart } from "./titlepart.js";
 import { GamesPart } from "./gamespart.js";
@@ -65,6 +66,9 @@ export class MainScene extends Scene {
 	/** @private @type { Rect } */ #lastSafeAreaRect;
 	/** @private @type { FontFace | null } */ #defaultFontFace;
 	/** @private @type { MessagePopup } */ #popup;
+	/** @private @type { Paint | null } */ #backgroundPaint;
+	/** @private @type { Paint | null } */ #navigationPaint;
+	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
 
 	//==============================================================================
 	// 비동기 로드. (폰트)
@@ -126,8 +130,33 @@ export class MainScene extends Scene {
 		// 모든 라벨에 기본 폰트 일괄 적용. (uihelper로 안 만든 라벨들 포함)
 		this.applyDefaultFontToAllLabels(this.getRoot());
 
+		// 테마 변경 리스너 + 현재 테마 즉시 적용.
+		addThemeChangeListener((theme) => this.applyTheme(theme));
+		this.applyTheme(getCurrentTheme());
+
 		// 인트로부터 시작.
 		this.replacePart(PartId.intro);
+	}
+
+	//==============================================================================
+	// 메인 씬의 테마 색 적용. (배경, 네비게이션, 뒤로가기 버튼)
+	//==============================================================================
+	/**
+	 * @param { object } theme
+	 */
+	applyTheme(theme) {
+		if (this.#backgroundPaint) {
+			this.#backgroundPaint.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#navigationPaint) {
+			this.#navigationPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
+		}
+		if (this.#navigationBackButtonPaint) {
+			this.#navigationBackButtonPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#navigationTitleLabel) {
+			this.#navigationTitleLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
 	}
 
 	//==============================================================================
@@ -174,8 +203,7 @@ export class MainScene extends Scene {
 		this.#backgroundNode.setName("background");
 		this.#backgroundNode.setPivot(Pivot.topLeft);
 		this.#backgroundNode.setAnchor(Pivot.topLeft);
-		const backgroundPaint = this.#backgroundNode.addComponent(Paint);
-		backgroundPaint.setColor(Color.createFromHEX("#11131c"));
+		this.#backgroundPaint = this.#backgroundNode.addComponent(Paint);
 		this.#safeAreaNode.addChild(this.#backgroundNode);
 
 		// 컨텐트 영역. (파트들이 들어감)
@@ -190,8 +218,7 @@ export class MainScene extends Scene {
 		this.#navigationNode.setName("navigation");
 		this.#navigationNode.setPivot(Pivot.topLeft);
 		this.#navigationNode.setAnchor(Pivot.topLeft);
-		const navigationPaint = this.#navigationNode.addComponent(Paint);
-		navigationPaint.setColor(Color.createFromHEX("#0c0e16"));
+		this.#navigationPaint = this.#navigationNode.addComponent(Paint);
 		this.#safeAreaNode.addChild(this.#navigationNode);
 
 		// 네비게이션 뒤로가기 버튼.
@@ -201,9 +228,8 @@ export class MainScene extends Scene {
 		this.#navigationBackButtonNode.setAnchor(Pivot.topLeft);
 		this.#navigationBackButtonNode.setContentSize(Vector2.create(NAVIGATION_BACK_BUTTON_WIDTH, NAVIGATION_BACK_BUTTON_HEIGHT));
 		this.#navigationBackButtonNode.setInteractable(true);
-		const backButtonPaint = this.#navigationBackButtonNode.addComponent(Paint);
-		backButtonPaint.setColor(Color.createFromHEX("#3a3f5b"));
-		backButtonPaint.setRoundSize(12);
+		this.#navigationBackButtonPaint = this.#navigationBackButtonNode.addComponent(Paint);
+		this.#navigationBackButtonPaint.setRoundSize(12);
 		const backButtonLabel = this.#navigationBackButtonNode.addComponent(Label);
 		backButtonLabel.setText("🔙");
 		backButtonLabel.setFontSize(56);
@@ -587,9 +613,10 @@ export class MainScene extends Scene {
 		const viewManager = engine.getViewManager();
 		const canvasNativeSize = viewManager.getCanvasNativeSize();
 
-		// 캔버스 전체 검게 칠하기 (세이프 에어리어 바깥은 까맣게).
+		// 캔버스 전체를 테마의 sceneBackground 색으로 칠하기 (세이프 에어리어 바깥 영역 포함).
 		viewManager.applyCanvasNativeRect(canvasRenderingContext);
-		graphic.setFillColor(Color.black());
+		const sceneBgColor = getCurrentTheme().sceneBackground;
+		graphic.setFillColor(Color.createFromHEX(sceneBgColor));
 		graphic.drawRect(Rect.create(0, 0, canvasNativeSize.x, canvasNativeSize.y));
 
 		// 뷰 좌표계 적용.

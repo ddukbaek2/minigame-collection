@@ -5,10 +5,10 @@ const System = globalThis;
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Part, PartId } from "./part.js";
 import { createButtonNode, createLabelNode, markUseSystemFont } from "./uihelper.js";
+import { getTheme } from "./theme.js";
 
 
 //==============================================================================
@@ -52,12 +52,11 @@ export class TitlePart extends Part {
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		// 배경.
-		const background = this.addComponent(Paint);
-		background.setColor(Color.createFromHEX("#262a3f"));
+		// 배경. (테마 자동 적용)
+		this.setupBackground();
 
 		// 게임 이름. (영역 하단 정렬)
-		this.#titleLabelNode = createLabelNode("미니게임 컬렉션", TITLE_FONT_SIZE, Color.createFromHEX("#ffe9a8"));
+		this.#titleLabelNode = createLabelNode("미니게임 컬렉션", TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
 		const titleLabel = this.#titleLabelNode.getComponent(Label);
 		titleLabel.setTextBaseline("bottom");
 		this.addChild(this.#titleLabelNode);
@@ -87,6 +86,18 @@ export class TitlePart extends Part {
 			markUseSystemFont(buttonLabel);
 			this.addChild(node);
 			this.#buttonNodes.push(node);
+		}
+
+		this.applyTheme(getTheme());
+	}
+
+	//==============================================================================
+	// 테마 색 갱신.
+	//==============================================================================
+	applyTheme(theme) {
+		super.applyTheme(theme);
+		if (this.#titleLabelNode) {
+			this.#titleLabelNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.primary));
 		}
 	}
 

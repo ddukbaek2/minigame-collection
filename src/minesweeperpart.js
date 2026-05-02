@@ -281,8 +281,7 @@ export class MinesweeperPart extends Part {
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		const background = this.addComponent(Paint);
-		background.setColor(Color.createFromHEX("#1d2238"));
+		this.setupBackground();
 
 		// 상태 표시 라벨.
 		this.#statusLabelNode = new WorldNode();

@@ -8,6 +8,7 @@ import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { createButtonNode, createLabelNode } from "./uihelper.js";
+import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 
 
 //==============================================================================
@@ -34,6 +35,7 @@ export class MessagePopup extends WorldNode {
 	//==============================================================================
 	/** @private @type { Paint } */ #dimPaint;
 	/** @private @type { WorldNode } */ #boxNode;
+	/** @private @type { Paint } */ #boxPaint;
 	/** @private @type { WorldNode } */ #messageLabelNode;
 	/** @private @type { Label } */ #messageLabel;
 	/** @private @type { WorldNode } */ #yesButtonNode;
@@ -56,16 +58,14 @@ export class MessagePopup extends WorldNode {
 
 		// 딤 배경.
 		this.#dimPaint = this.addComponent(Paint);
-		this.#dimPaint.setColor(new Color(0, 0, 0, 0.65));
 
 		// 박스.
 		this.#boxNode = new WorldNode();
 		this.#boxNode.setPivot(Pivot.middleCenter);
 		this.#boxNode.setAnchor(Pivot.topLeft);
 		this.#boxNode.setContentSize(Vector2.create(BOX_WIDTH, BOX_HEIGHT));
-		const boxPaint = this.#boxNode.addComponent(Paint);
-		boxPaint.setColor(Color.createFromHEX("#23283e"));
-		boxPaint.setRoundSize(28);
+		this.#boxPaint = this.#boxNode.addComponent(Paint);
+		this.#boxPaint.setRoundSize(28);
 		this.addChild(this.#boxNode);
 
 		// 메시지.
@@ -109,6 +109,28 @@ export class MessagePopup extends WorldNode {
 		this.#onYes = null;
 		this.#onNo = null;
 		this.#onOk = null;
+
+		// 테마 변경 리스너 + 즉시 적용.
+		addThemeChangeListener((theme) => this.applyTheme(theme));
+		this.applyTheme(getCurrentTheme());
+	}
+
+	//==============================================================================
+	// 테마 색 적용. (dim, 박스, 메시지 텍스트)
+	//==============================================================================
+	/**
+	 * @param { object } theme
+	 */
+	applyTheme(theme) {
+		if (this.#dimPaint) {
+			this.#dimPaint.setColor(new Color(0, 0, 0, theme.popupDimAlpha));
+		}
+		if (this.#boxPaint) {
+			this.#boxPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#messageLabel) {
+			this.#messageLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+		}
 	}
 
 	//==============================================================================

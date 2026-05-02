@@ -3,7 +3,10 @@
 //==============================================================================
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
+import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
+import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
+import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 
 
 //==============================================================================
@@ -30,6 +33,7 @@ export class Part extends WorldNode {
 	//==============================================================================
 	/** @private @type { import("./main.js").MainScene } */ #app;
 	/** @private @type { boolean } */ #isBuilt;
+	/** @private @type { Paint | null } */ #backgroundPaint;
 
 	//==============================================================================
 	// 생성.
@@ -42,6 +46,42 @@ export class Part extends WorldNode {
 		this.setActive(false);
 		this.#app = null;
 		this.#isBuilt = false;
+		this.#backgroundPaint = null;
+		addThemeChangeListener((theme) => this.applyTheme(theme));
+	}
+
+	//==============================================================================
+	// 테마 색이 자동 적용되는 배경 Paint 컴포넌트 부착.
+	// - onBuild() 안에서 호출. theme.partBackground 를 사용.
+	//==============================================================================
+	/**
+	 * @returns { Paint }
+	 */
+	setupBackground() {
+		this.#backgroundPaint = this.addComponent(Paint);
+		const theme = getCurrentTheme();
+		this.#backgroundPaint.setColor(Color.createFromHEX(theme.background));
+		return this.#backgroundPaint;
+	}
+
+	//==============================================================================
+	// 배경 Paint 반환.
+	//==============================================================================
+	getBackgroundPaint() {
+		return this.#backgroundPaint;
+	}
+
+	//==============================================================================
+	// 테마 변경 시 호출. (자식 클래스에서 super.applyTheme(theme) 호출 + 추가 색 갱신)
+	//==============================================================================
+	/**
+	 * @virtual
+	 * @param { object } theme
+	 */
+	applyTheme(theme) {
+		if (this.#backgroundPaint) {
+			this.#backgroundPaint.setColor(Color.createFromHEX(theme.background));
+		}
 	}
 
 	//==============================================================================

@@ -7,7 +7,7 @@ import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
+import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 
 
 //==============================================================================

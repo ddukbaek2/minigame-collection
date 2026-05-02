@@ -4,7 +4,6 @@
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Part, PartId } from "./part.js";
 import { createButtonNode } from "./uihelper.js";
 
@@ -42,9 +41,8 @@ export class GamesPart extends Part {
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		// 배경.
-		const background = this.addComponent(Paint);
-		background.setColor(Color.createFromHEX("#2d3148"));
+		// 배경. (테마 자동 적용)
+		this.setupBackground();
 
 		const app = this.getApp();
 		const games = [

@@ -4,10 +4,11 @@
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
+import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
 import { createLabelNode } from "./uihelper.js";
+import { getTheme } from "./theme.js";
 
 
 //==============================================================================
@@ -46,9 +47,8 @@ export class IntroPart extends Part {
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		// 배경.
-		const background = this.addComponent(Paint);
-		background.setColor(Color.createFromHEX("#1a1d2b"));
+		// 배경. (테마 자동 적용)
+		this.setupBackground();
 
 		// 인트로 전체 영역을 클릭하면 즉시 타이틀로 넘어감.
 		this.setInteractable(true);
@@ -58,11 +58,27 @@ export class IntroPart extends Part {
 			app.replacePart(PartId.title);
 		});
 
-		this.#titleNode = createLabelNode("미니게임 컬렉션", 88, Color.createFromHEX("#ffe9a8"));
+		this.#titleNode = createLabelNode("미니게임 컬렉션", 88, Color.createFromHEX("#ffffff"));
 		this.addChild(this.#titleNode);
 
-		this.#subtitleNode = createLabelNode("Minigame Collection", 44, Color.createFromHEX("#9fa8c8"));
+		this.#subtitleNode = createLabelNode("Minigame Collection", 44, Color.createFromHEX("#999999"));
 		this.addChild(this.#subtitleNode);
+
+		// 현재 테마 색 적용.
+		this.applyTheme(getTheme());
+	}
+
+	//==============================================================================
+	// 테마 색 갱신.
+	//==============================================================================
+	applyTheme(theme) {
+		super.applyTheme(theme);
+		if (this.#titleNode) {
+			this.#titleNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#subtitleNode) {
+			this.#subtitleNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
 	}
 
 	//==============================================================================
