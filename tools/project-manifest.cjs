@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 //==============================================================================
 // 프로젝트 매니페스트 적용 래퍼.
-// project-manifest.json 의 <platform> 섹션 값들을 대상 config 파일의
+// tools/project-manifest.json 의 <platform> 섹션 값들을 대상 config 파일의
 // <token> 플레이스홀더에 임시로 치환한 뒤, 지정된 명령을 실행한다.
 // 실행 종료/중단 시 반드시 원본 config 파일을 복원한다.
 //
 // 사용법:
-//   node tools/manifest.cjs <platform> <configFile> -- <command> [args...]
+//   node tools/project-manifest.cjs <platform> <configFile> -- <command> [args...]
 //
 // 예시:
-//   node tools/manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run build --prefix platforms/appintoss
+//   node tools/project-manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run build --prefix platforms/appintoss
 //==============================================================================
 "use strict";
 const fs = require("fs");
@@ -18,7 +18,7 @@ const { spawnSync } = require("child_process");
 
 
 const projectRoot = path.resolve(__dirname, "..");
-const manifestPath = path.join(projectRoot, "project-manifest.json");
+const manifestPath = path.join(__dirname, "project-manifest.json");
 
 
 //==============================================================================
@@ -29,7 +29,7 @@ function main() {
 	const separatorIndex = args.indexOf("--");
 
 	if (separatorIndex === -1 || separatorIndex < 2 || separatorIndex === args.length - 1) {
-		console.error("사용법: node tools/manifest.cjs <platform> <configFile> -- <command> [args...]");
+		console.error("사용법: node tools/project-manifest.cjs <platform> <configFile> -- <command> [args...]");
 		process.exit(1);
 	}
 
@@ -39,7 +39,7 @@ function main() {
 	const commandTokens = args.slice(separatorIndex + 1);
 
 	if (!fs.existsSync(manifestPath)) {
-		console.error(`[manifest] project-manifest.json 이 없습니다: ${manifestPath}`);
+		console.error(`[manifest] tools/project-manifest.json 이 없습니다: ${manifestPath}`);
 		process.exit(1);
 	}
 	if (!fs.existsSync(configFile)) {
@@ -50,7 +50,7 @@ function main() {
 	const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 	const platformValues = manifest[platform];
 	if (!platformValues || typeof platformValues !== "object") {
-		console.error(`[manifest] project-manifest.json 에 '${platform}' 섹션이 없습니다.`);
+		console.error(`[manifest] tools/project-manifest.json 에 '${platform}' 섹션이 없습니다.`);
 		process.exit(1);
 	}
 
@@ -71,7 +71,7 @@ function main() {
 		const unique = Array.from(new Set(remaining));
 		console.error(`[manifest] '${platform}' 매니페스트가 완전하지 않습니다. 다음 토큰이 치환되지 않았습니다:`);
 		console.error(`  ${unique.join(", ")}`);
-		console.error(`  project-manifest.json 의 '${platform}' 섹션을 확인하세요.`);
+		console.error(`  tools/project-manifest.json 의 '${platform}' 섹션을 확인하세요.`);
 		process.exit(1);
 	}
 

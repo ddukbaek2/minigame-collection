@@ -1,0 +1,48 @@
+<!-- 개발 테스트 환경 -->
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+		<style>
+			html, body {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background: #000000;
+				touch-action: none;
+			}
+
+			body {
+				position: fixed;
+				inset: 0;
+			}
+
+			canvas {
+				display: block;
+				width: 100vw;
+				height: 100vh;
+				max-width: 800px;
+				margin: 0 auto;
+			}
+		</style>
+		<script type="module">
+			//==================================================================
+			// 개발/라이브 서버 실행용 런처. (tools/ 에 위치)
+			// ../src/main.js 를 동적 import 한다.
+			// main.js 는 자체적으로 엔진 기동 + engine.run 을 수행하므로
+			// 여기서는 import 만 하면 된다.
+			//
+			// 프로덕션 빌드 시에는 esbuild 가 src/main.js 를 직접 엔트리로
+			// 번들링하므로 이 인라인 스크립트는 사용되지 않는다.
+			//==================================================================
+			import("../src/main.js").catch((error) => {
+				console.error(`[launcher] 진입 파일 로드 실패: ../src/main.js`, error);
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
