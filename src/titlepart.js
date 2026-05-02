@@ -8,7 +8,7 @@ import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Part, PartId } from "./part.js";
-import { createButtonNode, createLabelNode } from "./uihelper.js";
+import { createButtonNode, createLabelNode, markUseSystemFont } from "./uihelper.js";
 
 
 //==============================================================================
@@ -63,13 +63,14 @@ export class TitlePart extends Part {
 		this.addChild(this.#titleLabelNode);
 
 		// 메뉴 버튼들. (시작, 일일미션, 업적, 설정, 종료 순)
+		// - 텍스트에 이모지 prefix 가 있는 항목은 시스템 폰트(이모지 fallback)로 렌더.
 		const app = this.getApp();
 		const menuItems = [
-			{ text: "시작", color: "#5b8def", onClick: () => { app.pushPart(PartId.games); } },
-			{ text: "일일미션", color: "#4caf82", onClick: () => { app.pushPart(PartId.dailyMission); } },
-			{ text: "업적", color: "#c98a3f", onClick: () => { app.pushPart(PartId.achievement); } },
-			{ text: "설정", color: "#7a7e96", onClick: () => { app.pushPart(PartId.configuration); } },
-			{ text: "종료", color: "#a04545", onClick: () => { this.handleQuit(); } },
+			{ text: "▶️ 시작", color: "#5b8def", onClick: () => { app.pushPart(PartId.games); } },
+			{ text: "📅 일일미션", color: "#4caf82", onClick: () => { app.pushPart(PartId.dailyMission); } },
+			{ text: "🏆 업적", color: "#c98a3f", onClick: () => { app.pushPart(PartId.achievement); } },
+			{ text: "⚙️ 설정", color: "#7a7e96", onClick: () => { app.pushPart(PartId.configuration); } },
+			{ text: "🚪 종료", color: "#a04545", onClick: () => { this.handleQuit(); } },
 		];
 
 		for (const item of menuItems) {
@@ -81,6 +82,9 @@ export class TitlePart extends Part {
 				BUTTON_FONT_SIZE,
 				item.onClick,
 			);
+			// 라벨에 이모지가 들어 있으므로 시스템 폰트로 렌더링.
+			const buttonLabel = node.getComponent(Label);
+			markUseSystemFont(buttonLabel);
 			this.addChild(node);
 			this.#buttonNodes.push(node);
 		}
@@ -124,13 +128,16 @@ export class TitlePart extends Part {
 	}
 
 	//==============================================================================
-	// 종료.
+	// 종료. (확인 팝업 후 종료)
 	//==============================================================================
 	handleQuit() {
-		// 모바일 환경에서 탭/창 닫기를 시도. (브라우저 정책상 막힐 수 있음)
-		if (System.window && typeof System.window.close === "function") {
-			System.window.close();
-		}
-		console.log("[TitlePart] 종료 요청");
+		const app = this.getApp();
+		app.showConfirm("정말 종료하시겠습니까?", () => {
+			// 모바일 환경에서 탭/창 닫기를 시도. (브라우저 정책상 막힐 수 있음)
+			if (System.window && typeof System.window.close === "function") {
+				System.window.close();
+			}
+			console.log("[TitlePart] 종료 확정");
+		});
 	}
 }

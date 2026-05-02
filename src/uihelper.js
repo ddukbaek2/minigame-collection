@@ -40,6 +40,94 @@ export function getDefaultFontFace() {
 
 
 //==============================================================================
+// 라벨에 "시스템 폰트 사용" 마커 부착. (이모지/특수문자 fallback이 필요한 경우)
+// - 이 마커가 붙은 라벨은 applyDefaultFontToAllLabels 가 건너뛴다.
+//==============================================================================
+/**
+ * @param { Label } label
+ */
+export function markUseSystemFont(label) {
+	if (label) {
+		label.useSystemFont = true;
+	}
+}
+
+
+//==============================================================================
+// 라벨이 시스템 폰트 사용 마커가 부착됐는지 여부 반환.
+//==============================================================================
+/**
+ * @param { Label } label
+ * @returns { boolean }
+ */
+export function isUseSystemFont(label) {
+	return label && label.useSystemFont === true;
+}
+
+
+//==============================================================================
+// 아이콘(이모지) 라벨 노드 생성. 시스템 폰트 fallback을 사용.
+//==============================================================================
+/**
+ * @param { string } text
+ * @param { number } fontSize
+ * @param { Color } color
+ * @returns { WorldNode }
+ */
+export function createIconLabelNode(text, fontSize, color) {
+	const node = new WorldNode();
+	node.setPivot(Pivot.middleCenter);
+	node.setAnchor(Pivot.middleCenter);
+	const label = node.addComponent(Label);
+	label.setText(text);
+	label.setFontSize(fontSize);
+	label.setTextColor(color);
+	label.setTextAlign("center");
+	label.setTextBaseline("middle");
+	markUseSystemFont(label);
+	return node;
+}
+
+
+//==============================================================================
+// 아이콘(이모지) 버튼 노드 생성. 시스템 폰트 fallback을 사용.
+//==============================================================================
+/**
+ * @param { string } icon
+ * @param { Vector2 } size
+ * @param { Color } backgroundColor
+ * @param { Color } iconColor
+ * @param { number } fontSize
+ * @param { (button: UIButton) => void } onClick
+ * @returns { WorldNode }
+ */
+export function createIconButtonNode(icon, size, backgroundColor, iconColor, fontSize, onClick) {
+	const node = new WorldNode();
+	node.setPivot(Pivot.middleCenter);
+	node.setAnchor(Pivot.middleCenter);
+	node.setContentSize(size);
+	node.setInteractable(true);
+
+	const paint = node.addComponent(Paint);
+	paint.setColor(backgroundColor);
+	paint.setRoundSize(16);
+
+	const label = node.addComponent(Label);
+	label.setText(icon);
+	label.setFontSize(fontSize);
+	label.setTextColor(iconColor);
+	label.setTextAlign("center");
+	label.setTextBaseline("middle");
+	markUseSystemFont(label);
+
+	const button = node.addComponent(UIButton);
+	button.setClickEvent(onClick);
+
+	return node;
+}
+
+
+//==============================================================================
 // 단순 라벨 노드 생성.
 //==============================================================================
 /**

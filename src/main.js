@@ -16,7 +16,8 @@ import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIButton } from "../libs/vanilla.js/src/core/component/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
-import { setDefaultFontFace } from "./uihelper.js";
+import { setDefaultFontFace, isUseSystemFont, markUseSystemFont } from "./uihelper.js";
+import { MessagePopup } from "./messagepopup.js";
 import { PartId } from "./part.js";
 import { IntroPart } from "./intropart.js";
 import { TitlePart } from "./titlepart.js";
@@ -63,6 +64,7 @@ export class MainScene extends Scene {
 	/** @private @type { string[] } */ #partStack;
 	/** @private @type { Rect } */ #lastSafeAreaRect;
 	/** @private @type { FontFace | null } */ #defaultFontFace;
+	/** @private @type { MessagePopup } */ #popup;
 
 	//==============================================================================
 	// 비동기 로드. (폰트)
@@ -141,7 +143,7 @@ export class MainScene extends Scene {
 		if (typeof node.getAllComponents === "function") {
 			const components = node.getAllComponents();
 			for (const component of components) {
-				if (component instanceof Label) {
+				if (component instanceof Label && !isUseSystemFont(component)) {
 					component.setFont(this.#defaultFontFace);
 				}
 			}
@@ -203,11 +205,12 @@ export class MainScene extends Scene {
 		backButtonPaint.setColor(Color.createFromHEX("#3a3f5b"));
 		backButtonPaint.setRoundSize(12);
 		const backButtonLabel = this.#navigationBackButtonNode.addComponent(Label);
-		backButtonLabel.setText("<");
+		backButtonLabel.setText("🔙");
 		backButtonLabel.setFontSize(56);
 		backButtonLabel.setTextColor(Color.createFromHEX("#ffffff"));
 		backButtonLabel.setTextAlign("center");
 		backButtonLabel.setTextBaseline("middle");
+		markUseSystemFont(backButtonLabel);
 		const backButton = this.#navigationBackButtonNode.addComponent(UIButton);
 		backButton.setClickEvent(() => { this.popPart(); });
 		this.#navigationNode.addChild(this.#navigationBackButtonNode);
@@ -224,6 +227,11 @@ export class MainScene extends Scene {
 		this.#navigationTitleLabel.setTextAlign("center");
 		this.#navigationTitleLabel.setTextBaseline("middle");
 		this.#navigationNode.addChild(this.#navigationTitleNode);
+
+		// 메시지 팝업. (safeArea 의 마지막 자식 = 가장 위에 그려지고 raycast 에서 가장 먼저 hit)
+		this.#popup = new MessagePopup();
+		this.#popup.setName("popup");
+		this.#safeAreaNode.addChild(this.#popup);
 	}
 
 	//==============================================================================
@@ -265,8 +273,27 @@ export class MainScene extends Scene {
 
 	//==============================================================================
 	// 파트 팝. (현재 파트를 닫고 이전 파트로)
+	// - 현재 파트가 shouldConfirmExit() 이면 확인 팝업 후에만 진행.
 	//==============================================================================
 	popPart() {
+		if (this.#partStack.length <= 1) {
+			return;
+		}
+		const currentId = this.#partStack[this.#partStack.length - 1];
+		const current = this.#parts.get(currentId);
+		if (current && current.shouldConfirmExit()) {
+			this.showConfirm(current.getExitConfirmMessage(), () => {
+				this.performPopPart();
+			});
+			return;
+		}
+		this.performPopPart();
+	}
+
+	//==============================================================================
+	// 실제 파트 팝 처리.
+	//==============================================================================
+	performPopPart() {
 		if (this.#partStack.length <= 1) {
 			return;
 		}
@@ -314,6 +341,43 @@ export class MainScene extends Scene {
 		this.layout();
 		part.setActive(true);
 		part.enter();
+	}
+
+	//==============================================================================
+	// 메시지 팝업 - 예/아니오.
+	//==============================================================================
+	/**
+	 * @param { string } message
+	 * @param { (() => void) | null } onYes
+	 * @param { (() => void) | null } [onNo]
+	 */
+	showConfirm(message, onYes, onNo) {
+		this.#popup.setLocalPosition(Vector2.zero());
+		this.#popup.setContentSize(this.#safeAreaNode.getContentSize());
+		this.#popup.showConfirm(message, onYes, onNo);
+	}
+
+	//==============================================================================
+	// 메시지 팝업 - 확인.
+	//==============================================================================
+	/**
+	 * @param { string } message
+	 * @param { (() => void) | null } [onOk]
+	 */
+	showAlert(message, onOk) {
+		this.#popup.setLocalPosition(Vector2.zero());
+		this.#popup.setContentSize(this.#safeAreaNode.getContentSize());
+		this.#popup.showAlert(message, onOk);
+	}
+
+	//==============================================================================
+	// 팝업 노출 여부.
+	//==============================================================================
+	/**
+	 * @returns { boolean }
+	 */
+	isPopupShowing() {
+		return this.#popup.isShowing();
 	}
 
 	//==============================================================================
@@ -390,6 +454,15 @@ export class MainScene extends Scene {
 			activePart.setLocalPosition(Vector2.zero());
 			activePart.setContentSize(this.#contentAreaNode.getContentSize());
 			activePart.onResize();
+		}
+
+		// 팝업 (safeArea 전체를 덮음).
+		if (this.#popup) {
+			this.#popup.setLocalPosition(Vector2.zero());
+			this.#popup.setContentSize(safeAreaRect.size);
+			if (this.#popup.isShowing()) {
+				this.#popup.layout();
+			}
 		}
 	}
 

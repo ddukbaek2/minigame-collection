@@ -4,6 +4,8 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+		<!-- launcher.html 이 tools/ 에 있지만, src/main.js 가 사용하는 ./assets/... 같은 상대 경로를 빌드 결과(루트)와 동일하게 해석하기 위해 base 를 프로젝트 루트로 고정. -->
+		<base href="../">
 		<style>
 			html, body {
 				margin: 0;
@@ -31,15 +33,15 @@
 		<script type="module">
 			//==================================================================
 			// 개발/라이브 서버 실행용 런처. (tools/ 에 위치)
-			// ../src/main.js 를 동적 import 한다.
+			// <base href="../"> 에 의해 모든 상대 경로는 프로젝트 루트 기준.
 			// main.js 는 자체적으로 엔진 기동 + engine.run 을 수행하므로
 			// 여기서는 import 만 하면 된다.
 			//
 			// 프로덕션 빌드 시에는 esbuild 가 src/main.js 를 직접 엔트리로
 			// 번들링하므로 이 인라인 스크립트는 사용되지 않는다.
 			//==================================================================
-			import("../src/main.js").catch((error) => {
-				console.error(`[launcher] 진입 파일 로드 실패: ../src/main.js`, error);
+			import("./src/main.js").catch((error) => {
+				console.error(`[launcher] 진입 파일 로드 실패: ./src/main.js`, error);
 			});
 		</script>
 	</head>
