@@ -28,6 +28,31 @@ import { AchievementPart } from "./achievementpart.js";
 import { ConfigurationPart } from "./configurationpart.js";
 import { DailyMissionPart } from "./dailymissionpart.js";
 import { MinesweeperPart } from "./minesweeperpart.js";
+import { TicTacToePart } from "./tictactoepart.js";
+import { MemoryMatchPart } from "./memorymatchpart.js";
+import { Puzzle15Part } from "./puzzle15part.js";
+import { WhackAMolePart } from "./whackamolepart.js";
+import { NumberGuessPart } from "./numberguesspart.js";
+import { ReactionTimePart } from "./reactiontimepart.js";
+import { SimonPart } from "./simonpart.js";
+import { RpsPart } from "./rpspart.js";
+import { Game2048Part } from "./game2048part.js";
+import { QuickMathPart } from "./quickmathpart.js";
+import { SequencePart } from "./sequencepart.js";
+import { OddEvenPart } from "./oddevenpart.js";
+import { FindOddPart } from "./findoddpart.js";
+import { StroopPart } from "./strooppart.js";
+import { DiceBetPart } from "./dicebetpart.js";
+import { HighLowPart } from "./highlowpart.js";
+import { BlackjackPart } from "./blackjackpart.js";
+import { SlotPart } from "./slotpart.js";
+import { NumberMemoryPart } from "./numbermemorypart.js";
+import { CountStopPart } from "./countstoppart.js";
+import { TargetTapPart } from "./targettappart.js";
+import { ColorCountPart } from "./colorcountpart.js";
+import { DirectionPart } from "./directionpart.js";
+import { SameIconPart } from "./sameiconpart.js";
+import { CoinFlipPart } from "./coinflippart.js";
 
 
 //==============================================================================
@@ -284,6 +309,31 @@ export class MainScene extends Scene {
 			new ConfigurationPart(),
 			new DailyMissionPart(),
 			new MinesweeperPart(),
+			new TicTacToePart(),
+			new MemoryMatchPart(),
+			new Puzzle15Part(),
+			new WhackAMolePart(),
+			new NumberGuessPart(),
+			new ReactionTimePart(),
+			new SimonPart(),
+			new RpsPart(),
+			new Game2048Part(),
+			new QuickMathPart(),
+			new SequencePart(),
+			new OddEvenPart(),
+			new FindOddPart(),
+			new StroopPart(),
+			new DiceBetPart(),
+			new HighLowPart(),
+			new BlackjackPart(),
+			new SlotPart(),
+			new NumberMemoryPart(),
+			new CountStopPart(),
+			new TargetTapPart(),
+			new ColorCountPart(),
+			new DirectionPart(),
+			new SameIconPart(),
+			new CoinFlipPart(),
 		];
 
 		for (const part of partInstances) {
