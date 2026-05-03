@@ -8,6 +8,7 @@ import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
+import { UIToggleButton } from "../libs/vanilla.js/src/ui/uitogglebutton.js";
 
 
 //==============================================================================
@@ -149,6 +150,51 @@ export function createLabelNode(text, fontSize, color) {
 	if (defaultFontFace) {
 		label.setFont(defaultFontFace);
 	}
+	return node;
+}
+
+
+//==============================================================================
+// 토글 버튼 노드 생성. (배경 + 라벨 + UIButton)
+// - 라디오 그룹용. 토글 상태(on/off) 색은 외부에서 paint/label 색을 직접 갱신.
+// - UIButton 의 pressedTintColor 를 transparent 로 두어 매 tick tint 가 라벨 색을
+//   덮어쓰는 일이 없도록 한다. (UIToggleButton 을 쓰면 자동 토글/tint 사이클이
+//   외부 색 갱신과 충돌해 라벨 색이 깜빡이는 문제가 있음)
+//==============================================================================
+/**
+ * @param { string } text
+ * @param { Vector2 } size
+ * @param { Color } backgroundColor
+ * @param { Color } textColor
+ * @param { number } fontSize
+ * @param { (button: UIButton) => void } onClick
+ * @returns { WorldNode }
+ */
+export function createToggleButtonNode(text, size, backgroundColor, textColor, fontSize, onClick) {
+	const node = new WorldNode();
+	node.setPivot(Pivot.middleCenter);
+	node.setAnchor(Pivot.middleCenter);
+	node.setContentSize(size);
+	node.setInteractable(true);
+
+	const paint = node.addComponent(Paint);
+	paint.setColor(backgroundColor);
+	paint.setRoundSize(16);
+
+	const label = node.addComponent(Label);
+	label.setText(text);
+	label.setFontSize(fontSize);
+	label.setTextColor(textColor);
+	label.setTextAlign("center");
+	label.setTextBaseline("middle");
+	if (defaultFontFace) {
+		label.setFont(defaultFontFace);
+	}
+
+	const button = node.addComponent(UIButton);
+	button.setPressedTintColor(Color.transparent());
+	button.setClickEvent(onClick);
+
 	return node;
 }
 

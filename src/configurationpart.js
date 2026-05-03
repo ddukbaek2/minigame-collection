@@ -8,7 +8,7 @@ import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
-import { createButtonNode, createLabelNode } from "./uihelper.js";
+import { createToggleButtonNode, createLabelNode } from "./uihelper.js";
 import { getAllThemeIds, getTheme, getCurrentThemeId, setCurrentTheme } from "./theme.js";
 
 
@@ -24,7 +24,7 @@ const THEME_BUTTON_FONT_SIZE = 44;
 
 //==============================================================================
 // 설정 파트.
-// - 테마 선택 (라이트 / 다크 / 바닐라)
+// - 테마 선택 (라이트 / 다크 / 바닐라). 토글 버튼 그룹 (라디오) 형태.
 //==============================================================================
 export class ConfigurationPart extends Part {
 	//==============================================================================
@@ -32,7 +32,7 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	/** @private @type { WorldNode } */ #themeSectionLabelNode;
 	/** @private @type { Label } */ #themeSectionLabel;
-	/** @private @type { Array<{ themeId: string, node: WorldNode, paint: Paint, label: Label }> } */ #themeButtons;
+	/** @private @type { Array<{ themeId: string, node: WorldNode, paint: Paint, label: Label, button: UIButton }> } */ #themeButtons;
 
 	//==============================================================================
 	// 생성.
@@ -64,25 +64,23 @@ export class ConfigurationPart extends Part {
 		this.#themeSectionLabel = this.#themeSectionLabelNode.getComponent(Label);
 		this.addChild(this.#themeSectionLabelNode);
 
-		// 테마 버튼들. (라이트 / 다크 / 바닐라)
+		// 테마 토글 버튼들. (라이트 / 다크 / 바닐라). 라디오 그룹.
 		const themeIds = getAllThemeIds();
 		for (const themeId of themeIds) {
 			const theme = getTheme(themeId);
-			const node = createButtonNode(
+			const node = createToggleButtonNode(
 				theme.displayName,
 				Vector2.create(THEME_BUTTON_WIDTH, THEME_BUTTON_HEIGHT),
-				Color.createFromHEX("#3a3f5b"),
-				Color.createFromHEX("#ffffff"),
+				Color.createFromHEX(theme.surfaceVariant),
+				Color.createFromHEX(theme.onSurfaceVariant),
 				THEME_BUTTON_FONT_SIZE,
-				() => {
-					setCurrentTheme(themeId);
-					this.refreshSelection();
-				},
+				() => { this.handleThemeToggled(themeId); },
 			);
 			const paint = node.getComponent(Paint);
 			const label = node.getComponent(Label);
+			const button = node.getComponent(UIButton);
 			this.addChild(node);
-			this.#themeButtons.push({ themeId, node, paint, label });
+			this.#themeButtons.push({ themeId, node, paint, label, button });
 		}
 
 		// 현재 선택 반영.
@@ -108,7 +106,7 @@ export class ConfigurationPart extends Part {
 	}
 
 	//==============================================================================
-	// 테마 변경 시 적용. (배경 + 라벨 색 + 버튼 강조)
+	// 테마 변경 시 적용.
 	//==============================================================================
 	applyTheme(theme) {
 		super.applyTheme(theme);
@@ -119,29 +117,45 @@ export class ConfigurationPart extends Part {
 	}
 
 	//==============================================================================
-	// 선택된 테마 강조.
-	// - 미리보기 버튼은 해당 테마의 surfaceVariant 로 칠한다.
-	//   현재 화면 배경(background)과 surfaceVariant 는 항상 다른 톤이므로
-	//   어느 테마에서도 버튼이 배경에 묻히지 않는다.
-	// - 선택된 테마는 primary 외곽 테두리(흉내) + 살짝 확대로 강조.
+	// 토글 버튼 클릭 처리. (라디오: 누른 항목만 켜짐, 나머지는 꺼짐)
+	//==============================================================================
+	handleThemeToggled(themeId) {
+		// 사용자가 이미 선택된 항목을 다시 누른 경우에도 재선택 효과를 유지.
+		setCurrentTheme(themeId);
+		this.refreshSelection();
+	}
+
+	//==============================================================================
+	// 선택 상태 동기화. (표준 토큰 기반 on/off 색)
+	// - 안 선택(off):  surfaceVariant 배경 + onSurfaceVariant 텍스트
+	// - 선택(on):      primary 배경 + onPrimary 텍스트
+	// - 모든 토글의 색은 "현재 적용 중인 테마" 의 토큰을 사용한다.
+	//   (어떤 테마가 선택돼 있어도 on/off 가 같은 룰로 명확히 구분됨)
 	//==============================================================================
 	refreshSelection() {
 		const currentId = getCurrentThemeId();
-		const currentTheme = getTheme();
+		const theme = getTheme();
+		const offBgColor = Color.createFromHEX(theme.surfaceVariant);
+		const offTextColor = Color.createFromHEX(theme.onSurfaceVariant);
+		const onBgColor = Color.createFromHEX(theme.primary);
+		const onTextColor = Color.createFromHEX(theme.onPrimary);
+
 		for (const entry of this.#themeButtons) {
 			const isSelected = entry.themeId === currentId;
-			const targetTheme = getTheme(entry.themeId);
-			// 미리보기 색: 해당 테마의 surfaceVariant + onSurfaceVariant 텍스트.
-			entry.paint.setColor(Color.createFromHEX(targetTheme.surfaceVariant));
-			entry.label.setTextColor(Color.createFromHEX(targetTheme.onSurfaceVariant));
 			entry.paint.setRoundSize(16);
-			// 선택된 테마는 살짝 확대해 강조 + 텍스트를 primary 색으로 변경.
 			if (isSelected) {
-				entry.label.setTextColor(Color.createFromHEX(targetTheme.primary));
-				entry.node.setLocalScale(Vector2.create(1.08, 1.08));
+				entry.paint.setColor(onBgColor);
+				entry.label.setTextColor(onTextColor);
 			}
 			else {
-				entry.node.setLocalScale(Vector2.create(1, 1));
+				entry.paint.setColor(offBgColor);
+				entry.label.setTextColor(offTextColor);
+			}
+			// UIButton 의 originalColor 캐시 갱신.
+			// 안 그러면 다음 frame 의 applyTintProgress 가 stale 한 originalColor 로
+			// 라벨 색을 다시 칠해서 깜빡임이 생긴다.
+			if (entry.button && typeof entry.button.collectColorTargets === "function") {
+				entry.button.collectColorTargets();
 			}
 		}
 	}

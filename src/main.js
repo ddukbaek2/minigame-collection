@@ -69,6 +69,7 @@ export class MainScene extends Scene {
 	/** @private @type { Paint | null } */ #backgroundPaint;
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
+	/** @private @type { Label | null } */ #navigationBackButtonLabel;
 
 	//==============================================================================
 	// 비동기 로드. (폰트)
@@ -230,13 +231,13 @@ export class MainScene extends Scene {
 		this.#navigationBackButtonNode.setInteractable(true);
 		this.#navigationBackButtonPaint = this.#navigationBackButtonNode.addComponent(Paint);
 		this.#navigationBackButtonPaint.setRoundSize(12);
-		const backButtonLabel = this.#navigationBackButtonNode.addComponent(Label);
-		backButtonLabel.setText("🔙");
-		backButtonLabel.setFontSize(56);
-		backButtonLabel.setTextColor(Color.createFromHEX("#ffffff"));
-		backButtonLabel.setTextAlign("center");
-		backButtonLabel.setTextBaseline("middle");
-		markUseSystemFont(backButtonLabel);
+		this.#navigationBackButtonLabel = this.#navigationBackButtonNode.addComponent(Label);
+		this.#navigationBackButtonLabel.setText("🔙");
+		this.#navigationBackButtonLabel.setFontSize(56);
+		this.#navigationBackButtonLabel.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#navigationBackButtonLabel.setTextAlign("center");
+		this.#navigationBackButtonLabel.setTextBaseline("middle");
+		markUseSystemFont(this.#navigationBackButtonLabel);
 		const backButton = this.#navigationBackButtonNode.addComponent(UIButton);
 		backButton.setClickEvent(() => { this.popPart(); });
 		this.#navigationNode.addChild(this.#navigationBackButtonNode);
@@ -463,6 +464,10 @@ export class MainScene extends Scene {
 		this.#navigationBackButtonNode.setLocalPosition(Vector2.create(backButtonX, backButtonY));
 		const canPop = this.#partStack.length > 1;
 		this.#navigationBackButtonNode.setActive(canPop);
+		// 활성 파트가 지정한 아이콘 적용 (기본 🔙, 모달이면 ❌ 등).
+		if (activePart && this.#navigationBackButtonLabel) {
+			this.#navigationBackButtonLabel.setText(activePart.getNavigationBackIcon());
+		}
 
 		// 네비게이션 타이틀.
 		this.#navigationTitleNode.setLocalPosition(Vector2.create(safeAreaRect.size.x * 0.5, NAVIGATION_HEIGHT * 0.5));
