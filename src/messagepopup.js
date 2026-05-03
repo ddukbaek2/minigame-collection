@@ -14,20 +14,23 @@ import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 //==============================================================================
 // 팝업 레이아웃 상수.
 //==============================================================================
-const BOX_WIDTH = 800;
-const BOX_HEIGHT = 460;
+const BOX_WIDTH = 880;
+const BOX_HEIGHT = 540;
 const BUTTON_WIDTH = 280;
 const BUTTON_HEIGHT = 120;
 const BUTTON_GAP = 40;
 const MESSAGE_FONT_SIZE = 48;
-const BUTTON_FONT_SIZE = 48;
+const SUB_MESSAGE_FONT_SIZE = 32;
+const BUTTON_FONT_SIZE = 44;
 
 
 //==============================================================================
 // 메시지 팝업.
-// - 부모(safeArea) 전체를 덮는 dim + 가운데 박스(메시지 + 버튼).
-// - showConfirm(message, onYes, onNo): 예/아니오 2버튼.
-// - showAlert(message, onOk): 확인 1버튼.
+// - dim + 가운데 박스 (메시지 + 서브 메시지 + 버튼).
+// - showConfirm(message, onYes, onNo, options): 예/아니오 2버튼.
+//   options = { yesLabel, noLabel, subMessage }
+// - showAlert(message, onOk, options): 확인 1버튼.
+//   options = { okLabel, subMessage }
 //==============================================================================
 export class MessagePopup extends WorldNode {
 	//==============================================================================
@@ -38,9 +41,14 @@ export class MessagePopup extends WorldNode {
 	/** @private @type { Paint } */ #boxPaint;
 	/** @private @type { WorldNode } */ #messageLabelNode;
 	/** @private @type { Label } */ #messageLabel;
+	/** @private @type { WorldNode } */ #subMessageLabelNode;
+	/** @private @type { Label } */ #subMessageLabel;
 	/** @private @type { WorldNode } */ #yesButtonNode;
+	/** @private @type { Label } */ #yesButtonLabel;
 	/** @private @type { WorldNode } */ #noButtonNode;
+	/** @private @type { Label } */ #noButtonLabel;
 	/** @private @type { WorldNode } */ #okButtonNode;
+	/** @private @type { Label } */ #okButtonLabel;
 	/** @private @type { (() => void) | null } */ #onYes;
 	/** @private @type { (() => void) | null } */ #onNo;
 	/** @private @type { (() => void) | null } */ #onOk;
@@ -53,13 +61,10 @@ export class MessagePopup extends WorldNode {
 		this.setPivot(Pivot.topLeft);
 		this.setAnchor(Pivot.topLeft);
 		this.setActive(false);
-		// 활성화 시 입력 차단(아래 컨텐츠 클릭 방지).
 		this.setInteractable(true);
 
-		// 딤 배경.
 		this.#dimPaint = this.addComponent(Paint);
 
-		// 박스.
 		this.#boxNode = new WorldNode();
 		this.#boxNode.setPivot(Pivot.middleCenter);
 		this.#boxNode.setAnchor(Pivot.topLeft);
@@ -68,10 +73,15 @@ export class MessagePopup extends WorldNode {
 		this.#boxPaint.setRoundSize(28);
 		this.addChild(this.#boxNode);
 
-		// 메시지.
+		// 메시지 (메인).
 		this.#messageLabelNode = createLabelNode("", MESSAGE_FONT_SIZE, Color.createFromHEX("#ffffff"));
 		this.#boxNode.addChild(this.#messageLabelNode);
 		this.#messageLabel = this.#messageLabelNode.getComponent(Label);
+
+		// 서브 메시지. (점수 데이터 같은 부가 정보)
+		this.#subMessageLabelNode = createLabelNode("", SUB_MESSAGE_FONT_SIZE, Color.createFromHEX("#cccccc"));
+		this.#boxNode.addChild(this.#subMessageLabelNode);
+		this.#subMessageLabel = this.#subMessageLabelNode.getComponent(Label);
 
 		// 예 버튼.
 		this.#yesButtonNode = createButtonNode(
@@ -82,6 +92,7 @@ export class MessagePopup extends WorldNode {
 			BUTTON_FONT_SIZE,
 			() => { this.handleYes(); },
 		);
+		this.#yesButtonLabel = this.#yesButtonNode.getComponent(Label);
 		this.#boxNode.addChild(this.#yesButtonNode);
 
 		// 아니오 버튼.
@@ -93,6 +104,7 @@ export class MessagePopup extends WorldNode {
 			BUTTON_FONT_SIZE,
 			() => { this.handleNo(); },
 		);
+		this.#noButtonLabel = this.#noButtonNode.getComponent(Label);
 		this.#boxNode.addChild(this.#noButtonNode);
 
 		// 확인 버튼.
@@ -104,23 +116,20 @@ export class MessagePopup extends WorldNode {
 			BUTTON_FONT_SIZE,
 			() => { this.handleOk(); },
 		);
+		this.#okButtonLabel = this.#okButtonNode.getComponent(Label);
 		this.#boxNode.addChild(this.#okButtonNode);
 
 		this.#onYes = null;
 		this.#onNo = null;
 		this.#onOk = null;
 
-		// 테마 변경 리스너 + 즉시 적용.
 		addThemeChangeListener((theme) => this.applyTheme(theme));
 		this.applyTheme(getCurrentTheme());
 	}
 
 	//==============================================================================
-	// 테마 색 적용. (dim, 박스, 메시지 텍스트)
+	// 테마 색 적용.
 	//==============================================================================
-	/**
-	 * @param { object } theme
-	 */
 	applyTheme(theme) {
 		if (this.#dimPaint) {
 			this.#dimPaint.setColor(new Color(0, 0, 0, theme.popupDimAlpha));
@@ -131,18 +140,26 @@ export class MessagePopup extends WorldNode {
 		if (this.#messageLabel) {
 			this.#messageLabel.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
+		if (this.#subMessageLabel) {
+			this.#subMessageLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
 	}
 
 	//==============================================================================
-	// 예/아니오 팝업 노출.
+	// 예/아니오 팝업.
 	//==============================================================================
 	/**
 	 * @param { string } message
 	 * @param { (() => void) | null } onYes
-	 * @param { (() => void) | null } onNo
+	 * @param { (() => void) | null } [onNo]
+	 * @param { { yesLabel?: string, noLabel?: string, subMessage?: string } } [options]
 	 */
-	showConfirm(message, onYes, onNo) {
+	showConfirm(message, onYes, onNo, options) {
+		options = options || {};
 		this.#messageLabel.setText(message);
+		this.#subMessageLabel.setText(options.subMessage || "");
+		this.#yesButtonLabel.setText(options.yesLabel || "예");
+		this.#noButtonLabel.setText(options.noLabel || "아니오");
 		this.#onYes = onYes || null;
 		this.#onNo = onNo || null;
 		this.#onOk = null;
@@ -154,14 +171,18 @@ export class MessagePopup extends WorldNode {
 	}
 
 	//==============================================================================
-	// 확인 팝업 노출.
+	// 확인 팝업.
 	//==============================================================================
 	/**
 	 * @param { string } message
-	 * @param { (() => void) | null } onOk
+	 * @param { (() => void) | null } [onOk]
+	 * @param { { okLabel?: string, subMessage?: string } } [options]
 	 */
-	showAlert(message, onOk) {
+	showAlert(message, onOk, options) {
+		options = options || {};
 		this.#messageLabel.setText(message);
+		this.#subMessageLabel.setText(options.subMessage || "");
+		this.#okButtonLabel.setText(options.okLabel || "확인");
 		this.#onYes = null;
 		this.#onNo = null;
 		this.#onOk = onOk || null;
@@ -179,45 +200,22 @@ export class MessagePopup extends WorldNode {
 		this.setActive(false);
 	}
 
-	//==============================================================================
-	// 예 버튼 처리.
-	//==============================================================================
 	handleYes() {
-		const callback = this.#onYes;
+		const cb = this.#onYes;
 		this.hide();
-		if (callback) {
-			callback();
-		}
+		if (cb) cb();
 	}
-
-	//==============================================================================
-	// 아니오 버튼 처리.
-	//==============================================================================
 	handleNo() {
-		const callback = this.#onNo;
+		const cb = this.#onNo;
 		this.hide();
-		if (callback) {
-			callback();
-		}
+		if (cb) cb();
 	}
-
-	//==============================================================================
-	// 확인 버튼 처리.
-	//==============================================================================
 	handleOk() {
-		const callback = this.#onOk;
+		const cb = this.#onOk;
 		this.hide();
-		if (callback) {
-			callback();
-		}
+		if (cb) cb();
 	}
 
-	//==============================================================================
-	// 활성 여부 반환.
-	//==============================================================================
-	/**
-	 * @returns { boolean }
-	 */
 	isShowing() {
 		return this.isActive();
 	}
@@ -227,15 +225,16 @@ export class MessagePopup extends WorldNode {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-
-		// 박스를 영역 가운데에 배치.
 		this.#boxNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, contentSize.y * 0.5));
 
-		// 메시지: 박스 상단 1/3 지점.
-		this.#messageLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.38));
+		// 메시지: 박스 상단부.
+		this.#messageLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.30));
+
+		// 서브 메시지: 메시지 아래.
+		this.#subMessageLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.55));
 
 		// 버튼: 박스 하단.
-		const buttonY = BOX_HEIGHT * 0.72;
+		const buttonY = BOX_HEIGHT * 0.80;
 		if (this.#okButtonNode.isActive()) {
 			this.#okButtonNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, buttonY));
 		}
@@ -247,9 +246,6 @@ export class MessagePopup extends WorldNode {
 		}
 	}
 
-	//==============================================================================
-	// 입력 가로채기. (배경 dim 클릭 시 아무것도 안 함 — 박스 밖으로는 무반응)
-	//==============================================================================
 	touchPress() {}
 	touchMove() {}
 	touchRelease() {}

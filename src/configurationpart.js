@@ -2,100 +2,212 @@
 // 포함 모듈 목록.
 //==============================================================================
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
+import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
 import { Part, PartId } from "./part.js";
 import { createToggleButtonNode, createLabelNode } from "./uihelper.js";
-import { getAllThemeIds, getTheme, getCurrentThemeId, setCurrentTheme } from "./theme.js";
+import {
+	getAllThemeIds,
+	getTheme,
+	getCurrentUITheme,
+	getCurrentUIThemeId,
+	setCurrentUITheme,
+	getCurrentGameThemeId,
+	setCurrentGameTheme,
+} from "./theme.js";
+import {
+	SettingId,
+	LanguageId,
+	getSetting,
+	setSetting,
+} from "./settings.js";
 
 
 //==============================================================================
 // 레이아웃 상수.
 //==============================================================================
-const SECTION_LABEL_FONT_SIZE = 56;
-const THEME_BUTTON_WIDTH = 280;
-const THEME_BUTTON_HEIGHT = 130;
-const THEME_BUTTON_GAP = 28;
-const THEME_BUTTON_FONT_SIZE = 44;
+const SECTION_TITLE_FONT_SIZE = 44;
+const SECTION_TITLE_HEIGHT = 60;
+const BUTTON_WIDTH = 240;
+const BUTTON_HEIGHT = 100;
+const BUTTON_FONT_SIZE = 36;
+const BUTTON_GAP = 16;
+const SECTION_INNER_GAP = 16;
+const SECTION_OUTER_GAP = 40;
+const HORIZONTAL_PADDING = 32;
 
 
 //==============================================================================
 // 설정 파트.
-// - 테마 선택 (라이트 / 다크 / 바닐라). 토글 버튼 그룹 (라디오) 형태.
+// - 모든 항목을 ScrollView 안에 수직으로 배치.
+// - 항목: UI 테마 / 게임 테마 / 배경음 / 효과음 / 진동 / 언어.
 //==============================================================================
 export class ConfigurationPart extends Part {
 	//==============================================================================
 	// 멤버 변수 목록.
 	//==============================================================================
-	/** @private @type { WorldNode } */ #themeSectionLabelNode;
-	/** @private @type { Label } */ #themeSectionLabel;
-	/** @private @type { Array<{ themeId: string, node: WorldNode, paint: Paint, label: Label, button: UIButton }> } */ #themeButtons;
+	/** @private @type { WorldNode } */ #scrollContainerNode;
+	/** @private @type { UIScrollView } */ #scrollView;
+	/** @private @type { Array<object> } */ #sections;
 
 	//==============================================================================
 	// 생성.
 	//==============================================================================
 	constructor() {
 		super();
-		this.#themeSectionLabelNode = null;
-		this.#themeSectionLabel = null;
-		this.#themeButtons = [];
+		this.#scrollContainerNode = null;
+		this.#scrollView = null;
+		this.#sections = [];
 	}
 
-	getPartId() {
-		return PartId.configuration;
-	}
-
-	getNavigationTitle() {
-		return "설정";
-	}
+	getPartId() { return PartId.configuration; }
+	getNavigationTitle() { return "설정"; }
 
 	//==============================================================================
 	// 빌드.
 	//==============================================================================
 	onBuild() {
-		// 배경. (테마 자동 적용)
 		this.setupBackground();
 
-		// "테마 선택" 섹션 라벨.
-		this.#themeSectionLabelNode = createLabelNode("테마 선택", SECTION_LABEL_FONT_SIZE, Color.createFromHEX("#ffffff"));
-		this.#themeSectionLabel = this.#themeSectionLabelNode.getComponent(Label);
-		this.addChild(this.#themeSectionLabelNode);
+		// 스크롤 컨테이너. (WorldNode + UIScrollView)
+		this.#scrollContainerNode = new WorldNode();
+		this.#scrollContainerNode.setName("settingsScroll");
+		this.#scrollContainerNode.setPivot(Pivot.topLeft);
+		this.#scrollContainerNode.setAnchor(Pivot.topLeft);
+		this.#scrollContainerNode.setLocalPosition(Vector2.zero());
+		this.addChild(this.#scrollContainerNode);
 
-		// 테마 토글 버튼들. (라이트 / 다크 / 바닐라). 라디오 그룹.
-		const themeIds = getAllThemeIds();
-		for (const themeId of themeIds) {
-			const theme = getTheme(themeId);
-			const node = createToggleButtonNode(
-				theme.displayName,
-				Vector2.create(THEME_BUTTON_WIDTH, THEME_BUTTON_HEIGHT),
-				Color.createFromHEX(theme.surfaceVariant),
-				Color.createFromHEX(theme.onSurfaceVariant),
-				THEME_BUTTON_FONT_SIZE,
-				() => { this.handleThemeToggled(themeId); },
-			);
-			const paint = node.getComponent(Paint);
-			const label = node.getComponent(Label);
-			const button = node.getComponent(UIButton);
-			this.addChild(node);
-			this.#themeButtons.push({ themeId, node, paint, label, button });
+		this.#scrollView = this.#scrollContainerNode.addComponent(UIScrollView);
+		this.#scrollView.setHorizontal(false);
+		this.#scrollView.setVertical(true);
+		this.#scrollView.setScrollMode(ScrollMode.elastic);
+		// 스크롤뷰가 자체 배경을 그리지 않도록 (UIView 기본 흰색이 part 배경을 가림).
+		this.#scrollView.setBackgroundColor(Color.transparent());
+
+		// 섹션들.
+		this.#sections = [];
+		this.#sections.push(this.createSection(
+			"UI 테마",
+			getAllThemeIds().map((id) => ({ id, label: getTheme(id).displayName })),
+			() => getCurrentUIThemeId(),
+			(id) => { setCurrentUITheme(id); this.refreshAllSections(); },
+		));
+		this.#sections.push(this.createSection(
+			"게임 테마",
+			getAllThemeIds().map((id) => ({ id, label: getTheme(id).displayName })),
+			() => getCurrentGameThemeId(),
+			(id) => { setCurrentGameTheme(id); this.refreshAllSections(); },
+		));
+		this.#sections.push(this.createSection(
+			"배경음",
+			[
+				{ id: true,  label: "켜기" },
+				{ id: false, label: "끄기" },
+			],
+			() => !!getSetting(SettingId.bgmEnabled),
+			(value) => { setSetting(SettingId.bgmEnabled, value); this.refreshAllSections(); },
+		));
+		this.#sections.push(this.createSection(
+			"효과음",
+			[
+				{ id: true,  label: "켜기" },
+				{ id: false, label: "끄기" },
+			],
+			() => !!getSetting(SettingId.sfxEnabled),
+			(value) => { setSetting(SettingId.sfxEnabled, value); this.refreshAllSections(); },
+		));
+		this.#sections.push(this.createSection(
+			"진동",
+			[
+				{ id: true,  label: "켜기" },
+				{ id: false, label: "끄기" },
+			],
+			() => !!getSetting(SettingId.vibrationEnabled),
+			(value) => { setSetting(SettingId.vibrationEnabled, value); this.refreshAllSections(); },
+		));
+		this.#sections.push(this.createSection(
+			"언어",
+			[
+				{ id: LanguageId.ko, label: "한국어" },
+				{ id: LanguageId.en, label: "English" },
+			],
+			() => getSetting(SettingId.language),
+			(id) => { setSetting(SettingId.language, id); this.refreshAllSections(); },
+		));
+
+		// 각 섹션 노드를 스크롤 콘텐츠에 추가.
+		const content = this.#scrollView.getContent();
+		for (const section of this.#sections) {
+			content.addChild(section.node);
 		}
 
-		// 현재 선택 반영.
-		this.refreshSelection();
-		// 현재 테마 색 반영.
-		this.applyTheme(getTheme());
+		this.refreshAllSections();
+		this.applyTheme(getCurrentUITheme());
+	}
+
+	//==============================================================================
+	// 한 섹션 생성. 제목 라벨 + 옵션 토글 버튼들 (라디오 그룹).
+	// - options: [{ id: any, label: string }]
+	// - getCurrentValue(): 현재 선택된 id
+	// - onSelect(id): 사용자가 옵션을 선택했을 때 호출
+	//==============================================================================
+	/**
+	 * @returns { object }
+	 */
+	createSection(title, options, getCurrentValue, onSelect) {
+		const node = new WorldNode();
+		node.setPivot(Pivot.topLeft);
+		node.setAnchor(Pivot.topLeft);
+
+		// 제목 라벨. (가운데 정렬 — createLabelNode 기본값 유지)
+		const titleNode = createLabelNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		node.addChild(titleNode);
+
+		// 옵션 버튼들.
+		const buttons = [];
+		for (const option of options) {
+			const buttonNode = createToggleButtonNode(
+				option.label,
+				Vector2.create(BUTTON_WIDTH, BUTTON_HEIGHT),
+				Color.createFromHEX("#3a3f5b"),
+				Color.createFromHEX("#ffffff"),
+				BUTTON_FONT_SIZE,
+				() => { onSelect(option.id); },
+			);
+			node.addChild(buttonNode);
+			buttons.push({
+				id: option.id,
+				node: buttonNode,
+				paint: buttonNode.getComponent(Paint),
+				label: buttonNode.getComponent(Label),
+				button: buttonNode.getComponent(UIButton),
+			});
+		}
+
+		return {
+			node,
+			titleNode,
+			titleLabel: titleNode.getComponent(Label),
+			buttons,
+			getCurrentValue,
+		};
 	}
 
 	//==============================================================================
 	// 진입.
 	//==============================================================================
 	enter() {
-		this.refreshSelection();
-		this.applyTheme(getTheme());
+		this.applyTheme(getCurrentUITheme());
 		this.layout();
+		// 스크롤 위치 초기화.
+		if (this.#scrollView) {
+			this.#scrollView.setScrollOffset(Vector2.zero());
+		}
 	}
 
 	//==============================================================================
@@ -110,52 +222,41 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	applyTheme(theme) {
 		super.applyTheme(theme);
-		if (this.#themeSectionLabel) {
-			this.#themeSectionLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		}
-		this.refreshSelection();
+		// 모든 섹션 색 갱신.
+		this.refreshAllSections();
 	}
 
 	//==============================================================================
-	// 토글 버튼 클릭 처리. (라디오: 누른 항목만 켜짐, 나머지는 꺼짐)
+	// 모든 섹션의 라디오 강조 + 색상 갱신.
 	//==============================================================================
-	handleThemeToggled(themeId) {
-		// 사용자가 이미 선택된 항목을 다시 누른 경우에도 재선택 효과를 유지.
-		setCurrentTheme(themeId);
-		this.refreshSelection();
-	}
+	refreshAllSections() {
+		const theme = getCurrentUITheme();
+		const offBg = Color.createFromHEX(theme.surfaceVariant);
+		const offText = Color.createFromHEX(theme.onSurfaceVariant);
+		const onBg = Color.createFromHEX(theme.primary);
+		const onText = Color.createFromHEX(theme.onPrimary);
+		const titleColor = Color.createFromHEX(theme.onBackground);
 
-	//==============================================================================
-	// 선택 상태 동기화. (표준 토큰 기반 on/off 색)
-	// - 안 선택(off):  surfaceVariant 배경 + onSurfaceVariant 텍스트
-	// - 선택(on):      primary 배경 + onPrimary 텍스트
-	// - 모든 토글의 색은 "현재 적용 중인 테마" 의 토큰을 사용한다.
-	//   (어떤 테마가 선택돼 있어도 on/off 가 같은 룰로 명확히 구분됨)
-	//==============================================================================
-	refreshSelection() {
-		const currentId = getCurrentThemeId();
-		const theme = getTheme();
-		const offBgColor = Color.createFromHEX(theme.surfaceVariant);
-		const offTextColor = Color.createFromHEX(theme.onSurfaceVariant);
-		const onBgColor = Color.createFromHEX(theme.primary);
-		const onTextColor = Color.createFromHEX(theme.onPrimary);
-
-		for (const entry of this.#themeButtons) {
-			const isSelected = entry.themeId === currentId;
-			entry.paint.setRoundSize(16);
-			if (isSelected) {
-				entry.paint.setColor(onBgColor);
-				entry.label.setTextColor(onTextColor);
+		for (const section of this.#sections) {
+			if (section.titleLabel) {
+				section.titleLabel.setTextColor(titleColor);
 			}
-			else {
-				entry.paint.setColor(offBgColor);
-				entry.label.setTextColor(offTextColor);
-			}
-			// UIButton 의 originalColor 캐시 갱신.
-			// 안 그러면 다음 frame 의 applyTintProgress 가 stale 한 originalColor 로
-			// 라벨 색을 다시 칠해서 깜빡임이 생긴다.
-			if (entry.button && typeof entry.button.collectColorTargets === "function") {
-				entry.button.collectColorTargets();
+			const currentValue = section.getCurrentValue();
+			for (const entry of section.buttons) {
+				const isSelected = entry.id === currentValue;
+				entry.paint.setRoundSize(16);
+				if (isSelected) {
+					entry.paint.setColor(onBg);
+					entry.label.setTextColor(onText);
+				}
+				else {
+					entry.paint.setColor(offBg);
+					entry.label.setTextColor(offText);
+				}
+				// UIButton 의 originalColor 캐시 갱신.
+				if (entry.button && typeof entry.button.collectColorTargets === "function") {
+					entry.button.collectColorTargets();
+				}
 			}
 		}
 	}
@@ -166,25 +267,39 @@ export class ConfigurationPart extends Part {
 	layout() {
 		const contentSize = this.getContentSize();
 
-		// 섹션 라벨 + 버튼 한 줄을 수직 가운데에 배치.
-		const sectionLabelHeight = SECTION_LABEL_FONT_SIZE + 16;
-		const sectionGap = 60;
-		const buttonRowHeight = THEME_BUTTON_HEIGHT;
-		const totalHeight = sectionLabelHeight + sectionGap + buttonRowHeight;
-		const top = (contentSize.y - totalHeight) * 0.5;
+		// 스크롤 컨테이너 = 파트 영역 전체.
+		this.#scrollContainerNode.setContentSize(Vector2.create(contentSize.x, contentSize.y));
 
-		// 섹션 라벨.
-		this.#themeSectionLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + sectionLabelHeight * 0.5));
+		// 각 섹션 내부 레이아웃 + y 누적으로 스크롤 컨텐트 높이 계산.
+		const innerWidth = contentSize.x - HORIZONTAL_PADDING * 2;
+		let cursorY = SECTION_OUTER_GAP;
 
-		// 버튼 한 줄.
-		const buttonCount = this.#themeButtons.length;
-		const totalRowWidth = buttonCount * THEME_BUTTON_WIDTH + (buttonCount - 1) * THEME_BUTTON_GAP;
-		const rowLeft = (contentSize.x - totalRowWidth) * 0.5 + THEME_BUTTON_WIDTH * 0.5;
-		const rowY = top + sectionLabelHeight + sectionGap + buttonRowHeight * 0.5;
-		for (let i = 0; i < buttonCount; ++i) {
-			const entry = this.#themeButtons[i];
-			const x = rowLeft + i * (THEME_BUTTON_WIDTH + THEME_BUTTON_GAP);
-			entry.node.setLocalPosition(Vector2.create(x, rowY));
+		for (const section of this.#sections) {
+			// 섹션 내부 레이아웃.
+			const buttonCount = section.buttons.length;
+			const buttonsTotalWidth = buttonCount * BUTTON_WIDTH + (buttonCount - 1) * BUTTON_GAP;
+			const sectionHeight = SECTION_TITLE_HEIGHT + SECTION_INNER_GAP + BUTTON_HEIGHT;
+
+			section.node.setLocalPosition(Vector2.create(HORIZONTAL_PADDING, cursorY));
+			section.node.setContentSize(Vector2.create(innerWidth, sectionHeight));
+
+			// 제목 라벨: 섹션 좌상단.
+			section.titleNode.setLocalPosition(Vector2.create(innerWidth * 0.5, SECTION_TITLE_HEIGHT * 0.5));
+
+			// 버튼 row: 가운데 정렬.
+			const rowLeft = (innerWidth - buttonsTotalWidth) * 0.5 + BUTTON_WIDTH * 0.5;
+			const rowY = SECTION_TITLE_HEIGHT + SECTION_INNER_GAP + BUTTON_HEIGHT * 0.5;
+			for (let i = 0; i < buttonCount; ++i) {
+				const entry = section.buttons[i];
+				const x = rowLeft + i * (BUTTON_WIDTH + BUTTON_GAP);
+				entry.node.setLocalPosition(Vector2.create(x, rowY));
+			}
+
+			cursorY += sectionHeight + SECTION_OUTER_GAP;
 		}
+
+		// 스크롤 콘텐트 크기 설정.
+		const scrollContentHeight = cursorY;
+		this.#scrollView.setScrollContentSize(Vector2.create(contentSize.x, scrollContentHeight));
 	}
 }

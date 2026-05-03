@@ -18,6 +18,7 @@ import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
 import { setDefaultFontFace, isUseSystemFont, markUseSystemFont } from "./uihelper.js";
 import { MessagePopup } from "./messagepopup.js";
+import { ResultPopup } from "./resultpopup.js";
 import { PartId } from "./part.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { IntroPart } from "./intropart.js";
@@ -66,10 +67,13 @@ export class MainScene extends Scene {
 	/** @private @type { Rect } */ #lastSafeAreaRect;
 	/** @private @type { FontFace | null } */ #defaultFontFace;
 	/** @private @type { MessagePopup } */ #popup;
+	/** @private @type { ResultPopup } */ #resultPopup;
 	/** @private @type { Paint | null } */ #backgroundPaint;
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
 	/** @private @type { Label | null } */ #navigationBackButtonLabel;
+	/** @private @type { number } */ #lastViewSizeX;
+	/** @private @type { number } */ #lastViewSizeY;
 
 	//==============================================================================
 	// 비동기 로드. (폰트)
@@ -121,6 +125,8 @@ export class MainScene extends Scene {
 		this.#parts = new System.Map();
 		this.#partStack = [];
 		this.#lastSafeAreaRect = Rect.zero();
+		this.#lastViewSizeX = 0;
+		this.#lastViewSizeY = 0;
 
 		// 계층 구성.
 		this.buildHierarchy();
@@ -259,6 +265,11 @@ export class MainScene extends Scene {
 		this.#popup = new MessagePopup();
 		this.#popup.setName("popup");
 		this.#safeAreaNode.addChild(this.#popup);
+
+		// 결과 팝업. (메시지 팝업과는 별도 컴포넌트)
+		this.#resultPopup = new ResultPopup();
+		this.#resultPopup.setName("resultPopup");
+		this.#safeAreaNode.addChild(this.#resultPopup);
 	}
 
 	//==============================================================================
@@ -377,11 +388,12 @@ export class MainScene extends Scene {
 	 * @param { string } message
 	 * @param { (() => void) | null } onYes
 	 * @param { (() => void) | null } [onNo]
+	 * @param { { yesLabel?: string, noLabel?: string, subMessage?: string } } [options]
 	 */
-	showConfirm(message, onYes, onNo) {
+	showConfirm(message, onYes, onNo, options) {
 		this.#popup.setLocalPosition(Vector2.zero());
 		this.#popup.setContentSize(this.#safeAreaNode.getContentSize());
-		this.#popup.showConfirm(message, onYes, onNo);
+		this.#popup.showConfirm(message, onYes, onNo, options);
 	}
 
 	//==============================================================================
@@ -390,11 +402,12 @@ export class MainScene extends Scene {
 	/**
 	 * @param { string } message
 	 * @param { (() => void) | null } [onOk]
+	 * @param { { okLabel?: string, subMessage?: string } } [options]
 	 */
-	showAlert(message, onOk) {
+	showAlert(message, onOk, options) {
 		this.#popup.setLocalPosition(Vector2.zero());
 		this.#popup.setContentSize(this.#safeAreaNode.getContentSize());
-		this.#popup.showAlert(message, onOk);
+		this.#popup.showAlert(message, onOk, options);
 	}
 
 	//==============================================================================
@@ -405,6 +418,26 @@ export class MainScene extends Scene {
 	 */
 	isPopupShowing() {
 		return this.#popup.isShowing();
+	}
+
+	//==============================================================================
+	// 결과 팝업.
+	// options: { isWon, title, score, stats, onRetry, onExit }
+	//==============================================================================
+	showResult(options) {
+		this.#resultPopup.setLocalPosition(Vector2.zero());
+		this.#resultPopup.setContentSize(this.#safeAreaNode.getContentSize());
+		this.#resultPopup.show(options);
+	}
+
+	//==============================================================================
+	// 결과 팝업 노출 여부.
+	//==============================================================================
+	/**
+	 * @returns { boolean }
+	 */
+	isResultPopupShowing() {
+		return this.#resultPopup.isShowing();
 	}
 
 	//==============================================================================
@@ -495,6 +528,13 @@ export class MainScene extends Scene {
 				this.#popup.layout();
 			}
 		}
+		if (this.#resultPopup) {
+			this.#resultPopup.setLocalPosition(Vector2.zero());
+			this.#resultPopup.setContentSize(safeAreaRect.size);
+			if (this.#resultPopup.isShowing()) {
+				this.#resultPopup.layout();
+			}
+		}
 	}
 
 	//==============================================================================
@@ -547,6 +587,18 @@ export class MainScene extends Scene {
 		super.tick(timeDelta);
 
 		const engine = this.getEngine();
+
+		// viewSize 변화 감지 → 자동 layout 재호출.
+		// (모바일 주소창 표시/숨김으로 100vh 가 동적으로 변하는 경우 등에서
+		//  resize 이벤트만으로는 누락될 수 있어 매 tick 보정한다)
+		const viewManager = engine.getViewManager();
+		const viewSize = viewManager.getViewSize();
+		if (viewSize.x !== this.#lastViewSizeX || viewSize.y !== this.#lastViewSizeY) {
+			this.#lastViewSizeX = viewSize.x;
+			this.#lastViewSizeY = viewSize.y;
+			this.layout();
+		}
+
 		const timeManager = engine.getTimeManager();
 		const unscaledTimeDelta = timeManager.getUnscaleDeltaTime();
 		this.#devtools.tick(unscaledTimeDelta);
