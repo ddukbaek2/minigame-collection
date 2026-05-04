@@ -2,39 +2,35 @@
 // 포함 모듈 목록.
 //==============================================================================
 const System = globalThis;
-import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
-import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
-import { Color } from "../libs/vanilla.js/src/base/color.js";
-import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { Part, PartId } from "./part.js";
-import { createButtonNode, markUseSystemFont } from "./uihelper.js";
-import { getCurrentGameTheme, addGameThemeChangeListener } from "./theme.js";
+import { Vector2 } from "../../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
+import { Color } from "../../libs/vanilla.js/src/base/color.js";
+import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
+import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Part, PartId } from "../part.js";
+import { createButtonNode } from "../uihelper.js";
+import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 
 
 //==============================================================================
 // 게임 상수.
 //==============================================================================
+const TOTAL_FLIPS = 10;
 const STARTING_CHIPS = 100;
 const BET_AMOUNT = 10;
-const TOTAL_ROLLS = 10;
-const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
 
 //==============================================================================
-// 베팅 버튼.
+// 선택 버튼.
 //==============================================================================
-class BetButton extends WorldNode {
-	/** @type { string } */ choice;       // "under" / "seven" / "over"
-	/** @private @type { DiceBetPart } */ #part;
+class CoinButton extends WorldNode {
+	/** @type { string } */ choice;
+	/** @private @type { CoinFlipPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { WorldNode } */ #titleNode;
-	/** @private @type { Label } */ #titleLabel;
-	/** @private @type { WorldNode } */ #subNode;
-	/** @private @type { Label } */ #subLabel;
+	/** @private @type { Label } */ #label;
 
-	constructor(part, choice, title, sub) {
+	constructor(part, choice, text) {
 		super();
 		this.setPivot(Pivot.topLeft);
 		this.setAnchor(Pivot.topLeft);
@@ -43,82 +39,62 @@ class BetButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-
-		this.#titleNode = new WorldNode();
-		this.#titleNode.setPivot(Pivot.middleCenter);
-		this.#titleNode.setAnchor(Pivot.middleCenter);
-		this.#titleLabel = this.#titleNode.addComponent(Label);
-		this.#titleLabel.setText(title);
-		this.#titleLabel.setFontSize(48);
-		this.#titleLabel.setTextAlign("center");
-		this.#titleLabel.setTextBaseline("middle");
-		this.addChild(this.#titleNode);
-
-		this.#subNode = new WorldNode();
-		this.#subNode.setPivot(Pivot.middleCenter);
-		this.#subNode.setAnchor(Pivot.middleCenter);
-		this.#subLabel = this.#subNode.addComponent(Label);
-		this.#subLabel.setText(sub);
-		this.#subLabel.setFontSize(28);
-		this.#subLabel.setTextAlign("center");
-		this.#subLabel.setTextBaseline("middle");
-		this.addChild(this.#subNode);
-
+		this.#label = this.addComponent(Label);
+		this.#label.setText(text);
+		this.#label.setFontSize(80);
+		this.#label.setTextAlign("center");
+		this.#label.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
-		const theme = getCurrentGameTheme();
-		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#titleLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-		this.#subLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		const isHead = this.choice === "head";
+		this.#paint.setColor(Color.createFromHEX(isHead ? "#eab308" : "#a16207"));
+		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
-	updateLayout() {
-		const size = this.getContentSize();
-		this.#titleNode.setLocalPosition(Vector2.create(size.x * 0.5, size.y * 0.4));
-		this.#subNode.setLocalPosition(Vector2.create(size.x * 0.5, size.y * 0.7));
-	}
+	setFontSize(s) { this.#label.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
-		this.#part.onBet(this.choice);
+		this.#part.onChoice(this.choice);
 	}
 }
 
 
 //==============================================================================
-// 주사위 베팅 파트.
+// 동전 베팅 파트.
 //==============================================================================
-export class DiceBetPart extends Part {
+export class CoinFlipPart extends Part {
 	/** @private @type { WorldNode } */ #infoLabelNode;
 	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #diceLabelNode;
-	/** @private @type { Label } */ #diceLabel;
+	/** @private @type { WorldNode } */ #coinNode;
+	/** @private @type { Paint } */ #coinPaint;
+	/** @private @type { Label } */ #coinLabel;
 	/** @private @type { WorldNode } */ #resultLabelNode;
 	/** @private @type { Label } */ #resultLabel;
-	/** @private @type { WorldNode } */ #betNode;
-	/** @private @type { BetButton[] } */ #betButtons;
+	/** @private @type { WorldNode } */ #buttonsNode;
+	/** @private @type { CoinButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
 	/** @private @type { Label } */ #resetButtonLabel;
 	/** @private @type { number } */ #chips;
-	/** @private @type { number } */ #rolls;
+	/** @private @type { number } */ #flips;
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
 	constructor() {
 		super();
-		this.#betButtons = [];
+		this.#buttons = [];
 		this.#chips = STARTING_CHIPS;
-		this.#rolls = 0;
+		this.#flips = 0;
 		this.#isStarted = false;
 		this.#isGameOver = false;
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
-	getPartId() { return PartId.diceBet; }
-	getNavigationTitle() { return "주사위 베팅"; }
+	getPartId() { return PartId.coinFlip; }
+	getNavigationTitle() { return "동전 베팅"; }
 	getNavigationBackIcon() { return "❌"; }
 
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
@@ -131,23 +107,29 @@ export class DiceBetPart extends Part {
 		this.addChild(this.#infoLabelNode);
 		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
 
-		this.#diceLabelNode = this.makeLabel(200);
-		this.addChild(this.#diceLabelNode);
-		this.#diceLabel = this.#diceLabelNode.getComponent(Label);
-		markUseSystemFont(this.#diceLabel);
+		this.#coinNode = new WorldNode();
+		this.#coinNode.setPivot(Pivot.middleCenter);
+		this.#coinNode.setAnchor(Pivot.topLeft);
+		this.#coinPaint = this.#coinNode.addComponent(Paint);
+		this.#coinPaint.setRoundSize(150);
+		this.#coinLabel = this.#coinNode.addComponent(Label);
+		this.#coinLabel.setText("?");
+		this.#coinLabel.setFontSize(180);
+		this.#coinLabel.setTextAlign("center");
+		this.#coinLabel.setTextBaseline("middle");
+		this.addChild(this.#coinNode);
 
 		this.#resultLabelNode = this.makeLabel(48);
 		this.addChild(this.#resultLabelNode);
 		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
 
-		this.#betNode = new WorldNode();
-		this.#betNode.setPivot(Pivot.topLeft);
-		this.#betNode.setAnchor(Pivot.topLeft);
-		this.addChild(this.#betNode);
-		this.#betButtons.push(new BetButton(this, "under", "6 이하", "x2"));
-		this.#betButtons.push(new BetButton(this, "seven", "정확히 7", "x4"));
-		this.#betButtons.push(new BetButton(this, "over", "8 이상", "x2"));
-		for (const b of this.#betButtons) this.#betNode.addChild(b);
+		this.#buttonsNode = new WorldNode();
+		this.#buttonsNode.setPivot(Pivot.topLeft);
+		this.#buttonsNode.setAnchor(Pivot.topLeft);
+		this.addChild(this.#buttonsNode);
+		this.#buttons.push(new CoinButton(this, "head", "앞면"));
+		this.#buttons.push(new CoinButton(this, "tail", "뒷면"));
+		for (const b of this.#buttons) this.#buttonsNode.addChild(b);
 
 		this.#resetButtonNode = createButtonNode(
 			"다시하기",
@@ -164,12 +146,12 @@ export class DiceBetPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeLabel(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
 		const label = node.addComponent(Label);
-		label.setFontSize(size);
+		label.setFontSize(s);
 		label.setTextAlign("center");
 		label.setTextBaseline("middle");
 		label.setText("");
@@ -184,55 +166,50 @@ export class DiceBetPart extends Part {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
 		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#diceLabel) this.#diceLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#coinPaint) this.#coinPaint.setColor(Color.createFromHEX("#eab308"));
+		if (this.#coinLabel) this.#coinLabel.setTextColor(Color.createFromHEX("#ffffff"));
 		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#betButtons) b.refreshAppearance();
+		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
 	resetGame() {
 		this.#chips = STARTING_CHIPS;
-		this.#rolls = 0;
+		this.#flips = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.#diceLabel.setText("⚀ ⚀");
-		this.#resultLabel.setText(`${BET_AMOUNT} 칩 베팅`);
+		this.#coinLabel.setText("?");
+		this.#coinPaint.setColor(Color.createFromHEX("#eab308"));
+		this.#resultLabel.setText(`${BET_AMOUNT} 칩 베팅 (x2)`);
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`칩: ${this.#chips}    라운드 ${this.#rolls}/${TOTAL_ROLLS}`);
+		this.#infoLabel.setText(`칩: ${this.#chips}    플립 ${this.#flips}/${TOTAL_FLIPS}`);
 	}
 
-	onBet(choice) {
+	onChoice(choice) {
 		if (this.#isGameOver) return;
 		if (this.#chips < BET_AMOUNT) return;
 		this.#chips -= BET_AMOUNT;
-		const d1 = System.Math.floor(System.Math.random() * 6) + 1;
-		const d2 = System.Math.floor(System.Math.random() * 6) + 1;
-		const sum = d1 + d2;
-		this.#diceLabel.setText(`${DICE_FACES[d1 - 1]} ${DICE_FACES[d2 - 1]}`);
-
+		const result = System.Math.random() < 0.5 ? "head" : "tail";
+		this.#coinLabel.setText(result === "head" ? "H" : "T");
+		this.#coinPaint.setColor(Color.createFromHEX(result === "head" ? "#eab308" : "#a16207"));
 		const theme = getCurrentGameTheme();
-		let win = false;
-		let payout = 0;
-		if (choice === "under" && sum <= 6) { win = true; payout = BET_AMOUNT * 2; }
-		else if (choice === "over" && sum >= 8) { win = true; payout = BET_AMOUNT * 2; }
-		else if (choice === "seven" && sum === 7) { win = true; payout = BET_AMOUNT * 4; }
-
+		const win = (choice === result);
 		if (win) {
-			this.#chips += payout;
-			this.#resultLabel.setText(`합 ${sum}  +${payout - BET_AMOUNT} 칩`);
+			this.#chips += BET_AMOUNT * 2;
+			this.#resultLabel.setText(`${result === "head" ? "앞면" : "뒷면"}!  +${BET_AMOUNT} 칩`);
 			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else {
-			this.#resultLabel.setText(`합 ${sum}  -${BET_AMOUNT} 칩`);
+			this.#resultLabel.setText(`${result === "head" ? "앞면" : "뒷면"}  -${BET_AMOUNT} 칩`);
 			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
 		}
-		this.#rolls += 1;
+		this.#flips += 1;
 		this.refreshInfo();
-		if (this.#rolls >= TOTAL_ROLLS || this.#chips < BET_AMOUNT) {
+		if (this.#flips >= TOTAL_FLIPS || this.#chips < BET_AMOUNT) {
 			this.endGame();
 		}
 	}
@@ -240,33 +217,33 @@ export class DiceBetPart extends Part {
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
-		const gap = 14;
-		const buttonW = System.Math.floor((contentSize.x - margin * 2 - gap * 2) / 3);
+		const gap = 16;
+		const buttonW = System.Math.floor((contentSize.x - margin * 2 - gap) / 2);
 		const buttonH = 220;
+		const coinSize = 360;
 
 		const infoH = 60;
-		const diceH = 240;
 		const resultH = 80;
 		const resetH = 120;
-		const vGap = 28;
-		const totalH = infoH + vGap + diceH + vGap + resultH + vGap + buttonH + vGap + resetH;
+		const vGap = 32;
+		const totalH = infoH + vGap + coinSize + vGap + resultH + vGap + buttonH + vGap + resetH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
 		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#diceLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + diceH * 0.5));
-		cy += diceH + vGap;
+		this.#coinNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + coinSize * 0.5));
+		this.#coinNode.setContentSize(Vector2.create(coinSize, coinSize));
+		cy += coinSize + vGap;
 		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
-		const betX = (contentSize.x - (buttonW * 3 + gap * 2)) * 0.5;
-		this.#betNode.setLocalPosition(Vector2.create(betX, cy));
-		this.#betNode.setContentSize(Vector2.create(buttonW * 3 + gap * 2, buttonH));
-		for (let i = 0; i < this.#betButtons.length; ++i) {
-			const b = this.#betButtons[i];
-			b.setLocalPosition(Vector2.create(i * (buttonW + gap), 0));
-			b.setContentSize(Vector2.create(buttonW, buttonH));
-			b.updateLayout();
+		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
+		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));
+		this.#buttonsNode.setContentSize(Vector2.create(buttonW * 2 + gap, buttonH));
+		for (let i = 0; i < this.#buttons.length; ++i) {
+			this.#buttons[i].setLocalPosition(Vector2.create(i * (buttonW + gap), 0));
+			this.#buttons[i].setContentSize(Vector2.create(buttonW, buttonH));
+			this.#buttons[i].setFontSize(80);
 		}
 		cy += buttonH + vGap;
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));

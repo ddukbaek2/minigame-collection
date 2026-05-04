@@ -2,31 +2,36 @@
 // 포함 모듈 목록.
 //==============================================================================
 const System = globalThis;
-import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
-import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
-import { Color } from "../libs/vanilla.js/src/base/color.js";
-import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { Part, PartId } from "./part.js";
-import { createButtonNode } from "./uihelper.js";
-import { getCurrentGameTheme, addGameThemeChangeListener } from "./theme.js";
+import { Vector2 } from "../../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
+import { Color } from "../../libs/vanilla.js/src/base/color.js";
+import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
+import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Part, PartId } from "../part.js";
+import { createButtonNode } from "../uihelper.js";
+import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 
 
 //==============================================================================
 // 게임 상수.
 //==============================================================================
-const TOTAL_ROUNDS = 10;
-const MIN_CARD = 1;
-const MAX_CARD = 13;
+const GAME_DURATION = 30;
+// 단어 의미: 빨강/파랑/초록/노랑.
+const WORD_INFOS = [
+	{ word: "빨강", hex: "#ef4444" },
+	{ word: "파랑", hex: "#3b82f6" },
+	{ word: "초록", hex: "#22c55e" },
+	{ word: "노랑", hex: "#eab308" },
+];
 
 
 //==============================================================================
 // 선택 버튼.
 //==============================================================================
-class HLButton extends WorldNode {
-	/** @type { string } */ choice;
-	/** @private @type { HighLowPart } */ #part;
+class StroopButton extends WorldNode {
+	/** @type { string } */ choice; // "match" | "nomatch"
+	/** @private @type { StroopPart } */ #part;
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Label } */ #label;
 
@@ -48,8 +53,9 @@ class HLButton extends WorldNode {
 	}
 
 	refreshAppearance() {
-		const isHigh = this.choice === "high";
-		this.#paint.setColor(Color.createFromHEX(isHigh ? "#22c55e" : "#ef4444"));
+		const theme = getCurrentGameTheme();
+		const isMatch = this.choice === "match";
+		this.#paint.setColor(Color.createFromHEX(isMatch ? "#22c55e" : "#ef4444"));
 		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
@@ -63,40 +69,41 @@ class HLButton extends WorldNode {
 
 
 //==============================================================================
-// 하이로우 파트.
+// 스트룹 파트.
 //==============================================================================
-export class HighLowPart extends Part {
+export class StroopPart extends Part {
 	/** @private @type { WorldNode } */ #infoLabelNode;
 	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #cardNode;
-	/** @private @type { Paint } */ #cardPaint;
-	/** @private @type { Label } */ #cardLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { WorldNode } */ #wordLabelNode;
+	/** @private @type { Label } */ #wordLabel;
+	/** @private @type { WorldNode } */ #hintLabelNode;
+	/** @private @type { Label } */ #hintLabel;
 	/** @private @type { WorldNode } */ #buttonsNode;
-	/** @private @type { HLButton[] } */ #buttons;
+	/** @private @type { StroopButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
 	/** @private @type { Label } */ #resetButtonLabel;
-	/** @private @type { number } */ #current;
-	/** @private @type { number } */ #round;
+	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
+	/** @private @type { number } */ #wrongCount;
+	/** @private @type { boolean } */ #isMatch;       // 단어의 의미와 색이 일치?
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
 	constructor() {
 		super();
 		this.#buttons = [];
-		this.#current = 7;
-		this.#round = 0;
+		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
+		this.#wrongCount = 0;
+		this.#isMatch = false;
 		this.#isStarted = false;
 		this.#isGameOver = false;
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
-	getPartId() { return PartId.highLow; }
-	getNavigationTitle() { return "하이로우"; }
+	getPartId() { return PartId.stroop; }
+	getNavigationTitle() { return "스트룹"; }
 	getNavigationBackIcon() { return "❌"; }
 
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
@@ -109,28 +116,21 @@ export class HighLowPart extends Part {
 		this.addChild(this.#infoLabelNode);
 		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
 
-		this.#cardNode = new WorldNode();
-		this.#cardNode.setPivot(Pivot.middleCenter);
-		this.#cardNode.setAnchor(Pivot.topLeft);
-		this.#cardPaint = this.#cardNode.addComponent(Paint);
-		this.#cardPaint.setRoundSize(24);
-		this.#cardLabel = this.#cardNode.addComponent(Label);
-		this.#cardLabel.setText("");
-		this.#cardLabel.setFontSize(220);
-		this.#cardLabel.setTextAlign("center");
-		this.#cardLabel.setTextBaseline("middle");
-		this.addChild(this.#cardNode);
+		this.#hintLabelNode = this.makeLabel(36);
+		this.addChild(this.#hintLabelNode);
+		this.#hintLabel = this.#hintLabelNode.getComponent(Label);
+		this.#hintLabel.setText("단어의 '의미'와 '색'이 같으면 일치");
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#wordLabelNode = this.makeLabel(180);
+		this.addChild(this.#wordLabelNode);
+		this.#wordLabel = this.#wordLabelNode.getComponent(Label);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
 		this.#buttonsNode.setAnchor(Pivot.topLeft);
 		this.addChild(this.#buttonsNode);
-		this.#buttons.push(new HLButton(this, "low", "낮음 ↓"));
-		this.#buttons.push(new HLButton(this, "high", "높음 ↑"));
+		this.#buttons.push(new StroopButton(this, "match", "일치"));
+		this.#buttons.push(new StroopButton(this, "nomatch", "불일치"));
 		for (const b of this.#buttons) this.#buttonsNode.addChild(b);
 
 		this.#resetButtonNode = createButtonNode(
@@ -168,53 +168,61 @@ export class HighLowPart extends Part {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
 		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#cardPaint) this.#cardPaint.setColor(Color.createFromHEX(theme.surface));
-		if (this.#cardLabel) this.#cardLabel.setTextColor(Color.createFromHEX(theme.onSurface));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#hintLabel) this.#hintLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
 	resetGame() {
-		this.#current = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
-		this.#round = 0;
+		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
+		this.#wrongCount = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.#cardLabel.setText(String(this.#current));
-		this.#resultLabel.setText("다음 카드는?");
+		this.nextWord();
 		this.refreshInfo();
 	}
 
+	nextWord() {
+		const wordInfo = WORD_INFOS[System.Math.floor(System.Math.random() * WORD_INFOS.length)];
+		const isMatch = System.Math.random() < 0.5;
+		this.#isMatch = isMatch;
+		let colorInfo = wordInfo;
+		if (!isMatch) {
+			while (colorInfo === wordInfo) {
+				colorInfo = WORD_INFOS[System.Math.floor(System.Math.random() * WORD_INFOS.length)];
+			}
+		}
+		this.#wordLabel.setText(wordInfo.word);
+		this.#wordLabel.setTextColor(Color.createFromHEX(colorInfo.hex));
+	}
+
 	refreshInfo() {
-		this.#infoLabel.setText(`라운드 ${this.#round}/${TOTAL_ROUNDS}    정답 ${this.#correctCount}`);
+		const t = System.Math.ceil(this.#remainingTime);
+		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+	}
+
+	tick(timeDelta) {
+		super.tick(timeDelta);
+		if (!this.#isStarted || this.#isGameOver) return;
+		this.#remainingTime -= timeDelta;
+		if (this.#remainingTime <= 0) {
+			this.#remainingTime = 0;
+			this.refreshInfo();
+			this.endGame();
+			return;
+		}
+		this.refreshInfo();
 	}
 
 	onChoice(choice) {
 		if (this.#isGameOver) return;
-		let next = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
-		while (next === this.#current) {
-			next = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
-		}
-		const theme = getCurrentGameTheme();
-		const correct = (choice === "high" && next > this.#current) || (choice === "low" && next < this.#current);
-		this.#cardLabel.setText(String(next));
-		if (correct) {
-			this.#correctCount += 1;
-			this.#resultLabel.setText(`정답! (${this.#current} → ${next})`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
-		}
-		else {
-			this.#resultLabel.setText(`오답 (${this.#current} → ${next})`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
-		}
-		this.#current = next;
-		this.#round += 1;
+		const correct = (choice === "match" && this.#isMatch) || (choice === "nomatch" && !this.#isMatch);
+		if (correct) this.#correctCount += 1;
+		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 2); }
+		this.nextWord();
 		this.refreshInfo();
-		if (this.#round >= TOTAL_ROUNDS) {
-			this.endGame();
-		}
 	}
 
 	layout() {
@@ -225,22 +233,20 @@ export class HighLowPart extends Part {
 		const buttonH = 200;
 
 		const infoH = 60;
-		const cardH = 360;
-		const cardW = 360;
-		const resultH = 80;
+		const hintH = 50;
+		const wordH = 240;
 		const resetH = 120;
 		const vGap = 28;
-		const totalH = infoH + vGap + cardH + vGap + resultH + vGap + buttonH + vGap + resetH;
+		const totalH = infoH + vGap + hintH + vGap + wordH + vGap + buttonH + vGap + resetH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
 		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#cardNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + cardH * 0.5));
-		this.#cardNode.setContentSize(Vector2.create(cardW, cardH));
-		cy += cardH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
-		cy += resultH + vGap;
+		this.#hintLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + hintH * 0.5));
+		cy += hintH + vGap;
+		this.#wordLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + wordH * 0.5));
+		cy += wordH + vGap;
 		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));
 		this.#buttonsNode.setContentSize(Vector2.create(buttonW * 2 + gap, buttonH));
@@ -255,15 +261,18 @@ export class HighLowPart extends Part {
 
 	endGame() {
 		this.#isGameOver = true;
-		const score = this.#correctCount * 100;
-		const isWon = this.#correctCount >= 6;
+		const score = System.Math.max(0, this.#correctCount * 25 - this.#wrongCount * 15);
+		const total = this.#correctCount + this.#wrongCount;
+		const acc = total > 0 ? System.Math.round((this.#correctCount / total) * 100) : 0;
 		const app = this.getApp();
 		app.showResult({
-			isWon,
-			title: isWon ? "잘했어요!" : "아쉬워요",
+			isWon: this.#correctCount >= 15,
+			title: "타임 오버!",
 			score,
 			stats: [
-				`정답: ${this.#correctCount}/${TOTAL_ROUNDS}`,
+				`정답: ${this.#correctCount}`,
+				`오답: ${this.#wrongCount}`,
+				`정확도: ${acc}%`,
 			],
 			onRetry: () => { this.resetGame(); },
 			onExit: () => { app.popPart(); },

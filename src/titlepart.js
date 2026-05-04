@@ -7,8 +7,9 @@ import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Part, PartId } from "./part.js";
-import { createButtonNode, createLabelNode, markUseSystemFont } from "./uihelper.js";
+import { createIconTextButtonNode, createLabelNode } from "./uihelper.js";
 import { getTheme } from "./theme.js";
+import { Version } from "./version.js";
 
 
 //==============================================================================
@@ -23,6 +24,8 @@ const BUTTON_WIDTH = 560;
 const BUTTON_HEIGHT = 110;
 const BUTTON_FONT_SIZE = 44;
 const BUTTON_GAP = 24;
+const VERSION_FONT_SIZE = 24;
+const VERSION_PADDING = 24;
 
 export class TitlePart extends Part {
 	//==============================================================================
@@ -30,6 +33,7 @@ export class TitlePart extends Part {
 	//==============================================================================
 	/** @private @type { WorldNode } */ #titleLabelNode;
 	/** @private @type { WorldNode[] } */ #buttonNodes;
+	/** @private @type { WorldNode } */ #versionLabelNode;
 
 	//==============================================================================
 	// 생성.
@@ -38,6 +42,7 @@ export class TitlePart extends Part {
 		super();
 		this.#titleLabelNode = null;
 		this.#buttonNodes = [];
+		this.#versionLabelNode = null;
 	}
 
 	getPartId() {
@@ -65,15 +70,17 @@ export class TitlePart extends Part {
 		// - 텍스트에 이모지 prefix 가 있는 항목은 시스템 폰트(이모지 fallback)로 렌더.
 		const app = this.getApp();
 		const menuItems = [
-			{ text: "▶️ 시작", color: "#5b8def", onClick: () => { app.pushPart(PartId.games); } },
-			{ text: "📅 일일미션", color: "#4caf82", onClick: () => { app.pushPart(PartId.dailyMission); } },
-			{ text: "🏆 업적", color: "#c98a3f", onClick: () => { app.pushPart(PartId.achievement); } },
-			{ text: "⚙️ 설정", color: "#7a7e96", onClick: () => { app.pushPart(PartId.configuration); } },
-			{ text: "🚪 종료", color: "#a04545", onClick: () => { this.handleQuit(); } },
+			{ icon: "▶️", text: "시작", color: "#5b8def", onClick: () => { app.pushPart(PartId.games); } },
+			// 일일미션 / 업적 메뉴는 추후 활성화 예정. (파트는 createParts() 에 그대로 둠)
+			// { icon: "📅", text: "일일미션", color: "#4caf82", onClick: () => { app.pushPart(PartId.dailyMission); } },
+			// { icon: "🏆", text: "업적", color: "#c98a3f", onClick: () => { app.pushPart(PartId.achievement); } },
+			{ icon: "⚙️", text: "설정", color: "#7a7e96", onClick: () => { app.pushPart(PartId.configuration); } },
+			{ icon: "🚪", text: "종료", color: "#a04545", onClick: () => { this.handleQuit(); } },
 		];
 
 		for (const item of menuItems) {
-			const node = createButtonNode(
+			const node = createIconTextButtonNode(
+				item.icon,
 				item.text,
 				Vector2.create(BUTTON_WIDTH, BUTTON_HEIGHT),
 				Color.createFromHEX(item.color),
@@ -81,12 +88,16 @@ export class TitlePart extends Part {
 				BUTTON_FONT_SIZE,
 				item.onClick,
 			);
-			// 라벨에 이모지가 들어 있으므로 시스템 폰트로 렌더링.
-			const buttonLabel = node.getComponent(Label);
-			markUseSystemFont(buttonLabel);
 			this.addChild(node);
 			this.#buttonNodes.push(node);
 		}
+
+		// 버전 라벨. 우측 하단 고정.
+		this.#versionLabelNode = createLabelNode(`v${Version.getCurrent().toString()}`, VERSION_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		const versionLabel = this.#versionLabelNode.getComponent(Label);
+		versionLabel.setTextAlign("right");
+		versionLabel.setTextBaseline("bottom");
+		this.addChild(this.#versionLabelNode);
 
 		this.applyTheme(getTheme());
 	}
@@ -98,6 +109,9 @@ export class TitlePart extends Part {
 		super.applyTheme(theme);
 		if (this.#titleLabelNode) {
 			this.#titleLabelNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#versionLabelNode) {
+			this.#versionLabelNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
@@ -135,6 +149,11 @@ export class TitlePart extends Part {
 		for (const node of this.#buttonNodes) {
 			node.setLocalPosition(Vector2.create(contentSize.x * 0.5, y));
 			y += BUTTON_HEIGHT + BUTTON_GAP;
+		}
+
+		// 버전 라벨: 우측 하단.
+		if (this.#versionLabelNode) {
+			this.#versionLabelNode.setLocalPosition(Vector2.create(contentSize.x - VERSION_PADDING, contentSize.y - VERSION_PADDING));
 		}
 	}
 

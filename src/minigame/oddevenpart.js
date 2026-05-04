@@ -2,88 +2,82 @@
 // 포함 모듈 목록.
 //==============================================================================
 const System = globalThis;
-import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
-import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
-import { Color } from "../libs/vanilla.js/src/base/color.js";
-import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { Part, PartId } from "./part.js";
-import { createButtonNode } from "./uihelper.js";
-import { getCurrentGameTheme, addGameThemeChangeListener } from "./theme.js";
+import { Vector2 } from "../../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
+import { Color } from "../../libs/vanilla.js/src/base/color.js";
+import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
+import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Part, PartId } from "../part.js";
+import { createButtonNode } from "../uihelper.js";
+import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 
 
 //==============================================================================
 // 게임 상수.
 //==============================================================================
 const GAME_DURATION = 30;
-const CHOICES = 4;
 
 
 //==============================================================================
-// 답 버튼.
+// 선택 버튼 노드.
 //==============================================================================
-class AnswerButton extends WorldNode {
-	/** @type { number } */ value;
-	/** @private @type { QuickMathPart } */ #part;
+class OEButton extends WorldNode {
+	/** @type { string } */ choice;
+	/** @private @type { OddEvenPart } */ #part;
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Label } */ #label;
 
-	constructor(part) {
+	constructor(part, choice, text) {
 		super();
 		this.setPivot(Pivot.topLeft);
 		this.setAnchor(Pivot.topLeft);
 		this.setInteractable(true);
-		this.value = 0;
+		this.choice = choice;
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
-		this.#paint.setRoundSize(16);
+		this.#paint.setRoundSize(20);
 		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(72);
+		this.#label.setText(text);
+		this.#label.setFontSize(80);
 		this.#label.setTextAlign("center");
 		this.#label.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
-	setValue(v) {
-		this.value = v;
-		this.#label.setText(String(v));
-		this.refreshAppearance();
-	}
-
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
-		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		const isOdd = this.choice === "odd";
+		this.#paint.setColor(Color.createFromHEX(isOdd ? theme.primary : theme.secondary));
+		this.#label.setTextColor(Color.createFromHEX(isOdd ? theme.onPrimary : theme.onSecondary));
 	}
 
 	setFontSize(size) { this.#label.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
-		this.#part.onAnswer(this.value);
+		this.#part.onChoice(this.choice);
 	}
 }
 
 
 //==============================================================================
-// 빠른계산 파트.
+// 홀짝 파트.
 //==============================================================================
-export class QuickMathPart extends Part {
-	/** @private @type { WorldNode } */ #questionLabelNode;
-	/** @private @type { Label } */ #questionLabel;
+export class OddEvenPart extends Part {
 	/** @private @type { WorldNode } */ #infoLabelNode;
 	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #numberLabelNode;
+	/** @private @type { Label } */ #numberLabel;
 	/** @private @type { WorldNode } */ #buttonsNode;
-	/** @private @type { AnswerButton[] } */ #buttons;
+	/** @private @type { OEButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
 	/** @private @type { Label } */ #resetButtonLabel;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
 	/** @private @type { number } */ #wrongCount;
-	/** @private @type { number } */ #correctAnswer;
+	/** @private @type { number } */ #currentNumber;
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
@@ -93,14 +87,14 @@ export class QuickMathPart extends Part {
 		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
 		this.#wrongCount = 0;
-		this.#correctAnswer = 0;
+		this.#currentNumber = 0;
 		this.#isStarted = false;
 		this.#isGameOver = false;
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
-	getPartId() { return PartId.quickMath; }
-	getNavigationTitle() { return "빠른계산"; }
+	getPartId() { return PartId.oddEven; }
+	getNavigationTitle() { return "홀짝"; }
 	getNavigationBackIcon() { return "❌"; }
 
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
@@ -109,35 +103,21 @@ export class QuickMathPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
+		this.#infoLabelNode = this.makeLabel(40);
 		this.addChild(this.#infoLabelNode);
+		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
 
-		this.#questionLabelNode = new WorldNode();
-		this.#questionLabelNode.setPivot(Pivot.middleCenter);
-		this.#questionLabelNode.setAnchor(Pivot.topLeft);
-		this.#questionLabel = this.#questionLabelNode.addComponent(Label);
-		this.#questionLabel.setFontSize(120);
-		this.#questionLabel.setTextAlign("center");
-		this.#questionLabel.setTextBaseline("middle");
-		this.#questionLabel.setText("");
-		this.addChild(this.#questionLabelNode);
+		this.#numberLabelNode = this.makeLabel(220);
+		this.addChild(this.#numberLabelNode);
+		this.#numberLabel = this.#numberLabelNode.getComponent(Label);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
 		this.#buttonsNode.setAnchor(Pivot.topLeft);
 		this.addChild(this.#buttonsNode);
-		for (let i = 0; i < CHOICES; ++i) {
-			const b = new AnswerButton(this);
-			this.#buttonsNode.addChild(b);
-			this.#buttons.push(b);
-		}
+		this.#buttons.push(new OEButton(this, "odd", "홀"));
+		this.#buttons.push(new OEButton(this, "even", "짝"));
+		for (const b of this.#buttons) this.#buttonsNode.addChild(b);
 
 		this.#resetButtonNode = createButtonNode(
 			"다시하기",
@@ -154,6 +134,18 @@ export class QuickMathPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	makeLabel(size) {
+		const node = new WorldNode();
+		node.setPivot(Pivot.middleCenter);
+		node.setAnchor(Pivot.topLeft);
+		const label = node.addComponent(Label);
+		label.setFontSize(size);
+		label.setTextAlign("center");
+		label.setTextBaseline("middle");
+		label.setText("");
+		return node;
+	}
+
 	enter() { this.resetGame(); this.layout(); }
 	onResize() { this.layout(); }
 	applyTheme(theme) {}
@@ -162,7 +154,7 @@ export class QuickMathPart extends Part {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
 		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#questionLabel) this.#questionLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#numberLabel) this.#numberLabel.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
@@ -174,53 +166,18 @@ export class QuickMathPart extends Part {
 		this.#wrongCount = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.nextQuestion();
+		this.nextNumber();
 		this.refreshInfo();
+	}
+
+	nextNumber() {
+		this.#currentNumber = System.Math.floor(System.Math.random() * 999) + 1;
+		this.#numberLabel.setText(String(this.#currentNumber));
 	}
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
-	}
-
-	nextQuestion() {
-		const ops = ["+", "-", "×"];
-		const op = ops[System.Math.floor(System.Math.random() * ops.length)];
-		let a, b, ans;
-		if (op === "+") {
-			a = System.Math.floor(System.Math.random() * 50) + 1;
-			b = System.Math.floor(System.Math.random() * 50) + 1;
-			ans = a + b;
-		}
-		else if (op === "-") {
-			a = System.Math.floor(System.Math.random() * 80) + 20;
-			b = System.Math.floor(System.Math.random() * a);
-			ans = a - b;
-		}
-		else {
-			a = System.Math.floor(System.Math.random() * 11) + 2;
-			b = System.Math.floor(System.Math.random() * 11) + 2;
-			ans = a * b;
-		}
-		this.#correctAnswer = ans;
-		this.#questionLabel.setText(`${a} ${op} ${b} = ?`);
-
-		// 4지선다 (정답 + 오답 3개).
-		const choices = new System.Set([ans]);
-		while (choices.size < CHOICES) {
-			let off = System.Math.floor(System.Math.random() * 11) - 5;
-			if (off === 0) off = 1;
-			const v = ans + off;
-			if (v >= 0) choices.add(v);
-		}
-		const arr = System.Array.from(choices);
-		for (let i = arr.length - 1; i > 0; --i) {
-			const j = System.Math.floor(System.Math.random() * (i + 1));
-			const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-		}
-		for (let i = 0; i < this.#buttons.length; ++i) {
-			this.#buttons[i].setValue(arr[i]);
-		}
 	}
 
 	tick(timeDelta) {
@@ -236,17 +193,14 @@ export class QuickMathPart extends Part {
 		this.refreshInfo();
 	}
 
-	onAnswer(value) {
+	onChoice(choice) {
 		if (this.#isGameOver) return;
-		if (value === this.#correctAnswer) {
-			this.#correctCount += 1;
-		}
-		else {
-			this.#wrongCount += 1;
-			this.#remainingTime = System.Math.max(0, this.#remainingTime - 2);
-		}
+		const isOdd = (this.#currentNumber % 2) === 1;
+		const correct = (isOdd && choice === "odd") || (!isOdd && choice === "even");
+		if (correct) this.#correctCount += 1;
+		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 2); }
+		this.nextNumber();
 		this.refreshInfo();
-		this.nextQuestion();
 	}
 
 	layout() {
@@ -254,43 +208,40 @@ export class QuickMathPart extends Part {
 		const margin = 40;
 		const gap = 16;
 		const buttonW = System.Math.floor((contentSize.x - margin * 2 - gap) / 2);
-		const buttonH = 200;
-		const buttonsH = buttonH * 2 + gap;
+		const buttonH = 220;
 
 		const infoH = 60;
-		const questionH = 200;
+		const numberH = 280;
 		const resetH = 120;
-		const vGap = 32;
-		const totalH = infoH + vGap + questionH + vGap + buttonsH + vGap + resetH;
+		const vGap = 40;
+		const totalH = infoH + vGap + numberH + vGap + buttonH + vGap + resetH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
 		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#questionLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + questionH * 0.5));
-		cy += questionH + vGap;
-		const buttonsX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
-		this.#buttonsNode.setLocalPosition(Vector2.create(buttonsX, cy));
-		this.#buttonsNode.setContentSize(Vector2.create(buttonW * 2 + gap, buttonsH));
-		const positions = [[0, 0], [1, 0], [0, 1], [1, 1]];
+		this.#numberLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + numberH * 0.5));
+		cy += numberH + vGap;
+		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
+		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));
+		this.#buttonsNode.setContentSize(Vector2.create(buttonW * 2 + gap, buttonH));
 		for (let i = 0; i < this.#buttons.length; ++i) {
-			const [c, r] = positions[i];
-			this.#buttons[i].setLocalPosition(Vector2.create(c * (buttonW + gap), r * (buttonH + gap)));
+			this.#buttons[i].setLocalPosition(Vector2.create(i * (buttonW + gap), 0));
 			this.#buttons[i].setContentSize(Vector2.create(buttonW, buttonH));
-			this.#buttons[i].setFontSize(80);
+			this.#buttons[i].setFontSize(96);
 		}
-		cy += buttonsH + vGap;
+		cy += buttonH + vGap;
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
 	endGame() {
 		this.#isGameOver = true;
-		const score = System.Math.max(0, this.#correctCount * 50 - this.#wrongCount * 20);
+		const score = System.Math.max(0, this.#correctCount * 30 - this.#wrongCount * 15);
 		const total = this.#correctCount + this.#wrongCount;
 		const acc = total > 0 ? System.Math.round((this.#correctCount / total) * 100) : 0;
 		const app = this.getApp();
 		app.showResult({
-			isWon: this.#correctCount >= 10,
+			isWon: this.#correctCount >= 20,
 			title: "타임 오버!",
 			score,
 			stats: [

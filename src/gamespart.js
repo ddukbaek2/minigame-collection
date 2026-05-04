@@ -10,6 +10,7 @@ import { AnchoredWorldNode } from "../libs/vanilla.js/src/core/node/anchoredworl
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
+import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
 import { getDefaultFontFace } from "./uihelper.js";
 
@@ -17,9 +18,8 @@ import { getDefaultFontFace } from "./uihelper.js";
 //==============================================================================
 // 게임목록 파트.
 // - viewport (AnchoredWorldNode + UIScrollView) 안에 게임 셀 그리드.
-// - UIScrollView 가 마스크/관성/탄성/클램프 처리.
-// - 자식 셀이 입력을 가져가므로 셀이 받은 입력을 ScrollView 로 위임한다.
-//   (드래그 임계 미만이면 클릭, 초과면 클릭 취소)
+// - TouchRecognizer 가 자식 셀 위에서의 드래그를 자동으로 ScrollView 로
+//   위임하므로, 셀은 평범한 버튼처럼 touchPress/Release 만 처리하면 된다.
 //==============================================================================
 const COLS = 3;
 const TILE_GAP = 16;
@@ -27,38 +27,36 @@ const TILE_HEIGHT = 220;
 const SIDE_MARGIN = 30;
 const TOP_PADDING = 24;
 const BOTTOM_PADDING = 24;
-const DRAG_THRESHOLD = 10;            // 클릭 vs 드래그 판정 거리(px).
 
 
 //==============================================================================
-// 게임 셀 노드.
+// 게임 목록 스크롤뷰 안에 들어가는 단일 항목.
+// - UIButton 컴포넌트가 press / release / click 상태머신과 컬러 트랜지션을 담당.
+//   배경 Paint 가 transitionDuration 에 걸쳐 자동으로 darken 된다 (default
+//   pressedTintColor=(0,0,0,0.3) → 70% darken, 기존 k=0.7 와 동일).
+// - 라벨 텍스트는 트랜지션 대상에서 제외해 색이 흐려지지 않도록 한다.
+// - 드래그 → 스크롤 인계는 TouchRecognizer 가 처리한다.
+// - 마스크(스크롤 뷰포트) 밖 좌표는 press/release 를 컴포넌트에 전달하지 않아
+//   부분적으로 잘린 항목이 클릭되는 것을 막는다.
 //==============================================================================
-class GameCell extends WorldNode {
-	/** @type { string } */ partId;
-	/** @private @type { GamesPart } */ #part;
+class UIGamesPartScrollViewItem extends WorldNode {
+	/** @type { string } */ targetPartId;
+	/** @private @type { GamesPart } */ #gamesPart;
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Label } */ #label;
-	/** @private @type { Color } */ #baseColor;
-	/** @private @type { Color } */ #pressedColor;
-	/** @private @type { Vector2 | null } */ #pressStart;
-	/** @private @type { boolean } */ #wasDragged;
+	/** @private @type { UIButton } */ #button;
 
-	constructor(part, text, hex, partId) {
+	constructor(gamesPart, text, hex, targetPartId) {
 		super();
 		this.setPivot(Pivot.middleCenter);
 		this.setAnchor(Pivot.topLeft);
 		this.setInteractable(true);
-		this.partId = partId;
-		this.#part = part;
-		this.#baseColor = Color.createFromHEX(hex);
-		const k = 0.7;
-		this.#pressedColor = new Color(this.#baseColor.red * k, this.#baseColor.green * k, this.#baseColor.blue * k, this.#baseColor.alpha);
-		this.#pressStart = null;
-		this.#wasDragged = false;
+		this.targetPartId = targetPartId;
+		this.#gamesPart = gamesPart;
 
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#paint.setColor(this.#baseColor);
+		this.#paint.setColor(Color.createFromHEX(hex));
 
 		this.#label = this.addComponent(Label);
 		this.#label.setText(text);
@@ -68,51 +66,25 @@ class GameCell extends WorldNode {
 		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
 		const font = getDefaultFontFace();
 		if (font) this.#label.setFont(font);
-	}
 
-	setPressed(on) {
-		this.#paint.setColor(on ? this.#pressedColor : this.#baseColor);
+		this.#button = this.addComponent(UIButton);
+		this.#button.excludeComponentFromTint(this.#label);
+		this.#button.setClickedEvent(() => this.#gamesPart.onItemSelected(this.targetPartId));
 	}
 
 	touchPress(viewInputPosition) {
-		if (!this.#part.isInsideViewport(viewInputPosition)) return;
-		this.#pressStart = Vector2.create(viewInputPosition.x, viewInputPosition.y);
-		this.#wasDragged = false;
-		this.setPressed(true);
-		this.#part.scrollPress(viewInputPosition);
-	}
-
-	touchMove(viewInputPosition) {
-		if (!this.#pressStart) return;
-		if (!this.#wasDragged) {
-			const dx = viewInputPosition.x - this.#pressStart.x;
-			const dy = viewInputPosition.y - this.#pressStart.y;
-			if (System.Math.abs(dx) > DRAG_THRESHOLD || System.Math.abs(dy) > DRAG_THRESHOLD) {
-				this.#wasDragged = true;
-				this.setPressed(false);
-			}
-		}
-		this.#part.scrollMove(viewInputPosition);
+		if (!this.#gamesPart.isInsideViewport(viewInputPosition)) return;
+		super.touchPress(viewInputPosition);
 	}
 
 	touchRelease(viewInputPosition) {
-		if (!this.#pressStart) return;
-		const wasDragged = this.#wasDragged;
-		this.#pressStart = null;
-		this.#wasDragged = false;
-		this.setPressed(false);
-		this.#part.scrollRelease(viewInputPosition);
-		if (!wasDragged && this.contains(viewInputPosition) && this.#part.isInsideViewport(viewInputPosition)) {
-			this.#part.onCellClick(this.partId);
+		// 뷰포트 밖에서 떨어지면 클릭이 발동되지 않도록 cancel 로 변환해 전달.
+		if (this.#gamesPart.isInsideViewport(viewInputPosition)) {
+			super.touchRelease(viewInputPosition);
 		}
-	}
-
-	touchCancel(viewInputPosition) {
-		if (!this.#pressStart) return;
-		this.#pressStart = null;
-		this.#wasDragged = false;
-		this.setPressed(false);
-		this.#part.scrollCancel(viewInputPosition);
+		else {
+			super.touchCancel(viewInputPosition);
+		}
 	}
 }
 
@@ -121,16 +93,16 @@ class GameCell extends WorldNode {
 // 게임목록 파트.
 //==============================================================================
 export class GamesPart extends Part {
-	/** @private @type { AnchoredWorldNode } */ #viewportNode;
+	/** @private @type { AnchoredWorldNode } */ #scrollViewportNode;
 	/** @private @type { UIScrollView } */ #scrollView;
-	/** @private @type { GameCell[] } */ #cells;
+	/** @private @type { UIGamesPartScrollViewItem[] } */ #scrollViewItems;
 	/** @private @type { Array<{text: string, partId: string, color: string}> } */ #games;
 
 	constructor() {
 		super();
-		this.#viewportNode = null;
+		this.#scrollViewportNode = null;
 		this.#scrollView = null;
-		this.#cells = [];
+		this.#scrollViewItems = [];
 		this.#games = [];
 	}
 
@@ -169,26 +141,29 @@ export class GamesPart extends Part {
 			{ text: "동전베팅", partId: PartId.coinFlip, color: "#ca8a04" },
 		];
 
-		// 뷰포트 (AnchoredWorldNode). UIScrollView attach 시 마스크/interactable 자동.
-		this.#viewportNode = new AnchoredWorldNode();
-		this.#viewportNode.setName("viewport");
-		this.#viewportNode.setPivot(Pivot.topLeft);
-		this.#viewportNode.setAnchorMin(Vector2.zero());
-		this.#viewportNode.setAnchorMax(Vector2.zero());
-		this.addChild(this.#viewportNode);
+		// 스크롤 뷰포트.
+		// - UIScrollView 가 (현재 과도기 라이브러리 한정으로) AnchoredWorldNode 인스턴스에만
+		//   attach 시 마스크/interactable 자동 처리를 해주므로 이 노드만 어쩔 수 없이
+		//   AnchoredWorldNode 로 둔다. 다른 노드는 모두 일반 WorldNode 사용.
+		this.#scrollViewportNode = new AnchoredWorldNode();
+		this.#scrollViewportNode.setName("scrollViewport");
+		this.#scrollViewportNode.setPivot(Pivot.topLeft);
+		this.#scrollViewportNode.setAnchorMin(Vector2.zero());
+		this.#scrollViewportNode.setAnchorMax(Vector2.zero());
+		this.addChild(this.#scrollViewportNode);
 
-		this.#scrollView = this.#viewportNode.addComponent(UIScrollView);
+		this.#scrollView = this.#scrollViewportNode.addComponent(UIScrollView);
 		this.#scrollView.setHorizontal(false);
 		this.#scrollView.setVertical(true);
 		this.#scrollView.setScrollMode(ScrollMode.elastic);
 		this.#scrollView.setBackgroundColor(Color.transparent());
 
-		// ScrollView 내부 content 노드에 셀들 추가.
-		const content = this.#scrollView.getContent();
+		// 스크롤뷰 내부 content 노드에 항목들 추가.
+		const scrollContent = this.#scrollView.getContent();
 		for (const game of this.#games) {
-			const cell = new GameCell(this, game.text, game.color, game.partId);
-			content.addChild(cell);
-			this.#cells.push(cell);
+			const item = new UIGamesPartScrollViewItem(this, game.text, game.color, game.partId);
+			scrollContent.addChild(item);
+			this.#scrollViewItems.push(item);
 		}
 	}
 
@@ -208,63 +183,43 @@ export class GamesPart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-		if (!this.#viewportNode || contentSize.x <= 0) return;
+		if (!this.#scrollViewportNode || contentSize.x <= 0) return;
 
-		// 뷰포트.
-		this.#viewportNode.setLocalPosition(Vector2.zero());
-		this.#viewportNode.setContentSize(contentSize);
+		this.#scrollViewportNode.setLocalPosition(Vector2.zero());
+		this.#scrollViewportNode.setContentSize(contentSize);
 
-		// 셀 크기 산정.
 		const availW = contentSize.x - SIDE_MARGIN * 2;
 		const tileW = System.Math.floor((availW - TILE_GAP * (COLS - 1)) / COLS);
-		const itemCount = this.#cells.length;
+		const itemCount = this.#scrollViewItems.length;
 		const rows = System.Math.ceil(itemCount / COLS);
 		const totalContentH = TOP_PADDING + TILE_HEIGHT * rows + TILE_GAP * (rows - 1) + BOTTOM_PADDING;
 
-		// 스크롤 콘텐츠 크기. (가로는 뷰포트, 세로는 그리드 전체 높이)
 		this.#scrollView.setScrollContentSize(Vector2.create(contentSize.x, totalContentH));
 
-		// 셀 위치. (content 좌상단 기준, 셀은 middleCenter 피봇)
 		const startX = SIDE_MARGIN + tileW * 0.5;
 		const startY = TOP_PADDING + TILE_HEIGHT * 0.5;
 		for (let i = 0; i < itemCount; ++i) {
 			const r = System.Math.floor(i / COLS);
 			const c = i % COLS;
-			const cell = this.#cells[i];
-			cell.setContentSize(Vector2.create(tileW, TILE_HEIGHT));
-			cell.setLocalPosition(Vector2.create(startX + c * (tileW + TILE_GAP), startY + r * (TILE_HEIGHT + TILE_GAP)));
+			const item = this.#scrollViewItems[i];
+			item.setContentSize(Vector2.create(tileW, TILE_HEIGHT));
+			item.setLocalPosition(Vector2.create(startX + c * (tileW + TILE_GAP), startY + r * (TILE_HEIGHT + TILE_GAP)));
 		}
 	}
 
 	//==============================================================================
-	// 뷰포트(마스크) 안 글로벌 좌표 검사.
+	// 스크롤 뷰포트(마스크) 안 글로벌 좌표 검사. (스크롤로 잘린 항목 클릭 방지)
 	//==============================================================================
 	isInsideViewport(viewInputPosition) {
-		if (!this.#viewportNode) return false;
-		return this.#viewportNode.contains(viewInputPosition);
+		if (!this.#scrollViewportNode) return false;
+		return this.#scrollViewportNode.contains(viewInputPosition);
 	}
 
 	//==============================================================================
-	// 셀에서 받은 입력을 ScrollView 로 위임.
+	// 항목 선택 → 해당 파트로 진입.
 	//==============================================================================
-	scrollPress(pos) {
-		if (this.#scrollView) this.#scrollView.touchPress(pos);
-	}
-	scrollMove(pos) {
-		if (this.#scrollView) this.#scrollView.touchMove(pos);
-	}
-	scrollRelease(pos) {
-		if (this.#scrollView) this.#scrollView.touchRelease(pos);
-	}
-	scrollCancel(pos) {
-		if (this.#scrollView) this.#scrollView.touchCancel(pos);
-	}
-
-	//==============================================================================
-	// 셀 클릭 → 파트 진입.
-	//==============================================================================
-	onCellClick(partId) {
+	onItemSelected(targetPartId) {
 		const app = this.getApp();
-		app.pushPart(partId);
+		app.pushPart(targetPartId);
 	}
 }

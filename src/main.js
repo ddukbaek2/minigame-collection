@@ -11,48 +11,51 @@ import { Graphic } from "../libs/vanilla.js/src/core/graphic.js";
 import { Scene } from "../libs/vanilla.js/src/core/scene.js";
 import { ViewScaleMode } from "../libs/vanilla.js/src/core/viewmanager.js";
 import { TouchRaycaster } from "../libs/vanilla.js/src/core/touchraycaster.js";
+import { TouchRecognizer } from "../libs/vanilla.js/src/core/touchrecognizer.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
+import { ImageAsset } from "../libs/vanilla.js/src/resource/imageasset.js";
 import { setDefaultFontFace, isUseSystemFont, markUseSystemFont } from "./uihelper.js";
 import { MessagePopup } from "./messagepopup.js";
 import { ResultPopup } from "./resultpopup.js";
+import { NicknamePopup } from "./nicknamepopup.js";
+import { hasNickname } from "./userprofile.js";
 import { PartId } from "./part.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
-import { IntroPart } from "./intropart.js";
 import { TitlePart } from "./titlepart.js";
 import { GamesPart } from "./gamespart.js";
 import { AchievementPart } from "./achievementpart.js";
 import { ConfigurationPart } from "./configurationpart.js";
 import { DailyMissionPart } from "./dailymissionpart.js";
-import { MinesweeperPart } from "./minesweeperpart.js";
-import { TicTacToePart } from "./tictactoepart.js";
-import { MemoryMatchPart } from "./memorymatchpart.js";
-import { Puzzle15Part } from "./puzzle15part.js";
-import { WhackAMolePart } from "./whackamolepart.js";
-import { NumberGuessPart } from "./numberguesspart.js";
-import { ReactionTimePart } from "./reactiontimepart.js";
-import { SimonPart } from "./simonpart.js";
-import { RpsPart } from "./rpspart.js";
-import { Game2048Part } from "./game2048part.js";
-import { QuickMathPart } from "./quickmathpart.js";
-import { SequencePart } from "./sequencepart.js";
-import { OddEvenPart } from "./oddevenpart.js";
-import { FindOddPart } from "./findoddpart.js";
-import { StroopPart } from "./strooppart.js";
-import { DiceBetPart } from "./dicebetpart.js";
-import { HighLowPart } from "./highlowpart.js";
-import { BlackjackPart } from "./blackjackpart.js";
-import { SlotPart } from "./slotpart.js";
-import { NumberMemoryPart } from "./numbermemorypart.js";
-import { CountStopPart } from "./countstoppart.js";
-import { TargetTapPart } from "./targettappart.js";
-import { ColorCountPart } from "./colorcountpart.js";
-import { DirectionPart } from "./directionpart.js";
-import { SameIconPart } from "./sameiconpart.js";
-import { CoinFlipPart } from "./coinflippart.js";
+import { MinesweeperPart } from "./minigame/minesweeperpart.js";
+import { TicTacToePart } from "./minigame/tictactoepart.js";
+import { MemoryMatchPart } from "./minigame/memorymatchpart.js";
+import { Puzzle15Part } from "./minigame/puzzle15part.js";
+import { WhackAMolePart } from "./minigame/whackamolepart.js";
+import { NumberGuessPart } from "./minigame/numberguesspart.js";
+import { ReactionTimePart } from "./minigame/reactiontimepart.js";
+import { SimonPart } from "./minigame/simonpart.js";
+import { RpsPart } from "./minigame/rpspart.js";
+import { Game2048Part } from "./minigame/game2048part.js";
+import { QuickMathPart } from "./minigame/quickmathpart.js";
+import { SequencePart } from "./minigame/sequencepart.js";
+import { OddEvenPart } from "./minigame/oddevenpart.js";
+import { FindOddPart } from "./minigame/findoddpart.js";
+import { StroopPart } from "./minigame/strooppart.js";
+import { DiceBetPart } from "./minigame/dicebetpart.js";
+import { HighLowPart } from "./minigame/highlowpart.js";
+import { BlackjackPart } from "./minigame/blackjackpart.js";
+import { SlotPart } from "./minigame/slotpart.js";
+import { NumberMemoryPart } from "./minigame/numbermemorypart.js";
+import { CountStopPart } from "./minigame/countstoppart.js";
+import { TargetTapPart } from "./minigame/targettappart.js";
+import { ColorCountPart } from "./minigame/colorcountpart.js";
+import { DirectionPart } from "./minigame/directionpart.js";
+import { SameIconPart } from "./minigame/sameiconpart.js";
+import { CoinFlipPart } from "./minigame/coinflippart.js";
 
 
 //==============================================================================
@@ -79,7 +82,7 @@ export class MainScene extends Scene {
 	// 멤버 변수 목록.
 	//==============================================================================
 	/** @private @type { DEVTools } */ #devtools;
-	/** @private @type { TouchRaycaster } */ #touchRaycaster;
+	/** @private @type { TouchRecognizer } */ #touchRaycaster;
 	/** @private @type { WorldNode } */ #safeAreaNode;
 	/** @private @type { WorldNode } */ #backgroundNode;
 	/** @private @type { WorldNode } */ #contentAreaNode;
@@ -93,15 +96,22 @@ export class MainScene extends Scene {
 	/** @private @type { FontFace | null } */ #defaultFontFace;
 	/** @private @type { MessagePopup } */ #popup;
 	/** @private @type { ResultPopup } */ #resultPopup;
+	/** @private @type { NicknamePopup } */ #nicknamePopup;
 	/** @private @type { Paint | null } */ #backgroundPaint;
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
 	/** @private @type { Label | null } */ #navigationBackButtonLabel;
 	/** @private @type { number } */ #lastViewSizeX;
 	/** @private @type { number } */ #lastViewSizeY;
+	/** @private @type { ImageAsset | null } */ #ciImageAsset;
+	/** @private @type { number } */ #loadStartTime;
+	/** @private @type { number } */ #loadMinDurationMs;
 
 	//==============================================================================
-	// 비동기 로드. (폰트)
+	// 비동기 로드.
+	// - 폰트 + CI 이미지 로드.
+	// - CI 화면 최소 노출 시간 보장 + 화면 터치 시 즉시 단축.
+	// - 이 메서드가 끝날 때까지 엔진은 drawOnLoad() 만 호출한다.
 	//==============================================================================
 	/**
 	 * @override
@@ -110,7 +120,41 @@ export class MainScene extends Scene {
 	async load(engine) {
 		await super.load(engine);
 
-		// Cafe24Ssurround 폰트 로드.
+		this.#ciImageAsset = null;
+		this.#loadMinDurationMs = 3000;
+		this.#loadStartTime = System.Date.now();
+
+		// 화면 터치 시 즉시 단축. (drawOnLoad 단계에서는 씬의 touchPress 가
+		//  호출된다는 보장이 없으므로 window 이벤트로 직접 캡처)
+		let touchedToSkip = false;
+		const skipHandler = () => { touchedToSkip = true; };
+		System.window.addEventListener("pointerdown", skipHandler, { once: true });
+
+		try {
+			// 자산 비동기 로드.
+			const ciImageAsset = new ImageAsset();
+			this.#ciImageAsset = ciImageAsset;
+			await Promise.all([
+				this.loadDefaultFont(),
+				ciImageAsset.load("./assets/sprites/ci.png").catch((error) => {
+					console.error("[MainScene] CI 이미지 로드 실패:", error);
+				}),
+			]);
+
+			// 최소 노출 시간 보장 (또는 화면 터치 시 단축).
+			while (System.Date.now() - this.#loadStartTime < this.#loadMinDurationMs && !touchedToSkip) {
+				await new Promise(resolve => System.setTimeout(resolve, 50));
+			}
+		}
+		finally {
+			System.window.removeEventListener("pointerdown", skipHandler);
+		}
+	}
+
+	//==============================================================================
+	// Cafe24Ssurround 폰트 로드.
+	//==============================================================================
+	async loadDefaultFont() {
 		this.#defaultFontFace = null;
 		try {
 			const fontFace = new System.FontFace("Cafe24Ssurround", `url("./assets/fonts/Cafe24Ssurround-v2.0.woff2")`);
@@ -122,6 +166,61 @@ export class MainScene extends Scene {
 		catch (error) {
 			console.error("[MainScene] 폰트 로드 실패:", error);
 		}
+	}
+
+	//==============================================================================
+	// 로딩 화면 출력. (엔진이 isLoaded() === false 인 동안 매 프레임 호출)
+	// - 검은 배경 + CI 이미지 가운데 + 하단에 "Loading..." (점이 늘어남)
+	//==============================================================================
+	/**
+	 * @override
+	 * @param { Graphic } graphic
+	 */
+	drawOnLoad(graphic) {
+		super.drawOnLoad(graphic);
+
+		const engine = this.getEngine();
+		if (!engine) return;
+		const canvasRenderingContext = graphic.getCanvasRenderingContext();
+		const viewManager = engine.getViewManager();
+		const canvasNativeSize = viewManager.getCanvasNativeSize();
+		const viewSize = viewManager.getViewSize();
+
+		// 캔버스 전체 검은색.
+		viewManager.applyCanvasNativeRect(canvasRenderingContext);
+		graphic.setFillColor(Color.black());
+		graphic.drawRect(Rect.create(0, 0, canvasNativeSize.x, canvasNativeSize.y));
+
+		// 뷰 좌표계 적용.
+		viewManager.applyViewRect(canvasRenderingContext);
+		graphic.setFillColor(Color.black());
+		graphic.drawRect(Rect.create(0, 0, viewSize.x, viewSize.y));
+
+		// CI 이미지 (가운데, 가로폭 70% / 비율 유지).
+		const ciAsset = this.#ciImageAsset;
+		if (ciAsset && ciAsset.isLoaded()) {
+			const image = ciAsset.image;
+			const targetW = viewSize.x * 0.7;
+			const ratio = image.height / image.width;
+			const targetH = targetW * ratio;
+			const x = (viewSize.x - targetW) * 0.5;
+			const y = (viewSize.y - targetH) * 0.5;
+			canvasRenderingContext.drawImage(image, x, y, targetW, targetH);
+		}
+
+		// 하단 로딩 게이지. (경과 시간 기준 0~1 진행)
+		const elapsed = System.Date.now() - this.#loadStartTime;
+		const progress = System.Math.min(1, System.Math.max(0, elapsed / this.#loadMinDurationMs));
+		const barWidth = viewSize.x * 0.6;
+		const barHeight = 24;
+		const barX = (viewSize.x - barWidth) * 0.5;
+		const barY = viewSize.y * 0.78;
+		// 게이지 배경.
+		canvasRenderingContext.fillStyle = "#333333";
+		canvasRenderingContext.fillRect(barX, barY, barWidth, barHeight);
+		// 게이지 채움.
+		canvasRenderingContext.fillStyle = "#ffffff";
+		canvasRenderingContext.fillRect(barX, barY, barWidth * progress, barHeight);
 	}
 
 	//==============================================================================
@@ -144,7 +243,7 @@ export class MainScene extends Scene {
 		this.#devtools.setRootNodes([this.getRoot()]);
 
 		// 터치 레이캐스터.
-		this.#touchRaycaster = new TouchRaycaster();
+		this.#touchRaycaster = new TouchRecognizer();
 		this.#touchRaycaster.setRootNode(this.getRoot());
 
 		this.#parts = new System.Map();
@@ -166,8 +265,22 @@ export class MainScene extends Scene {
 		addThemeChangeListener((theme) => this.applyTheme(theme));
 		this.applyTheme(getCurrentTheme());
 
-		// 인트로부터 시작.
-		this.replacePart(PartId.intro);
+		// 닉네임 팝업에 엔진 주입 (HTML <input> 위치 계산용).
+		if (this.#nicknamePopup) {
+			this.#nicknamePopup.setEngine(engine);
+		}
+
+		// 인트로(로딩 화면)는 drawOnLoad 가 처리. load() 가 끝났으므로 바로 타이틀로.
+		// 단, 닉네임이 등록되지 않은 첫 실행이면 닉네임 팝업을 먼저 띄운다.
+		if (hasNickname()) {
+			this.replacePart(PartId.title);
+		}
+		else {
+			this.layout();
+			this.#nicknamePopup.show("", () => {
+				this.replacePart(PartId.title);
+			});
+		}
 	}
 
 	//==============================================================================
@@ -295,6 +408,11 @@ export class MainScene extends Scene {
 		this.#resultPopup = new ResultPopup();
 		this.#resultPopup.setName("resultPopup");
 		this.#safeAreaNode.addChild(this.#resultPopup);
+
+		// 닉네임 입력 팝업. (앱 첫 실행 시 노출)
+		this.#nicknamePopup = new NicknamePopup();
+		this.#nicknamePopup.setName("nicknamePopup");
+		this.#safeAreaNode.addChild(this.#nicknamePopup);
 	}
 
 	//==============================================================================
@@ -302,7 +420,6 @@ export class MainScene extends Scene {
 	//==============================================================================
 	createParts() {
 		const partInstances = [
-			new IntroPart(),
 			new TitlePart(),
 			new GamesPart(),
 			new AchievementPart(),
@@ -471,6 +588,20 @@ export class MainScene extends Scene {
 	}
 
 	//==============================================================================
+	// 닉네임 입력 팝업. (변경/최초 입력 공용)
+	//==============================================================================
+	/**
+	 * @param { string } initialValue
+	 * @param { (nickname: string) => void | null } onConfirm
+	 */
+	showNicknameInput(initialValue, onConfirm) {
+		if (!this.#nicknamePopup) return;
+		this.#nicknamePopup.setLocalPosition(Vector2.zero());
+		this.#nicknamePopup.setContentSize(this.#safeAreaNode.getContentSize());
+		this.#nicknamePopup.show(initialValue || "", onConfirm || null);
+	}
+
+	//==============================================================================
 	// 결과 팝업.
 	// options: { isWon, title, score, stats, onRetry, onExit }
 	//==============================================================================
@@ -583,6 +714,13 @@ export class MainScene extends Scene {
 			this.#resultPopup.setContentSize(safeAreaRect.size);
 			if (this.#resultPopup.isShowing()) {
 				this.#resultPopup.layout();
+			}
+		}
+		if (this.#nicknamePopup) {
+			this.#nicknamePopup.setLocalPosition(Vector2.zero());
+			this.#nicknamePopup.setContentSize(safeAreaRect.size);
+			if (this.#nicknamePopup.isShowing()) {
+				this.#nicknamePopup.layout();
 			}
 		}
 	}

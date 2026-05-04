@@ -13,7 +13,6 @@ import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 // 파트 식별자.
 //==============================================================================
 export const PartId = {
-	intro: "intro",
 	title: "title",
 	games: "games",
 	achievement: "achievement",

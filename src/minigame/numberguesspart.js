@@ -2,15 +2,15 @@
 // 포함 모듈 목록.
 //==============================================================================
 const System = globalThis;
-import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
-import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
-import { Color } from "../libs/vanilla.js/src/base/color.js";
-import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { Part, PartId } from "./part.js";
-import { createButtonNode, markUseSystemFont } from "./uihelper.js";
-import { getCurrentGameTheme, addGameThemeChangeListener } from "./theme.js";
+import { Vector2 } from "../../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
+import { Color } from "../../libs/vanilla.js/src/base/color.js";
+import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
+import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
+import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Part, PartId } from "../part.js";
+import { createButtonNode, markUseSystemFont } from "../uihelper.js";
+import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 
 
 //==============================================================================

@@ -200,6 +200,76 @@ export function createToggleButtonNode(text, size, backgroundColor, textColor, f
 
 
 //==============================================================================
+// 아이콘 + 텍스트 버튼 노드 생성.
+// - 단일 라벨로 "이모지 + 텍스트" 를 중앙정렬하면 이모지의 measured width 와 실제
+//   렌더 폭 차이로 시각적으로 한쪽으로 쏠려 보인다. 이를 피하기 위해 아이콘을
+//   right-aligned, 텍스트를 left-aligned 로 두 라벨로 나눠 버튼 중앙 양쪽에 배치한다.
+// - 아이콘은 시스템 폰트(이모지 fallback), 텍스트는 기본 폰트.
+//==============================================================================
+/**
+ * @param { string } icon
+ * @param { string } text
+ * @param { Vector2 } size
+ * @param { Color } backgroundColor
+ * @param { Color } textColor
+ * @param { number } fontSize
+ * @param { (button: UIButton) => void } onClick
+ * @param { number } [gap]
+ * @returns { WorldNode }
+ */
+export function createIconTextButtonNode(icon, text, size, backgroundColor, textColor, fontSize, onClick, gap) {
+	const node = new WorldNode();
+	node.setPivot(Pivot.middleCenter);
+	node.setAnchor(Pivot.middleCenter);
+	node.setContentSize(size);
+	node.setInteractable(true);
+
+	const paint = node.addComponent(Paint);
+	paint.setColor(backgroundColor);
+	paint.setRoundSize(16);
+
+	const halfGap = (typeof gap === "number" ? gap : 16) * 0.5;
+	const centerX = size.x * 0.5;
+	const centerY = size.y * 0.5;
+
+	// 아이콘: 오른쪽 끝이 (중앙 - halfGap) 에 닿도록 right-aligned.
+	const iconNode = new WorldNode();
+	iconNode.setPivot(Pivot.middleCenter);
+	iconNode.setAnchor(Pivot.topLeft);
+	iconNode.setLocalPosition(Vector2.create(centerX - halfGap, centerY));
+	const iconLabel = iconNode.addComponent(Label);
+	iconLabel.setText(icon);
+	iconLabel.setFontSize(fontSize);
+	iconLabel.setTextColor(textColor);
+	iconLabel.setTextAlign("right");
+	iconLabel.setTextBaseline("middle");
+	markUseSystemFont(iconLabel);
+	node.addChild(iconNode);
+
+	// 텍스트: 왼쪽 끝이 (중앙 + halfGap) 에 닿도록 left-aligned.
+	const textNode = new WorldNode();
+	textNode.setPivot(Pivot.middleCenter);
+	textNode.setAnchor(Pivot.topLeft);
+	textNode.setLocalPosition(Vector2.create(centerX + halfGap, centerY));
+	const textLabel = textNode.addComponent(Label);
+	textLabel.setText(text);
+	textLabel.setFontSize(fontSize);
+	textLabel.setTextColor(textColor);
+	textLabel.setTextAlign("left");
+	textLabel.setTextBaseline("middle");
+	if (defaultFontFace) {
+		textLabel.setFont(defaultFontFace);
+	}
+	node.addChild(textNode);
+
+	const button = node.addComponent(UIButton);
+	button.setClickEvent(onClick);
+
+	return node;
+}
+
+
+//==============================================================================
 // 버튼 노드 생성. (배경 + 라벨 + UIButton)
 //==============================================================================
 /**

@@ -1,0 +1,114 @@
+//==============================================================================
+// 사용자 프로필.
+// - 닉네임 등 LocalStorage 영속화 + 변경 리스너.
+//==============================================================================
+const System = globalThis;
+
+
+//==============================================================================
+// 저장 키.
+//==============================================================================
+const STORAGE_KEY = "minigame-collection.userprofile";
+
+
+//==============================================================================
+// 닉네임 제한.
+//==============================================================================
+export const NICKNAME_MAX_LENGTH = 16;
+
+
+//==============================================================================
+// 상태.
+//==============================================================================
+const state = { nickname: "" };
+/** @type { Set<(nickname: string) => void> } */
+const listeners = new System.Set();
+
+
+//==============================================================================
+// 초기 로드.
+//==============================================================================
+try {
+	const saved = System.localStorage.getItem(STORAGE_KEY);
+	if (saved) {
+		const parsed = JSON.parse(saved);
+		if (parsed && typeof parsed === "object" && typeof parsed.nickname === "string") {
+			state.nickname = parsed.nickname;
+		}
+	}
+}
+catch (error) {
+	// 무시.
+}
+
+
+//==============================================================================
+// 저장.
+//==============================================================================
+function persist() {
+	try {
+		System.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	}
+	catch (error) {
+		// 무시.
+	}
+}
+
+
+//==============================================================================
+// 닉네임 반환.
+//==============================================================================
+export function getNickname() {
+	return state.nickname;
+}
+
+
+//==============================================================================
+// 닉네임이 등록돼 있는지 여부.
+//==============================================================================
+export function hasNickname() {
+	return typeof state.nickname === "string" && state.nickname.length > 0;
+}
+
+
+//==============================================================================
+// 닉네임 설정. (앞뒤 공백 제거 + 최대 길이 제한)
+//==============================================================================
+/**
+ * @param { string } nickname
+ */
+export function setNickname(nickname) {
+	const raw = typeof nickname === "string" ? nickname : "";
+	const trimmed = raw.trim().slice(0, NICKNAME_MAX_LENGTH);
+	if (state.nickname === trimmed) {
+		return;
+	}
+	state.nickname = trimmed;
+	persist();
+	for (const listener of listeners) {
+		try {
+			listener(trimmed);
+		}
+		catch (error) {
+			console.error("[userprofile]", error);
+		}
+	}
+}
+
+
+//==============================================================================
+// 변경 리스너 등록 / 해제.
+//==============================================================================
+/**
+ * @param { (nickname: string) => void } listener
+ */
+export function addNicknameChangeListener(listener) {
+	listeners.add(listener);
+}
+
+/**
+ * @param { (nickname: string) => void } listener
+ */
+export function removeNicknameChangeListener(listener) {
+	listeners.delete(listener);
+}

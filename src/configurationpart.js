@@ -1,6 +1,7 @@
 //==============================================================================
 // 포함 모듈 목록.
 //==============================================================================
+const System = globalThis;
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
@@ -11,6 +12,7 @@ import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
 import { Part, PartId } from "./part.js";
 import { createToggleButtonNode, createLabelNode } from "./uihelper.js";
+import { getNickname } from "./userprofile.js";
 import {
 	getAllThemeIds,
 	getTheme,
@@ -35,11 +37,13 @@ const SECTION_TITLE_FONT_SIZE = 44;
 const SECTION_TITLE_HEIGHT = 60;
 const BUTTON_WIDTH = 240;
 const BUTTON_HEIGHT = 100;
+const ACTION_BUTTON_WIDTH = 520;
 const BUTTON_FONT_SIZE = 36;
 const BUTTON_GAP = 16;
 const SECTION_INNER_GAP = 16;
 const SECTION_OUTER_GAP = 40;
 const HORIZONTAL_PADDING = 32;
+const DANGER_COLOR = "#a04545";
 
 
 //==============================================================================
@@ -91,6 +95,15 @@ export class ConfigurationPart extends Part {
 
 		// 섹션들.
 		this.#sections = [];
+
+		// 닉네임 변경 (맨 위).
+		this.#sections.push(this.createActionSection(
+			"닉네임 변경",
+			() => getNickname() || "(미설정)",
+			"action",
+			() => this.handleChangeNickname(),
+		));
+
 		this.#sections.push(this.createSection(
 			"UI 테마",
 			getAllThemeIds().map((id) => ({ id, label: getTheme(id).displayName })),
@@ -138,6 +151,14 @@ export class ConfigurationPart extends Part {
 			],
 			() => getSetting(SettingId.language),
 			(id) => { setSetting(SettingId.language, id); this.refreshAllSections(); },
+		));
+
+		// 모든 데이터 초기화 (맨 아래, 위험).
+		this.#sections.push(this.createActionSection(
+			"데이터",
+			() => "모든 데이터 초기화",
+			"danger",
+			() => this.handleResetAllData(),
 		));
 
 		// 각 섹션 노드를 스크롤 콘텐츠에 추가.
@@ -190,12 +211,92 @@ export class ConfigurationPart extends Part {
 		}
 
 		return {
+			kind: "radio",
 			node,
 			titleNode,
 			titleLabel: titleNode.getComponent(Label),
 			buttons,
+			buttonWidth: BUTTON_WIDTH,
 			getCurrentValue,
 		};
+	}
+
+	//==============================================================================
+	// 액션 섹션 생성. 단일 버튼.
+	// - kind: "action" → 테마 primary 색.
+	// - kind: "danger" → 위험(빨강) 색.
+	// - getButtonText: 매 refresh 마다 호출돼 버튼 라벨이 동적으로 갱신된다.
+	//==============================================================================
+	/**
+	 * @param { string } title
+	 * @param { () => string } getButtonText
+	 * @param { "action" | "danger" } kind
+	 * @param { () => void } onClick
+	 * @returns { object }
+	 */
+	createActionSection(title, getButtonText, kind, onClick) {
+		const node = new WorldNode();
+		node.setPivot(Pivot.topLeft);
+		node.setAnchor(Pivot.topLeft);
+
+		const titleNode = createLabelNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		node.addChild(titleNode);
+
+		const buttonNode = createToggleButtonNode(
+			"",
+			Vector2.create(ACTION_BUTTON_WIDTH, BUTTON_HEIGHT),
+			Color.createFromHEX("#3a3f5b"),
+			Color.createFromHEX("#ffffff"),
+			BUTTON_FONT_SIZE,
+			() => { onClick(); },
+		);
+		node.addChild(buttonNode);
+
+		return {
+			kind,
+			node,
+			titleNode,
+			titleLabel: titleNode.getComponent(Label),
+			buttons: [{
+				id: null,
+				node: buttonNode,
+				paint: buttonNode.getComponent(Paint),
+				label: buttonNode.getComponent(Label),
+				button: buttonNode.getComponent(UIButton),
+				getButtonText,
+			}],
+			buttonWidth: ACTION_BUTTON_WIDTH,
+			getCurrentValue: () => null,
+		};
+	}
+
+	//==============================================================================
+	// 닉네임 변경 클릭.
+	//==============================================================================
+	handleChangeNickname() {
+		const app = this.getApp();
+		if (!app || typeof app.showNicknameInput !== "function") return;
+		app.showNicknameInput(getNickname(), () => {
+			this.refreshAllSections();
+		});
+	}
+
+	//==============================================================================
+	// 모든 데이터 초기화 클릭.
+	// - 확인 팝업 → 동의 시 LocalStorage 전체 비우고 페이지 리로드.
+	//==============================================================================
+	handleResetAllData() {
+		const app = this.getApp();
+		if (!app) return;
+		app.showConfirm(
+			"정말 모든 데이터를 초기화하시겠습니까?",
+			() => {
+				try { System.localStorage.clear(); } catch (error) { /* 무시 */ }
+				try { System.location.reload(); } catch (error) { /* 무시 */ }
+			},
+			null,
+			{ subMessage: "닉네임, 설정, 진행 기록이 모두 사라집니다." },
+		);
 	}
 
 	//==============================================================================
@@ -235,12 +336,42 @@ export class ConfigurationPart extends Part {
 		const offText = Color.createFromHEX(theme.onSurfaceVariant);
 		const onBg = Color.createFromHEX(theme.primary);
 		const onText = Color.createFromHEX(theme.onPrimary);
+		const dangerBg = Color.createFromHEX(DANGER_COLOR);
+		const dangerText = Color.createFromHEX("#ffffff");
 		const titleColor = Color.createFromHEX(theme.onBackground);
 
 		for (const section of this.#sections) {
 			if (section.titleLabel) {
 				section.titleLabel.setTextColor(titleColor);
 			}
+			if (section.kind === "action") {
+				const entry = section.buttons[0];
+				if (entry.getButtonText) {
+					entry.label.setText(entry.getButtonText());
+				}
+				entry.paint.setRoundSize(16);
+				entry.paint.setColor(onBg);
+				entry.label.setTextColor(onText);
+				if (entry.button && typeof entry.button.collectColorTargets === "function") {
+					entry.button.collectColorTargets();
+				}
+				continue;
+			}
+			if (section.kind === "danger") {
+				const entry = section.buttons[0];
+				if (entry.getButtonText) {
+					entry.label.setText(entry.getButtonText());
+				}
+				entry.paint.setRoundSize(16);
+				entry.paint.setColor(dangerBg);
+				entry.label.setTextColor(dangerText);
+				if (entry.button && typeof entry.button.collectColorTargets === "function") {
+					entry.button.collectColorTargets();
+				}
+				continue;
+			}
+
+			// 기본 (radio).
 			const currentValue = section.getCurrentValue();
 			for (const entry of section.buttons) {
 				const isSelected = entry.id === currentValue;
@@ -277,7 +408,8 @@ export class ConfigurationPart extends Part {
 		for (const section of this.#sections) {
 			// 섹션 내부 레이아웃.
 			const buttonCount = section.buttons.length;
-			const buttonsTotalWidth = buttonCount * BUTTON_WIDTH + (buttonCount - 1) * BUTTON_GAP;
+			const buttonWidth = section.buttonWidth || BUTTON_WIDTH;
+			const buttonsTotalWidth = buttonCount * buttonWidth + (buttonCount - 1) * BUTTON_GAP;
 			const sectionHeight = SECTION_TITLE_HEIGHT + SECTION_INNER_GAP + BUTTON_HEIGHT;
 
 			section.node.setLocalPosition(Vector2.create(HORIZONTAL_PADDING, cursorY));
@@ -287,11 +419,11 @@ export class ConfigurationPart extends Part {
 			section.titleNode.setLocalPosition(Vector2.create(innerWidth * 0.5, SECTION_TITLE_HEIGHT * 0.5));
 
 			// 버튼 row: 가운데 정렬.
-			const rowLeft = (innerWidth - buttonsTotalWidth) * 0.5 + BUTTON_WIDTH * 0.5;
+			const rowLeft = (innerWidth - buttonsTotalWidth) * 0.5 + buttonWidth * 0.5;
 			const rowY = SECTION_TITLE_HEIGHT + SECTION_INNER_GAP + BUTTON_HEIGHT * 0.5;
 			for (let i = 0; i < buttonCount; ++i) {
 				const entry = section.buttons[i];
-				const x = rowLeft + i * (BUTTON_WIDTH + BUTTON_GAP);
+				const x = rowLeft + i * (buttonWidth + BUTTON_GAP);
 				entry.node.setLocalPosition(Vector2.create(x, rowY));
 			}
 
