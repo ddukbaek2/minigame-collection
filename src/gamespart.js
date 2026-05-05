@@ -157,6 +157,8 @@ export class GamesPart extends Part {
 		this.#scrollView.setVertical(true);
 		this.#scrollView.setScrollMode(ScrollMode.elastic);
 		this.#scrollView.setBackgroundColor(Color.transparent());
+		// 세로 스크롤바 자동 생성 / 관리.
+		this.#scrollView.setShowsVerticalScrollBar(true);
 
 		// 스크롤뷰 내부 content 노드에 항목들 추가.
 		const scrollContent = this.#scrollView.getContent();
@@ -188,13 +190,17 @@ export class GamesPart extends Part {
 		this.#scrollViewportNode.setLocalPosition(Vector2.zero());
 		this.#scrollViewportNode.setContentSize(contentSize);
 
-		const availW = contentSize.x - SIDE_MARGIN * 2;
+		// 가시 영역 = 뷰포트 - 스크롤바 점유 영역.
+		const innerSize = this.#scrollView.getInnerContentSize();
+		const innerWidth = innerSize.x;
+
+		const availW = innerWidth - SIDE_MARGIN * 2;
 		const tileW = System.Math.floor((availW - TILE_GAP * (COLS - 1)) / COLS);
 		const itemCount = this.#scrollViewItems.length;
 		const rows = System.Math.ceil(itemCount / COLS);
 		const totalContentH = TOP_PADDING + TILE_HEIGHT * rows + TILE_GAP * (rows - 1) + BOTTOM_PADDING;
 
-		this.#scrollView.setScrollContentSize(Vector2.create(contentSize.x, totalContentH));
+		this.#scrollView.setScrollContentSize(Vector2.create(innerWidth, totalContentH));
 
 		const startX = SIDE_MARGIN + tileW * 0.5;
 		const startY = TOP_PADDING + TILE_HEIGHT * 0.5;

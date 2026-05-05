@@ -6,6 +6,7 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
+import { AnchoredWorldNode } from "../libs/vanilla.js/src/core/node/anchoredworldmnode.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
@@ -55,7 +56,7 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	// 멤버 변수 목록.
 	//==============================================================================
-	/** @private @type { WorldNode } */ #scrollContainerNode;
+	/** @private @type { AnchoredWorldNode } */ #scrollContainerNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { Array<object> } */ #sections;
 
@@ -78,12 +79,15 @@ export class ConfigurationPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		// 스크롤 컨테이너. (WorldNode + UIScrollView)
-		this.#scrollContainerNode = new WorldNode();
+		// 스크롤 컨테이너.
+		// - UIScrollView 는 (현재 라이브러리 한정으로) AnchoredWorldNode 인스턴스에 한해
+		//   마스크 / interactable 자동 처리를 해 주므로 반드시 AnchoredWorldNode 로 둔다.
+		//   WorldNode 로 두면 마스킹과 드래그 핸들링이 정상 동작하지 않는다.
+		this.#scrollContainerNode = new AnchoredWorldNode();
 		this.#scrollContainerNode.setName("settingsScroll");
 		this.#scrollContainerNode.setPivot(Pivot.topLeft);
-		this.#scrollContainerNode.setAnchor(Pivot.topLeft);
-		this.#scrollContainerNode.setLocalPosition(Vector2.zero());
+		this.#scrollContainerNode.setAnchorMin(Vector2.zero());
+		this.#scrollContainerNode.setAnchorMax(Vector2.zero());
 		this.addChild(this.#scrollContainerNode);
 
 		this.#scrollView = this.#scrollContainerNode.addComponent(UIScrollView);
@@ -92,6 +96,8 @@ export class ConfigurationPart extends Part {
 		this.#scrollView.setScrollMode(ScrollMode.elastic);
 		// 스크롤뷰가 자체 배경을 그리지 않도록 (UIView 기본 흰색이 part 배경을 가림).
 		this.#scrollView.setBackgroundColor(Color.transparent());
+		// 세로 스크롤바 자동 생성 / 관리.
+		this.#scrollView.setShowsVerticalScrollBar(true);
 
 		// 섹션들.
 		this.#sections = [];
@@ -397,12 +403,15 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
+		if (!this.#scrollContainerNode || contentSize.x <= 0) return;
 
 		// 스크롤 컨테이너 = 파트 영역 전체.
-		this.#scrollContainerNode.setContentSize(Vector2.create(contentSize.x, contentSize.y));
+		this.#scrollContainerNode.setLocalPosition(Vector2.zero());
+		this.#scrollContainerNode.setContentSize(contentSize);
 
-		// 각 섹션 내부 레이아웃 + y 누적으로 스크롤 컨텐트 높이 계산.
-		const innerWidth = contentSize.x - HORIZONTAL_PADDING * 2;
+		// 가시 영역 = 뷰포트 - 스크롤바 점유 영역.
+		const innerSize = this.#scrollView.getInnerContentSize();
+		const innerWidth = innerSize.x - HORIZONTAL_PADDING * 2;
 		let cursorY = SECTION_OUTER_GAP;
 
 		for (const section of this.#sections) {
@@ -430,8 +439,8 @@ export class ConfigurationPart extends Part {
 			cursorY += sectionHeight + SECTION_OUTER_GAP;
 		}
 
-		// 스크롤 콘텐트 크기 설정.
+		// 스크롤 콘텐트 크기 설정. (스크롤바 점유 영역 제외)
 		const scrollContentHeight = cursorY;
-		this.#scrollView.setScrollContentSize(Vector2.create(contentSize.x, scrollContentHeight));
+		this.#scrollView.setScrollContentSize(Vector2.create(innerSize.x, scrollContentHeight));
 	}
 }

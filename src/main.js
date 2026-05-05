@@ -843,6 +843,18 @@ export class MainScene extends Scene {
 		this.#touchRaycaster.touchCancel(viewInputPosition);
 	}
 
+	/**
+	 * @override
+	 * @param { Vector2 } viewInputPosition
+	 * @param { Vector2 } wheelDelta
+	 */
+	touchWheel(viewInputPosition, wheelDelta) {
+		if (this.isDevToolsCapturingInput()) {
+			return;
+		}
+		this.#touchRaycaster.touchWheel(viewInputPosition, wheelDelta);
+	}
+
 	//==============================================================================
 	// 출력.
 	//==============================================================================
