@@ -13,6 +13,8 @@ import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
 import { getDefaultFontFace } from "./uihelper.js";
+import { getTotalScore, getPlayCount, addScoreChangeListener } from "./scoreboard.js";
+import { getVisibleGames } from "./gamescatalog.js";
 
 
 //==============================================================================
@@ -27,6 +29,16 @@ const TILE_HEIGHT = 220;
 const SIDE_MARGIN = 30;
 const TOP_PADDING = 24;
 const BOTTOM_PADDING = 24;
+const NUMBER_FONT_SIZE = 24;
+const NUMBER_PADDING = 14;
+const BADGE_HORIZONTAL_PADDING = 14;
+const BADGE_BOTTOM_PADDING = 12;
+const BADGE_GAP = 4;
+const BADGE_ROUND_SIZE = 10;
+const SCORE_BADGE_HEIGHT = 32;
+const SCORE_BADGE_FONT_SIZE = 20;
+const PLAY_COUNT_BADGE_HEIGHT = 26;
+const PLAY_COUNT_BADGE_FONT_SIZE = 16;
 
 
 //==============================================================================
@@ -41,17 +53,26 @@ const BOTTOM_PADDING = 24;
 //==============================================================================
 class UIGamesPartScrollViewItem extends WorldNode {
 	/** @type { string } */ targetPartId;
+	/** @type { string | null } */ gameId;
 	/** @private @type { GamesPart } */ #gamesPart;
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Label } */ #label;
 	/** @private @type { UIButton } */ #button;
+	/** @private @type { WorldNode } */ #numberNode;
+	/** @private @type { WorldNode } */ #scoreNode;
+	/** @private @type { Paint } */ #scorePaint;
+	/** @private @type { Label } */ #scoreLabel;
+	/** @private @type { WorldNode } */ #playCountNode;
+	/** @private @type { Paint } */ #playCountPaint;
+	/** @private @type { Label } */ #playCountLabel;
 
-	constructor(gamesPart, text, hex, targetPartId) {
+	constructor(gamesPart, text, hex, targetPartId, gameId, index) {
 		super();
 		this.setPivot(Pivot.middleCenter);
 		this.setAnchor(Pivot.topLeft);
 		this.setInteractable(true);
 		this.targetPartId = targetPartId;
+		this.gameId = gameId || null;
 		this.#gamesPart = gamesPart;
 
 		this.#paint = this.addComponent(Paint);
@@ -67,9 +88,101 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		const font = getDefaultFontFace();
 		if (font) this.#label.setFont(font);
 
+		// 우측상단 번호 라벨. ("#1" "#2" ...) - setContentSize 에서 위치를 재계산.
+		this.#numberNode = new WorldNode();
+		this.#numberNode.setPivot(Pivot.topLeft);
+		this.#numberNode.setAnchor(Pivot.topLeft);
+		const numberLabel = this.#numberNode.addComponent(Label);
+		numberLabel.setText(`#${index}`);
+		numberLabel.setFontSize(NUMBER_FONT_SIZE);
+		numberLabel.setTextAlign("right");
+		numberLabel.setTextBaseline("top");
+		numberLabel.setTextColor(new Color(255, 255, 255, 0.7));
+		if (font) numberLabel.setFont(font);
+		this.addChild(this.#numberNode);
+
+		// 하단 총점 배지. (라운드렉트 배경 + 텍스트)
+		this.#scoreNode = new WorldNode();
+		this.#scoreNode.setPivot(Pivot.topLeft);
+		this.#scoreNode.setAnchor(Pivot.topLeft);
+		this.#scorePaint = this.#scoreNode.addComponent(Paint);
+		this.#scorePaint.setRoundSize(BADGE_ROUND_SIZE);
+		this.#scorePaint.setColor(new Color(0, 0, 0, 0.32));
+		this.#scoreLabel = this.#scoreNode.addComponent(Label);
+		this.#scoreLabel.setFontSize(SCORE_BADGE_FONT_SIZE);
+		this.#scoreLabel.setTextAlign("center");
+		this.#scoreLabel.setTextBaseline("middle");
+		this.#scoreLabel.setTextColor(new Color(255, 255, 255, 0.95));
+		if (font) this.#scoreLabel.setFont(font);
+		this.addChild(this.#scoreNode);
+
+		// 하단 플레이 횟수 배지. (점수 배지 위에 별도로 표시)
+		this.#playCountNode = new WorldNode();
+		this.#playCountNode.setPivot(Pivot.topLeft);
+		this.#playCountNode.setAnchor(Pivot.topLeft);
+		this.#playCountPaint = this.#playCountNode.addComponent(Paint);
+		this.#playCountPaint.setRoundSize(BADGE_ROUND_SIZE);
+		this.#playCountPaint.setColor(new Color(0, 0, 0, 0.22));
+		this.#playCountLabel = this.#playCountNode.addComponent(Label);
+		this.#playCountLabel.setFontSize(PLAY_COUNT_BADGE_FONT_SIZE);
+		this.#playCountLabel.setTextAlign("center");
+		this.#playCountLabel.setTextBaseline("middle");
+		this.#playCountLabel.setTextColor(new Color(255, 255, 255, 0.75));
+		if (font) this.#playCountLabel.setFont(font);
+		this.addChild(this.#playCountNode);
+
+		this.refreshScore();
+
 		this.#button = this.addComponent(UIButton);
 		this.#button.excludeComponentFromTint(this.#label);
+		// 번호 / 총점 / 플레이 횟수 모두 트랜지션 대상에서 제외.
+		this.#button.excludeNodeFromTint(this.#numberNode);
+		this.#button.excludeNodeFromTint(this.#scoreNode);
+		this.#button.excludeNodeFromTint(this.#playCountNode);
 		this.#button.setClickedEvent(() => this.#gamesPart.onItemSelected(this.targetPartId));
+	}
+
+	//==============================================================================
+	// 배지 텍스트 / 가시성 갱신. 각 배지는 독립적으로 표시 여부 결정.
+	//==============================================================================
+	refreshScore() {
+		const total = this.gameId ? getTotalScore(this.gameId) : 0;
+		const playCount = this.gameId ? getPlayCount(this.gameId) : 0;
+
+		const scoreVisible = total > 0;
+		this.#scoreNode.setActive(scoreVisible);
+		if (scoreVisible) {
+			this.#scoreLabel.setText(`${total.toLocaleString()}점`);
+		}
+
+		const playCountVisible = playCount > 0;
+		this.#playCountNode.setActive(playCountVisible);
+		if (playCountVisible) {
+			this.#playCountLabel.setText(`${playCount.toLocaleString()}회`);
+		}
+	}
+
+	//==============================================================================
+	// 콘텐트 크기 변경 시 자식 노드들 위치/크기 재계산.
+	// - 플레이 횟수 배지가 가장 아래, 그 위에 총점 배지가 GAP 만큼 띄워서 자리잡음.
+	//==============================================================================
+	setContentSize(size) {
+		super.setContentSize(size);
+		if (this.#numberNode) {
+			this.#numberNode.setLocalPosition(Vector2.create(size.x - NUMBER_PADDING, NUMBER_PADDING));
+		}
+		const badgeWidth = System.Math.max(0, size.x - BADGE_HORIZONTAL_PADDING * 2);
+		const playCountTop = size.y - BADGE_BOTTOM_PADDING - PLAY_COUNT_BADGE_HEIGHT;
+		const scoreTop = playCountTop - BADGE_GAP - SCORE_BADGE_HEIGHT;
+
+		if (this.#scoreNode) {
+			this.#scoreNode.setLocalPosition(Vector2.create(BADGE_HORIZONTAL_PADDING, scoreTop));
+			this.#scoreNode.setContentSize(Vector2.create(badgeWidth, SCORE_BADGE_HEIGHT));
+		}
+		if (this.#playCountNode) {
+			this.#playCountNode.setLocalPosition(Vector2.create(BADGE_HORIZONTAL_PADDING, playCountTop));
+			this.#playCountNode.setContentSize(Vector2.create(badgeWidth, PLAY_COUNT_BADGE_HEIGHT));
+		}
 	}
 
 	touchPress(viewInputPosition) {
@@ -96,7 +209,7 @@ export class GamesPart extends Part {
 	/** @private @type { AnchoredWorldNode } */ #scrollViewportNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { UIGamesPartScrollViewItem[] } */ #scrollViewItems;
-	/** @private @type { Array<{text: string, partId: string, color: string}> } */ #games;
+	/** @private @type { Array<{id: string, partId: string, title: string, color: string, visible?: boolean}> } */ #games;
 
 	constructor() {
 		super();
@@ -112,34 +225,9 @@ export class GamesPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#games = [
-			{ text: "지뢰찾기", partId: PartId.minesweeper, color: "#5b8def" },
-			{ text: "틱택토", partId: PartId.ticTacToe, color: "#ef6c6c" },
-			{ text: "메모리매치", partId: PartId.memoryMatch, color: "#9c5bef" },
-			{ text: "15퍼즐", partId: PartId.puzzle15, color: "#5bef9c" },
-			{ text: "두더지잡기", partId: PartId.whackAMole, color: "#ef9c5b" },
-			{ text: "숫자맞추기", partId: PartId.numberGuess, color: "#5befef" },
-			{ text: "반응속도", partId: PartId.reactionTime, color: "#22c55e" },
-			{ text: "사이먼", partId: PartId.simon, color: "#3b82f6" },
-			{ text: "가위바위보", partId: PartId.rps, color: "#eab308" },
-			{ text: "2048", partId: PartId.game2048, color: "#f59563" },
-			{ text: "빠른계산", partId: PartId.quickMath, color: "#a16207" },
-			{ text: "순서맞추기", partId: PartId.sequence, color: "#0ea5e9" },
-			{ text: "홀짝", partId: PartId.oddEven, color: "#71717a" },
-			{ text: "다른색찾기", partId: PartId.findOdd, color: "#ec4899" },
-			{ text: "스트룹", partId: PartId.stroop, color: "#a855f7" },
-			{ text: "주사위베팅", partId: PartId.diceBet, color: "#84cc16" },
-			{ text: "하이로우", partId: PartId.highLow, color: "#14b8a6" },
-			{ text: "블랙잭", partId: PartId.blackjack, color: "#1e293b" },
-			{ text: "슬롯머신", partId: PartId.slot, color: "#dc2626" },
-			{ text: "숫자기억", partId: PartId.numberMemory, color: "#7c3aed" },
-			{ text: "카운트스톱", partId: PartId.countStop, color: "#06b6d4" },
-			{ text: "표적탭", partId: PartId.targetTap, color: "#f97316" },
-			{ text: "컬러카운트", partId: PartId.colorCount, color: "#10b981" },
-			{ text: "방향맞추기", partId: PartId.direction, color: "#6366f1" },
-			{ text: "공통아이콘", partId: PartId.sameIcon, color: "#d946ef" },
-			{ text: "동전베팅", partId: PartId.coinFlip, color: "#ca8a04" },
-		];
+		// 카탈로그(assets/data/games.json) 에서 노출 대상만 가져온다. 카탈로그는 main.load
+		// 단계에서 미리 fetch 되므로 onBuild 시점엔 동기로 접근 가능.
+		this.#games = getVisibleGames();
 
 		// 스크롤 뷰포트.
 		// - UIScrollView 가 (현재 과도기 라이브러리 한정으로) AnchoredWorldNode 인스턴스에만
@@ -162,17 +250,32 @@ export class GamesPart extends Part {
 
 		// 스크롤뷰 내부 content 노드에 항목들 추가.
 		const scrollContent = this.#scrollView.getContent();
+		let itemIndex = 1;
 		for (const game of this.#games) {
-			const item = new UIGamesPartScrollViewItem(this, game.text, game.color, game.partId);
+			const item = new UIGamesPartScrollViewItem(this, game.title, game.color, game.partId, game.id, itemIndex);
 			scrollContent.addChild(item);
 			this.#scrollViewItems.push(item);
+			++itemIndex;
 		}
+
+		// 스코어 변경 시 해당 GameId 의 항목만 refresh.
+		addScoreChangeListener((gameId) => {
+			for (const item of this.#scrollViewItems) {
+				if (item.gameId === gameId) {
+					item.refreshScore();
+				}
+			}
+		});
 	}
 
 	enter() {
 		this.layout();
 		if (this.#scrollView) {
 			this.#scrollView.setScrollOffset(Vector2.zero());
+		}
+		// 다른 파트에서 돌아왔을 수 있으므로 모든 항목의 총점을 재조회.
+		for (const item of this.#scrollViewItems) {
+			item.refreshScore();
 		}
 	}
 

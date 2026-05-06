@@ -23,6 +23,8 @@ import { MessagePopup } from "./messagepopup.js";
 import { ResultPopup } from "./resultpopup.js";
 import { NicknamePopup } from "./nicknamepopup.js";
 import { hasNickname } from "./userprofile.js";
+import { addScore, addPlay } from "./scoreboard.js";
+import { loadGamesCatalog, getGameIdForPartId } from "./gamescatalog.js";
 import { PartId } from "./part.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { TitlePart } from "./titlepart.js";
@@ -139,6 +141,7 @@ export class MainScene extends Scene {
 				ciImageAsset.load("./assets/sprites/ci.png").catch((error) => {
 					console.error("[MainScene] CI 이미지 로드 실패:", error);
 				}),
+				loadGamesCatalog(),
 			]);
 
 			// 최소 노출 시간 보장 (또는 화면 터치 시 단축).
@@ -604,8 +607,20 @@ export class MainScene extends Scene {
 	//==============================================================================
 	// 결과 팝업.
 	// options: { isWon, title, score, stats, onRetry, onExit }
+	// - 활성 파트의 PartId 를 GameId 로 매핑한 뒤 플레이 횟수 +1 + 점수 누적 (양수일 때만).
+	//   비-게임 파트(GameId 미등록)면 통계에 반영하지 않는다.
 	//==============================================================================
 	showResult(options) {
+		const activePart = this.getActivePart();
+		if (activePart) {
+			const gameId = getGameIdForPartId(activePart.getPartId());
+			if (gameId) {
+				addPlay(gameId);
+				if (options && typeof options.score === "number") {
+					addScore(gameId, options.score);
+				}
+			}
+		}
 		this.#resultPopup.setLocalPosition(Vector2.zero());
 		this.#resultPopup.setContentSize(this.#safeAreaNode.getContentSize());
 		this.#resultPopup.show(options);

@@ -1,5 +1,5 @@
 # Build output
-build/
+build/*
 
 # Platform artifacts (generated)
 platforms/appintoss/public/

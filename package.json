@@ -1,6 +1,6 @@
 {
 	"name": "minigame-collection",
-	"version": "1.0.0",
+	"version": "1.0.8",
 	"description": "미니게임모음",
 	"main": "src/main.js",
 	"scripts": {
@@ -15,12 +15,12 @@
 		"mangle": "node libs/vanilla.js/tools/mangle.cjs",
 		"stage:ait": "node tools/project-manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run stage --prefix platforms/appintoss",
 		"dev:ait": "node tools/project-manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run dev --prefix platforms/appintoss",
-		"build:ait": "node tools/bump-version.cjs && node tools/project-manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run build --prefix platforms/appintoss",
+		"build:ait": "node tools/bump-version.cjs && node tools/project-manifest.cjs appintoss platforms/appintoss/granite.config.ts -- npm run build --prefix platforms/appintoss && node tools/copy-build-artifact.cjs appintoss",
 		"stage:onestore": "node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run stage --prefix platforms/onestore",
 		"sync:onestore": "node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run sync --prefix platforms/onestore",
 		"open:onestore": "node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run open --prefix platforms/onestore",
-		"build:aab:onestore": "node tools/bump-version.cjs && node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run build:aab --prefix platforms/onestore",
-		"build:apk:onestore": "node tools/bump-version.cjs && node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run build:apk --prefix platforms/onestore",
+		"build:aab:onestore": "node tools/bump-version.cjs && node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run build:aab --prefix platforms/onestore && node tools/copy-build-artifact.cjs onestore-aab",
+		"build:apk:onestore": "node tools/bump-version.cjs && node tools/project-manifest.cjs onestore platforms/onestore/capacitor.config.json -- npm run build:apk --prefix platforms/onestore && node tools/copy-build-artifact.cjs onestore-apk",
 		"stage:bff": "npm run stage --prefix platforms/backendforfrontend",
 		"start:bff": "npm run start --prefix platforms/backendforfrontend",
 		"dev:bff": "npm run dev --prefix platforms/backendforfrontend"

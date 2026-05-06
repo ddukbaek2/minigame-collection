@@ -19,6 +19,15 @@ import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 const TOTAL_FLIPS = 10;
 const STARTING_CHIPS = 100;
 const BET_AMOUNT = 10;
+const COIN_SIZE = 360;
+const COIN_RIM_THICKNESS = 18;          // 외곽 테두리 두께.
+const COIN_HEAD_RIM_COLOR = "#92400e";  // 앞면 림 (어두운 황동).
+const COIN_HEAD_FACE_COLOR = "#fbbf24"; // 앞면 (밝은 금).
+const COIN_TAIL_RIM_COLOR = "#475569";  // 뒷면 림 (어두운 회색).
+const COIN_TAIL_FACE_COLOR = "#94a3b8"; // 뒷면 (은색).
+const COIN_IDLE_RIM_COLOR = "#7c5e1e";  // 대기 상태 림.
+const COIN_IDLE_FACE_COLOR = "#eab308"; // 대기 상태 (현재 황금색).
+const COIN_FACE_TEXT_COLOR = "#1f2937";
 
 
 //==============================================================================
@@ -69,7 +78,9 @@ export class CoinFlipPart extends Part {
 	/** @private @type { WorldNode } */ #infoLabelNode;
 	/** @private @type { Label } */ #infoLabel;
 	/** @private @type { WorldNode } */ #coinNode;
-	/** @private @type { Paint } */ #coinPaint;
+	/** @private @type { Paint } */ #coinRimPaint;
+	/** @private @type { WorldNode } */ #coinFaceNode;
+	/** @private @type { Paint } */ #coinFacePaint;
 	/** @private @type { Label } */ #coinLabel;
 	/** @private @type { WorldNode } */ #resultLabelNode;
 	/** @private @type { Label } */ #resultLabel;
@@ -107,17 +118,27 @@ export class CoinFlipPart extends Part {
 		this.addChild(this.#infoLabelNode);
 		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
 
+		// 동전: 외곽 림(어두운 색) + 안쪽 face(밝은 색) + 텍스트. 두 Paint 모두
+		// roundSize 를 자기 크기의 절반으로 설정해 진짜 원형이 되게 한다.
 		this.#coinNode = new WorldNode();
 		this.#coinNode.setPivot(Pivot.middleCenter);
 		this.#coinNode.setAnchor(Pivot.topLeft);
-		this.#coinPaint = this.#coinNode.addComponent(Paint);
-		this.#coinPaint.setRoundSize(150);
-		this.#coinLabel = this.#coinNode.addComponent(Label);
+		this.#coinRimPaint = this.#coinNode.addComponent(Paint);
+		this.#coinRimPaint.setColor(Color.createFromHEX(COIN_IDLE_RIM_COLOR));
+		this.addChild(this.#coinNode);
+
+		this.#coinFaceNode = new WorldNode();
+		this.#coinFaceNode.setPivot(Pivot.middleCenter);
+		this.#coinFaceNode.setAnchor(Pivot.topLeft);
+		this.#coinFacePaint = this.#coinFaceNode.addComponent(Paint);
+		this.#coinFacePaint.setColor(Color.createFromHEX(COIN_IDLE_FACE_COLOR));
+		this.#coinLabel = this.#coinFaceNode.addComponent(Label);
 		this.#coinLabel.setText("?");
 		this.#coinLabel.setFontSize(180);
 		this.#coinLabel.setTextAlign("center");
 		this.#coinLabel.setTextBaseline("middle");
-		this.addChild(this.#coinNode);
+		this.#coinLabel.setTextColor(Color.createFromHEX(COIN_FACE_TEXT_COLOR));
+		this.#coinNode.addChild(this.#coinFaceNode);
 
 		this.#resultLabelNode = this.makeLabel(48);
 		this.addChild(this.#resultLabelNode);
@@ -166,12 +187,35 @@ export class CoinFlipPart extends Part {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
 		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#coinPaint) this.#coinPaint.setColor(Color.createFromHEX("#eab308"));
-		if (this.#coinLabel) this.#coinLabel.setTextColor(Color.createFromHEX("#ffffff"));
 		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
+	}
+
+	//==============================================================================
+	// 동전 색/텍스트를 상태에 맞게 갱신. ("idle" / "head" / "tail")
+	//==============================================================================
+	setCoinFace(state) {
+		let rimHex, faceHex, text;
+		if (state === "head") {
+			rimHex = COIN_HEAD_RIM_COLOR;
+			faceHex = COIN_HEAD_FACE_COLOR;
+			text = "앞";
+		}
+		else if (state === "tail") {
+			rimHex = COIN_TAIL_RIM_COLOR;
+			faceHex = COIN_TAIL_FACE_COLOR;
+			text = "뒤";
+		}
+		else {
+			rimHex = COIN_IDLE_RIM_COLOR;
+			faceHex = COIN_IDLE_FACE_COLOR;
+			text = "?";
+		}
+		this.#coinRimPaint.setColor(Color.createFromHEX(rimHex));
+		this.#coinFacePaint.setColor(Color.createFromHEX(faceHex));
+		this.#coinLabel.setText(text);
 	}
 
 	resetGame() {
@@ -179,8 +223,7 @@ export class CoinFlipPart extends Part {
 		this.#flips = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.#coinLabel.setText("?");
-		this.#coinPaint.setColor(Color.createFromHEX("#eab308"));
+		this.setCoinFace("idle");
 		this.#resultLabel.setText(`${BET_AMOUNT} 칩 베팅 (x2)`);
 		this.refreshInfo();
 	}
@@ -194,8 +237,7 @@ export class CoinFlipPart extends Part {
 		if (this.#chips < BET_AMOUNT) return;
 		this.#chips -= BET_AMOUNT;
 		const result = System.Math.random() < 0.5 ? "head" : "tail";
-		this.#coinLabel.setText(result === "head" ? "H" : "T");
-		this.#coinPaint.setColor(Color.createFromHEX(result === "head" ? "#eab308" : "#a16207"));
+		this.setCoinFace(result);
 		const theme = getCurrentGameTheme();
 		const win = (choice === result);
 		if (win) {
@@ -220,7 +262,7 @@ export class CoinFlipPart extends Part {
 		const gap = 16;
 		const buttonW = System.Math.floor((contentSize.x - margin * 2 - gap) / 2);
 		const buttonH = 220;
-		const coinSize = 360;
+		const coinSize = COIN_SIZE;
 
 		const infoH = 60;
 		const resultH = 80;
@@ -234,6 +276,15 @@ export class CoinFlipPart extends Part {
 		cy += infoH + vGap;
 		this.#coinNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + coinSize * 0.5));
 		this.#coinNode.setContentSize(Vector2.create(coinSize, coinSize));
+		// 진짜 원형이 되도록 roundSize = 반지름.
+		this.#coinRimPaint.setRoundSize(coinSize * 0.5);
+		const faceSize = coinSize - COIN_RIM_THICKNESS * 2;
+		// 림 안쪽에 face 를 가운데 정렬.
+		this.#coinFaceNode.setLocalPosition(Vector2.create(coinSize * 0.5, coinSize * 0.5));
+		this.#coinFaceNode.setContentSize(Vector2.create(faceSize, faceSize));
+		this.#coinFacePaint.setRoundSize(faceSize * 0.5);
+		// 라벨 폰트는 face 크기에 비례.
+		this.#coinLabel.setFontSize(System.Math.floor(faceSize * 0.55));
 		cy += coinSize + vGap;
 		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;

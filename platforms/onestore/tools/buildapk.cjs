@@ -109,7 +109,8 @@ try {
 		}
 	}
 
-	const gradleCommand = isWindows ? "gradlew.bat" : "./gradlew";
+	// Windows cmd.exe 는 보안 정책상 cwd 의 실행 파일을 자동으로 찾지 않으므로 ".\\" 접두 필수.
+	const gradleCommand = isWindows ? ".\\gradlew.bat" : "./gradlew";
 	const gradleResult = spawnSync(gradleCommand, [":app:assembleRelease"], {
 		stdio: "inherit",
 		cwd: androidDirectory,

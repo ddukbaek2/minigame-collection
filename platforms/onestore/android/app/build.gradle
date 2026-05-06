@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// 업로드용 keystore.properties 로드. (platforms/onestore/keystore.properties)
+// 파일이 없으면 release 빌드는 unsigned 가 되므로, 실제 출시 빌드 전 반드시 생성해야 한다.
+def keystorePropertiesFile = rootProject.file("../keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace "com.ddukbaek2.playable.template"
     compileSdk rootProject.ext.compileSdkVersion
@@ -16,8 +24,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file("../" + keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
