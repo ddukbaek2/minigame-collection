@@ -55,8 +55,14 @@ function writeVersionGenerated(versionString) {
 
 //==============================================================================
 // 메인.
+// - SKIP_BUMP=1 환경변수가 설정돼 있으면 건너뛴다. (build-all 같은 상위 워크플로가
+//   여러 build:* 를 순차 호출할 때, 한 번만 bump 하기 위해 사용.)
 //==============================================================================
 function main() {
+	if (process.env.SKIP_BUMP === "1") {
+		console.log("[bump-version] SKIP_BUMP=1 → 건너뜀.");
+		return;
+	}
 	const raw = fs.readFileSync(PACKAGE_JSON_PATH, "utf8");
 	const json = JSON.parse(raw);
 	const previous = json.version || "0.0.0";

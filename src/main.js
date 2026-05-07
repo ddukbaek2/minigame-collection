@@ -25,6 +25,8 @@ import { NicknamePopup } from "./nicknamepopup.js";
 import { hasNickname } from "./userprofile.js";
 import { addScore, addPlay } from "./scoreboard.js";
 import { loadGamesCatalog, getGameIdForPartId } from "./gamescatalog.js";
+import { loadNotices } from "./notice.js";
+import { NoticePopup } from "./noticepopup.js";
 import { PartId } from "./part.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { TitlePart } from "./titlepart.js";
@@ -99,6 +101,7 @@ export class MainScene extends Scene {
 	/** @private @type { MessagePopup } */ #popup;
 	/** @private @type { ResultPopup } */ #resultPopup;
 	/** @private @type { NicknamePopup } */ #nicknamePopup;
+	/** @private @type { NoticePopup } */ #noticePopup;
 	/** @private @type { Paint | null } */ #backgroundPaint;
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
@@ -142,6 +145,7 @@ export class MainScene extends Scene {
 					console.error("[MainScene] CI 이미지 로드 실패:", error);
 				}),
 				loadGamesCatalog(),
+				loadNotices(),
 			]);
 
 			// 최소 노출 시간 보장 (또는 화면 터치 시 단축).
@@ -416,6 +420,11 @@ export class MainScene extends Scene {
 		this.#nicknamePopup = new NicknamePopup();
 		this.#nicknamePopup.setName("nicknamePopup");
 		this.#safeAreaNode.addChild(this.#nicknamePopup);
+
+		// 공지 팝업. (타이틀의 버전 영역 탭 시 노출)
+		this.#noticePopup = new NoticePopup();
+		this.#noticePopup.setName("noticePopup");
+		this.#safeAreaNode.addChild(this.#noticePopup);
 	}
 
 	//==============================================================================
@@ -605,6 +614,16 @@ export class MainScene extends Scene {
 	}
 
 	//==============================================================================
+	// 공지 팝업.
+	//==============================================================================
+	showNotice() {
+		if (!this.#noticePopup) return;
+		this.#noticePopup.setLocalPosition(Vector2.zero());
+		this.#noticePopup.setContentSize(this.#safeAreaNode.getContentSize());
+		this.#noticePopup.show();
+	}
+
+	//==============================================================================
 	// 결과 팝업.
 	// options: { isWon, title, score, stats, onRetry, onExit }
 	// - 활성 파트의 PartId 를 GameId 로 매핑한 뒤 플레이 횟수 +1 + 점수 누적 (양수일 때만).
@@ -736,6 +755,13 @@ export class MainScene extends Scene {
 			this.#nicknamePopup.setContentSize(safeAreaRect.size);
 			if (this.#nicknamePopup.isShowing()) {
 				this.#nicknamePopup.layout();
+			}
+		}
+		if (this.#noticePopup) {
+			this.#noticePopup.setLocalPosition(Vector2.zero());
+			this.#noticePopup.setContentSize(safeAreaRect.size);
+			if (this.#noticePopup.isShowing()) {
+				this.#noticePopup.layout();
 			}
 		}
 	}

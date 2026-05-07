@@ -3,11 +3,13 @@
 //==============================================================================
 const System = globalThis;
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
+import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
-import { createIconTextButtonNode, createLabelNode } from "./uihelper.js";
+import { createIconTextButtonNode, createLabelNode, getDefaultFontFace } from "./uihelper.js";
 import { getTheme } from "./theme.js";
 import { Version } from "./version.js";
 
@@ -26,6 +28,8 @@ const BUTTON_FONT_SIZE = 44;
 const BUTTON_GAP = 24;
 const VERSION_FONT_SIZE = 24;
 const VERSION_PADDING = 24;
+const VERSION_HIT_WIDTH = 220;
+const VERSION_HIT_HEIGHT = 60;
 
 export class TitlePart extends Part {
 	//==============================================================================
@@ -92,11 +96,24 @@ export class TitlePart extends Part {
 			this.#buttonNodes.push(node);
 		}
 
-		// 버전 라벨. 우측 하단 고정.
-		this.#versionLabelNode = createLabelNode(`v${Version.getCurrent().toString()}`, VERSION_FONT_SIZE, Color.createFromHEX("#ffffff"));
-		const versionLabel = this.#versionLabelNode.getComponent(Label);
+		// 버전 라벨 영역. 우측 하단에 고정. 탭하면 공지 팝업.
+		// pivot=bottomRight 라서 setLocalPosition 으로 지정한 좌표가 노드의 우측 하단 꼭짓점.
+		// 노드의 contentSize 가 hit area 가 된다 (라벨은 우측 하단 정렬로 그 안에서 그려짐).
+		this.#versionLabelNode = new WorldNode();
+		this.#versionLabelNode.setPivot(Pivot.bottomRight);
+		this.#versionLabelNode.setAnchor(Pivot.topLeft);
+		this.#versionLabelNode.setContentSize(Vector2.create(VERSION_HIT_WIDTH, VERSION_HIT_HEIGHT));
+		this.#versionLabelNode.setInteractable(true);
+		const versionLabel = this.#versionLabelNode.addComponent(Label);
+		versionLabel.setText(`v${Version.getCurrent().toString()}`);
+		versionLabel.setFontSize(VERSION_FONT_SIZE);
 		versionLabel.setTextAlign("right");
 		versionLabel.setTextBaseline("bottom");
+		const font = getDefaultFontFace();
+		if (font) versionLabel.setFont(font);
+		const versionButton = this.#versionLabelNode.addComponent(UIButton);
+		versionButton.setPressedTintColor(Color.transparent());
+		versionButton.setClickEvent(() => { app.showNotice(); });
 		this.addChild(this.#versionLabelNode);
 
 		this.applyTheme(getTheme());

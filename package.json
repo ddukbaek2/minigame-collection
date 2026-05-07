@@ -1,12 +1,13 @@
 {
 	"name": "minigame-collection",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "미니게임모음",
 	"main": "src/main.js",
 	"scripts": {
 		"postinstall": "git submodule update --init --recursive && npm install --prefix platforms/appintoss && npm install --prefix platforms/onestore && npm install --prefix platforms/backendforfrontend",
 		"install:all": "git submodule update --init --recursive && npm install && npm install --prefix platforms/appintoss && npm install --prefix platforms/onestore && npm install --prefix platforms/backendforfrontend",
 		"version:bump": "node tools/bump-version.cjs",
+		"build:all": "node tools/build-all.cjs",
 		"build": "node libs/vanilla.js/tools/project.cjs build --script src/main.js --input . --output build/web",
 		"build:web": "node tools/bump-version.cjs && node tools/project-manifest.cjs web tools/buildtemplate/css/style.css -- node libs/vanilla.js/tools/project.cjs build --script src/main.js --input . --output build/web -t tools/buildtemplate",
 		"check": "node libs/vanilla.js/tools/project.cjs check --input .",

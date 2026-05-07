@@ -1,14 +1,14 @@
 //==============================================================================
 // 포함 모듈 목록.
 //==============================================================================
-const System = globalThis;
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { createButtonNode, createLabelNode } from "./uihelper.js";
+import { UIInputField } from "../libs/vanilla.js/src/ui/uiinputfield.js";
+import { createButtonNode, createLabelNode, getDefaultFontFace } from "./uihelper.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { setNickname, NICKNAME_MAX_LENGTH } from "./userprofile.js";
 
@@ -30,9 +30,8 @@ const INPUT_FONT_SIZE = 48;
 
 //==============================================================================
 // 닉네임 입력 팝업.
-// - dim + 박스 + 안내 라벨 + (HTML <input> 오버레이) + 확인 버튼.
-// - 캔버스 위에 포지셔닝된 실제 <input> 요소를 띄워 IME(한글) / 모바일 키보드 / 복붙
-//   같은 네이티브 텍스트 입력을 그대로 사용한다.
+// - 입력은 UIInputField (캔버스 렌더 + 숨겨진 DOM input). IME / 모바일 키보드 / 복붙
+//   모두 네이티브로 동작하면서 캔버스 위에 자유롭게 그려진다.
 //==============================================================================
 export class NicknamePopup extends WorldNode {
 	//==============================================================================
@@ -45,10 +44,10 @@ export class NicknamePopup extends WorldNode {
 	/** @private @type { Label } */ #titleLabel;
 	/** @private @type { WorldNode } */ #subLabelNode;
 	/** @private @type { Label } */ #subLabel;
+	/** @private @type { UIInputField } */ #inputField;
 	/** @private @type { WorldNode } */ #okButtonNode;
 	/** @private @type { Label } */ #okButtonLabel;
 	/** @private @type { (nickname: string) => void | null } */ #onConfirm;
-	/** @private @type { HTMLInputElement | null } */ #inputElement;
 	/** @private @type { * } */ #engine;
 
 	//==============================================================================
@@ -79,6 +78,20 @@ export class NicknamePopup extends WorldNode {
 		this.#boxNode.addChild(this.#subLabelNode);
 		this.#subLabel = this.#subLabelNode.getComponent(Label);
 
+		// 캔버스 입력 위젯. 한글 IME / 모바일 키보드 필요하므로 DOM input 사용.
+		this.#inputField = new UIInputField();
+		this.#inputField.setUseDOMInput(true);
+		this.#inputField.setContentSize(Vector2.create(INPUT_AREA_WIDTH, INPUT_AREA_HEIGHT));
+		this.#inputField.setPlaceholder("닉네임");
+		this.#inputField.setMaxLength(NICKNAME_MAX_LENGTH);
+		this.#inputField.setFontSize(INPUT_FONT_SIZE);
+		this.#inputField.setRoundSize(16);
+		this.#inputField.setPadding(20);
+		const font = getDefaultFontFace();
+		if (font) this.#inputField.setFont(font);
+		this.#inputField.setOnSubmit(() => this.handleOk());
+		this.#boxNode.addChild(this.#inputField);
+
 		this.#okButtonNode = createButtonNode(
 			"확인",
 			Vector2.create(BUTTON_WIDTH, BUTTON_HEIGHT),
@@ -91,7 +104,6 @@ export class NicknamePopup extends WorldNode {
 		this.#boxNode.addChild(this.#okButtonNode);
 
 		this.#onConfirm = null;
-		this.#inputElement = null;
 		this.#engine = null;
 
 		addThemeChangeListener((theme) => this.applyTheme(theme));
@@ -99,10 +111,11 @@ export class NicknamePopup extends WorldNode {
 	}
 
 	//==============================================================================
-	// 엔진 주입. (HTML input 위치 계산에 ViewManager 가 필요하다.)
+	// 엔진 주입. (UIInputField 의 DOM input 위치 계산용)
 	//==============================================================================
 	setEngine(engine) {
 		this.#engine = engine;
+		if (this.#inputField) this.#inputField.setEngine(engine);
 	}
 
 	//==============================================================================
@@ -121,6 +134,12 @@ export class NicknamePopup extends WorldNode {
 		if (this.#subLabel) {
 			this.#subLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
+		if (this.#inputField) {
+			this.#inputField.setBackgroundColor(Color.createFromHEX("#ffffff"));
+			this.#inputField.setTextColor(Color.createFromHEX("#222222"));
+			this.#inputField.setPlaceholderColor(Color.createFromHEX("#999999"));
+			this.#inputField.setCursorColor(Color.createFromHEX(theme.primary));
+		}
 	}
 
 	//==============================================================================
@@ -134,7 +153,10 @@ export class NicknamePopup extends WorldNode {
 		this.#onConfirm = onConfirm || null;
 		this.setActive(true);
 		this.layout();
-		this.ensureInputElement(initialValue || "");
+		this.#inputField.setText(initialValue || "");
+		this.#inputField.attach();
+		// 자동 포커스 시도. 모바일 정책상 키보드는 사용자 탭이 있어야 뜰 수 있다.
+		setTimeout(() => this.#inputField && this.#inputField.focus(), 0);
 	}
 
 	//==============================================================================
@@ -142,7 +164,7 @@ export class NicknamePopup extends WorldNode {
 	//==============================================================================
 	hide() {
 		this.setActive(false);
-		this.removeInputElement();
+		this.#inputField.detach();
 	}
 
 	//==============================================================================
@@ -156,74 +178,15 @@ export class NicknamePopup extends WorldNode {
 	// 확인 처리.
 	//==============================================================================
 	handleOk() {
-		const value = this.#inputElement ? this.#inputElement.value.trim() : "";
+		const value = this.#inputField.getText().trim();
 		if (value.length === 0) {
-			// 빈 입력은 거절. 포커스만 다시 잡아준다.
-			if (this.#inputElement) this.#inputElement.focus();
+			this.#inputField.focus();
 			return;
 		}
 		setNickname(value);
 		const callback = this.#onConfirm;
 		this.hide();
 		if (callback) callback(value);
-	}
-
-	//==============================================================================
-	// HTML <input> 요소 준비.
-	//==============================================================================
-	ensureInputElement(initialValue) {
-		if (this.#inputElement) {
-			this.#inputElement.value = initialValue;
-			this.layoutInputElement();
-			System.setTimeout(() => this.#inputElement && this.#inputElement.focus(), 0);
-			return;
-		}
-		const input = System.document.createElement("input");
-		input.type = "text";
-		input.maxLength = NICKNAME_MAX_LENGTH;
-		input.value = initialValue;
-		input.placeholder = "닉네임";
-		input.autocomplete = "off";
-		input.spellcheck = false;
-		input.style.position = "absolute";
-		input.style.boxSizing = "border-box";
-		input.style.zIndex = "1000";
-		input.style.outline = "none";
-		input.style.border = "2px solid #5b8def";
-		input.style.borderRadius = "12px";
-		input.style.background = "#ffffff";
-		input.style.color = "#222222";
-		input.style.textAlign = "center";
-		input.style.padding = "0 16px";
-		input.style.fontFamily = "inherit";
-		input.addEventListener("keydown", (event) => {
-			if (event.key === "Enter") {
-				event.preventDefault();
-				this.handleOk();
-			}
-		});
-		System.document.body.appendChild(input);
-		this.#inputElement = input;
-		this.layoutInputElement();
-		// 모바일 환경에선 사용자 제스처 없이 포커스 시 키보드가 안 뜰 수 있다.
-		// 일단 포커스 시도만 해두고, 안 뜨면 사용자가 입력창을 한 번 탭하게 된다.
-		System.setTimeout(() => input.focus(), 0);
-	}
-
-	//==============================================================================
-	// HTML <input> 요소 제거.
-	//==============================================================================
-	removeInputElement() {
-		if (!this.#inputElement) return;
-		try {
-			if (this.#inputElement.parentNode) {
-				this.#inputElement.parentNode.removeChild(this.#inputElement);
-			}
-		}
-		catch (error) {
-			// 무시.
-		}
-		this.#inputElement = null;
 	}
 
 	//==============================================================================
@@ -234,52 +197,11 @@ export class NicknamePopup extends WorldNode {
 		this.#boxNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, contentSize.y * 0.5));
 		this.#titleLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.20));
 		this.#subLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.32));
-		// HTML input 영역 중심 = BOX_HEIGHT * 0.55 (이 위치에 input 을 오버레이)
+		// 입력창: 중앙 가로, 박스 세로의 55% 위치를 중심으로.
+		const inputLeft = (BOX_WIDTH - INPUT_AREA_WIDTH) * 0.5;
+		const inputTop = BOX_HEIGHT * 0.55 - INPUT_AREA_HEIGHT * 0.5;
+		this.#inputField.setLocalPosition(Vector2.create(inputLeft, inputTop));
 		this.#okButtonNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.82));
-		this.layoutInputElement();
-	}
-
-	//==============================================================================
-	// HTML <input> 위치 / 크기 / 폰트 갱신.
-	// 캔버스의 view 좌표(박스 중심) → CSS 픽셀로 변환해 절대 위치 지정.
-	//==============================================================================
-	layoutInputElement() {
-		const input = this.#inputElement;
-		if (!input || !this.#engine) return;
-		const viewManager = this.#engine.getViewManager();
-		const canvas = viewManager.getCanvas();
-		if (!canvas) return;
-		const canvasRect = canvas.getBoundingClientRect();
-		const targetScale = viewManager.getTargetResolutionScale() || 1;
-
-		// 박스의 글로벌 view 좌표.
-		const boxPosition = this.#boxNode.getPosition();
-		const inputCenterX_view = boxPosition.x;
-		const inputCenterY_view = boxPosition.y - BOX_HEIGHT * 0.5 + BOX_HEIGHT * 0.55;
-		const inputLeft_view = inputCenterX_view - INPUT_AREA_WIDTH * 0.5;
-		const inputTop_view = inputCenterY_view - INPUT_AREA_HEIGHT * 0.5;
-
-		// view → CSS 픽셀 (canvas DOM offset 추가).
-		const left_css = canvasRect.left + inputLeft_view * targetScale;
-		const top_css = canvasRect.top + inputTop_view * targetScale;
-		const width_css = INPUT_AREA_WIDTH * targetScale;
-		const height_css = INPUT_AREA_HEIGHT * targetScale;
-
-		input.style.left = `${left_css}px`;
-		input.style.top = `${top_css}px`;
-		input.style.width = `${width_css}px`;
-		input.style.height = `${height_css}px`;
-		input.style.fontSize = `${INPUT_FONT_SIZE * targetScale}px`;
-	}
-
-	//==============================================================================
-	// 매 프레임 - 활성 상태에서 캔버스가 리사이즈/스크롤되어도 input 위치를 보정.
-	//==============================================================================
-	tick(timeDelta) {
-		super.tick(timeDelta);
-		if (this.isActive() && this.#inputElement) {
-			this.layoutInputElement();
-		}
 	}
 
 	//==============================================================================
