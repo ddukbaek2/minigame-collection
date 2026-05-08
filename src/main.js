@@ -125,6 +125,9 @@ export class MainScene extends Scene {
 	async load(engine) {
 		await super.load(engine);
 
+		const viewManager = engine.getViewManager();
+		viewManager.setViewScaleMode(ViewScaleMode.stretchWidthExpandHeight);
+
 		this.#ciImageAsset = null;
 		this.#loadMinDurationMs = 3000;
 		this.#loadStartTime = System.Date.now();
@@ -980,8 +983,10 @@ engineConfiguration.referenceResolutionSize = Vector2.create(REFERENCE_WIDTH, RE
 engineConfiguration.useStatistics = false;
 engineConfiguration.title = "미니게임 컬렉션";
 const engine = new Engine(engineConfiguration);
-// const scene = new MainScene();
-
-import { UITestScene } from "./uitest.js";
-const scene = new UITestScene();
+const scene = new MainScene();
+// import { UITestScene } from "./uitest.js";
+// const scene = new UITestScene();
 engine.run(scene);
+
+// launcher 등 외부 환경에서 엔진 인스턴스에 접근할 수 있도록 globalThis 에 노출.
+System.engine = engine;

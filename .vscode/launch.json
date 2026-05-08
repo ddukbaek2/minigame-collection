@@ -5,7 +5,14 @@
 			"name": "Debug Local Live Server",
 			"type": "chrome",
 			"request": "launch",
-			"url": "http://127.0.0.1:6001/tools/launcher.html",
+			"url": "http://127.0.0.1:6001/tools/launcher.html?entry=./src/main.js",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"name": "Debug Local Live Server (fixed)",
+			"type": "chrome",
+			"request": "launch",
+			"url": "http://127.0.0.1:6001/tools/launcher.html?entry=./src/main.js&fixed=true",
 			"webRoot": "${workspaceFolder}"
 		},
 		{

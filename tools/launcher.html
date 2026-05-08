@@ -26,8 +26,6 @@
 				display: block;
 				width: 100vw;
 				height: 100vh;
-				max-width: 800px;
-				margin: 0 auto;
 			}
 		</style>
 		<script type="module">
@@ -40,8 +38,24 @@
 			// 프로덕션 빌드 시에는 esbuild 가 src/main.js 를 직접 엔트리로
 			// 번들링하므로 이 인라인 스크립트는 사용되지 않는다.
 			//==================================================================
-			import("./src/main.js").catch((error) => {
-				console.error(`[launcher] 진입 파일 로드 실패: ./src/main.js`, error);
+			const urlSearchParams = new URLSearchParams(window.location.search);
+			const fixedParam = urlSearchParams.get("fixed");
+			const fixed = fixedParam === "true";
+			const entryParam = urlSearchParams.get("entry");
+			const entryPath = entryParam !== null ? entryParam : "./src/main.js";
+			import(entryPath).then(() => {
+				if (fixed) {
+					const engineConfiguration = window.engine.getEngineConfiguration();
+					const referenceResolutionSize = engineConfiguration.referenceResolutionSize;
+					const referenceWidth = referenceResolutionSize.x;
+					const referenceHeight = referenceResolutionSize.y;
+					const styleElement = document.createElement("style");
+					styleElement.textContent = `canvas { width: auto; aspect-ratio: ${referenceWidth} / ${referenceHeight}; margin: 0 auto; }`;
+					document.head.appendChild(styleElement);
+					window.engine.resize();
+				}
+			}).catch((error) => {
+				console.error(`[launcher] 진입 파일 로드 실패: ${entryPath}`, error);
 			});
 		</script>
 	</head>
