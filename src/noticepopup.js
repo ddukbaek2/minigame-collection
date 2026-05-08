@@ -6,7 +6,6 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { AnchoredWorldNode } from "../libs/vanilla.js/src/core/node/anchoredworldmnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
@@ -177,7 +176,7 @@ export class NoticePopup extends WorldNode {
 	/** @private @type { WorldNode } */ #closeButtonNode;
 	/** @private @type { Paint } */ #closeButtonPaint;
 	/** @private @type { Label } */ #closeButtonLabel;
-	/** @private @type { AnchoredWorldNode } */ #scrollContainerNode;
+	/** @private @type { WorldNode } */ #scrollContainerNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { NoticeCard[] } */ #cards;
 	/** @private @type { Vector2 } */ #boxBasePos;
@@ -241,12 +240,10 @@ export class NoticePopup extends WorldNode {
 		closeButton.setClickEvent(() => this.hide());
 		this.#boxNode.addChild(this.#closeButtonNode);
 
-		// 스크롤 영역. (UIScrollView 마스킹/터치 자동화를 위해 AnchoredWorldNode)
-		this.#scrollContainerNode = new AnchoredWorldNode();
+		// 스크롤 영역. UIScrollView 의 require(Mask) 가 자동으로 클리핑을 켜준다.
+		this.#scrollContainerNode = new WorldNode();
 		this.#scrollContainerNode.setName("noticeScroll");
 		this.#scrollContainerNode.setPivot(Pivot.topLeft);
-		this.#scrollContainerNode.setAnchorMin(Vector2.zero());
-		this.#scrollContainerNode.setAnchorMax(Vector2.zero());
 		this.#boxNode.addChild(this.#scrollContainerNode);
 
 		this.#scrollView = this.#scrollContainerNode.addComponent(UIScrollView);

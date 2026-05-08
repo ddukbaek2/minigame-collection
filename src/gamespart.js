@@ -6,7 +6,6 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { AnchoredWorldNode } from "../libs/vanilla.js/src/core/node/anchoredworldmnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
@@ -19,7 +18,7 @@ import { getVisibleGames } from "./gamescatalog.js";
 
 //==============================================================================
 // 게임목록 파트.
-// - viewport (AnchoredWorldNode + UIScrollView) 안에 게임 셀 그리드.
+// - viewport (WorldNode + UIScrollView) 안에 게임 셀 그리드.
 // - TouchRecognizer 가 자식 셀 위에서의 드래그를 자동으로 ScrollView 로
 //   위임하므로, 셀은 평범한 버튼처럼 touchPress/Release 만 처리하면 된다.
 //==============================================================================
@@ -206,7 +205,7 @@ class UIGamesPartScrollViewItem extends WorldNode {
 // 게임목록 파트.
 //==============================================================================
 export class GamesPart extends Part {
-	/** @private @type { AnchoredWorldNode } */ #scrollViewportNode;
+	/** @private @type { WorldNode } */ #scrollViewportNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { UIGamesPartScrollViewItem[] } */ #scrollViewItems;
 	/** @private @type { Array<{id: string, partId: string, title: string, color: string, visible?: boolean}> } */ #games;
@@ -229,15 +228,10 @@ export class GamesPart extends Part {
 		// 단계에서 미리 fetch 되므로 onBuild 시점엔 동기로 접근 가능.
 		this.#games = getVisibleGames();
 
-		// 스크롤 뷰포트.
-		// - UIScrollView 가 (현재 과도기 라이브러리 한정으로) AnchoredWorldNode 인스턴스에만
-		//   attach 시 마스크/interactable 자동 처리를 해주므로 이 노드만 어쩔 수 없이
-		//   AnchoredWorldNode 로 둔다. 다른 노드는 모두 일반 WorldNode 사용.
-		this.#scrollViewportNode = new AnchoredWorldNode();
+		// 스크롤 뷰포트. UIScrollView 의 require(Mask) 가 자동으로 클리핑을 켜준다.
+		this.#scrollViewportNode = new WorldNode();
 		this.#scrollViewportNode.setName("scrollViewport");
 		this.#scrollViewportNode.setPivot(Pivot.topLeft);
-		this.#scrollViewportNode.setAnchorMin(Vector2.zero());
-		this.#scrollViewportNode.setAnchorMax(Vector2.zero());
 		this.addChild(this.#scrollViewportNode);
 
 		this.#scrollView = this.#scrollViewportNode.addComponent(UIScrollView);

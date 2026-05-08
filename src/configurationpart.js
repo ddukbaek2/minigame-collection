@@ -6,7 +6,6 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { AnchoredWorldNode } from "../libs/vanilla.js/src/core/node/anchoredworldmnode.js";
 import { Label } from "../libs/vanilla.js/src/core/component/label.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
@@ -56,7 +55,7 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	// 멤버 변수 목록.
 	//==============================================================================
-	/** @private @type { AnchoredWorldNode } */ #scrollContainerNode;
+	/** @private @type { WorldNode } */ #scrollContainerNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { Array<object> } */ #sections;
 
@@ -79,15 +78,10 @@ export class ConfigurationPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		// 스크롤 컨테이너.
-		// - UIScrollView 는 (현재 라이브러리 한정으로) AnchoredWorldNode 인스턴스에 한해
-		//   마스크 / interactable 자동 처리를 해 주므로 반드시 AnchoredWorldNode 로 둔다.
-		//   WorldNode 로 두면 마스킹과 드래그 핸들링이 정상 동작하지 않는다.
-		this.#scrollContainerNode = new AnchoredWorldNode();
+		// 스크롤 컨테이너. UIScrollView 의 require(Mask) 가 자동으로 클리핑을 켜준다.
+		this.#scrollContainerNode = new WorldNode();
 		this.#scrollContainerNode.setName("settingsScroll");
 		this.#scrollContainerNode.setPivot(Pivot.topLeft);
-		this.#scrollContainerNode.setAnchorMin(Vector2.zero());
-		this.#scrollContainerNode.setAnchorMax(Vector2.zero());
 		this.addChild(this.#scrollContainerNode);
 
 		this.#scrollView = this.#scrollContainerNode.addComponent(UIScrollView);

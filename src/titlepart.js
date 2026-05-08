@@ -11,7 +11,7 @@ import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
 import { createIconTextButtonNode, createLabelNode, getDefaultFontFace } from "./uihelper.js";
 import { getTheme } from "./theme.js";
-import { Version } from "./version.js";
+import { getCurrentVersion } from "./version.js";
 
 
 //==============================================================================
@@ -105,7 +105,8 @@ export class TitlePart extends Part {
 		this.#versionLabelNode.setContentSize(Vector2.create(VERSION_HIT_WIDTH, VERSION_HIT_HEIGHT));
 		this.#versionLabelNode.setInteractable(true);
 		const versionLabel = this.#versionLabelNode.addComponent(Label);
-		versionLabel.setText(`v${Version.getCurrent().toString()}`);
+		const currentVersion = getCurrentVersion();
+		versionLabel.setText(`v${currentVersion.getVersionString()}`);
 		versionLabel.setFontSize(VERSION_FONT_SIZE);
 		versionLabel.setTextAlign("right");
 		versionLabel.setTextBaseline("bottom");
