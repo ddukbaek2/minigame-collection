@@ -35,6 +35,9 @@ class Tile2048 extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -50,11 +53,20 @@ class Tile2048 extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setValue.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	setValue(v) {
 		this.value = v;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const colorHex = TILE_COLORS[this.value] || "#3c3a32";
 		this.#paint.setColor(Color.createFromHEX(colorHex));
@@ -67,6 +79,12 @@ class Tile2048 extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 }
 
@@ -80,6 +98,14 @@ class DirButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } dir
+	 * @param { * } icon
+	 */
 	constructor(part, dir, icon) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -98,14 +124,29 @@ class DirButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
 		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.move(this.dir);
@@ -131,6 +172,9 @@ export class Game2048Part extends Part {
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { boolean } */ #hasReached2048;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#tiles = [];
@@ -142,13 +186,31 @@ export class Game2048Part extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.game2048; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "2048"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -200,19 +262,47 @@ export class Game2048Part extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#scoreText) this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#dirButtons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#scoreText) {
+			this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#dirButtons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#score = 0;
 		this.#isStarted = false;
@@ -224,26 +314,57 @@ export class Game2048Part extends Part {
 		this.refreshScore();
 	}
 
+	//==============================================================================
+	// refreshScore.
+	//==============================================================================
 	refreshScore() {
 		this.#scoreText.setText(`점수: ${this.#score}`);
 	}
 
+	//==============================================================================
+	// spawnRandom.
+	//==============================================================================
 	spawnRandom() {
 		const empties = [];
 		for (let i = 0; i < this.#tiles.length; ++i) {
-			if (this.#tiles[i].value === 0) empties.push(i);
+			if (this.#tiles[i].value === 0) {
+				empties.push(i);
+			}
 		}
-		if (empties.length === 0) return;
-		const pick = empties[System.Math.floor(System.Math.random() * empties.length)];
+		if (empties.length === 0) {
+			return;
+		}		const pick = empties[System.Math.floor(System.Math.random() * empties.length)];
 		this.#tiles[pick].setValue(System.Math.random() < 0.9 ? 2 : 4);
 	}
 
+	//==============================================================================
+	// get.
+	//==============================================================================
+	/**
+	 * @param { * } r
+	 * @param { * } c
+	 */
 	get(r, c) { return this.#tiles[r * SIZE + c].value; }
+	//==============================================================================
+	// set.
+	//==============================================================================
+	/**
+	 * @param { * } r
+	 * @param { * } c
+	 * @param { * } v
+	 */
 	set(r, c, v) { this.#tiles[r * SIZE + c].setValue(v); }
 
+	//==============================================================================
+	// move.
+	//==============================================================================
+	/**
+	 * @param { * } dir
+	 */
 	move(dir) {
-		if (this.#isGameOver) return;
-		// 한 줄을 왼쪽으로 미는 헬퍼.
+		if (this.#isGameOver) {
+			return;
+		}		// 한 줄을 왼쪽으로 미는 헬퍼.
 		const slide = (line) => {
 			const filtered = line.filter(v => v !== 0);
 			let gained = 0;
@@ -263,8 +384,9 @@ export class Game2048Part extends Part {
 		for (let i = 0; i < SIZE; ++i) {
 			let line = [];
 			for (let j = 0; j < SIZE; ++j) {
-				if (dir === "left") line.push(this.get(i, j));
-				else if (dir === "right") line.push(this.get(i, SIZE - 1 - j));
+				if (dir === "left") {
+					line.push(this.get(i, j));
+				}				else if (dir === "right") line.push(this.get(i, SIZE - 1 - j));
 				else if (dir === "up") line.push(this.get(j, i));
 				else line.push(this.get(SIZE - 1 - j, i));
 			}
@@ -272,9 +394,12 @@ export class Game2048Part extends Part {
 			const { line: newLine, gained } = slide(line);
 			totalGained += gained;
 			for (let j = 0; j < SIZE; ++j) {
-				if (newLine[j] !== before[j]) moved = true;
-				if (dir === "left") this.set(i, j, newLine[j]);
-				else if (dir === "right") this.set(i, SIZE - 1 - j, newLine[j]);
+				if (newLine[j] !== before[j]) {
+					moved = true;
+				}
+				if (dir === "left") {
+					this.set(i, j, newLine[j]);
+				}				else if (dir === "right") this.set(i, SIZE - 1 - j, newLine[j]);
 				else if (dir === "up") this.set(j, i, newLine[j]);
 				else this.set(SIZE - 1 - j, i, newLine[j]);
 			}
@@ -299,6 +424,9 @@ export class Game2048Part extends Part {
 		}
 	}
 
+	//==============================================================================
+	// canMove.
+	//==============================================================================
 	canMove() {
 		for (const t of this.#tiles) if (t.value === 0) return true;
 		for (let r = 0; r < SIZE; ++r) {
@@ -311,6 +439,9 @@ export class Game2048Part extends Part {
 		return false;
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -366,6 +497,13 @@ export class Game2048Part extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, dirsY + dirsH + vGap + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
+	/**
+	 * @param { * } isWon
+	 * @param { * } title
+	 */
 	endGame(isWon, title) {
 		this.#isGameOver = true;
 		const app = this.getApp();

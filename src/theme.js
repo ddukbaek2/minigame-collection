@@ -97,10 +97,22 @@ const gameListeners = new System.Set();
 //==============================================================================
 try {
 	const savedUI = System.localStorage.getItem(STORAGE_KEY_UI);
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } savedUI && THEMES[savedUI]
+	 */
 	if (savedUI && THEMES[savedUI]) {
 		currentUIThemeId = savedUI;
 	}
 	const savedGame = System.localStorage.getItem(STORAGE_KEY_GAME);
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } savedGame && THEMES[savedGame]
+	 */
 	if (savedGame && THEMES[savedGame]) {
 		currentGameThemeId = savedGame;
 	}
@@ -129,6 +141,12 @@ export function getAllThemeIds() {
  * @returns { object | null }
  */
 export function getTheme(themeId) {
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } themeId
+	 */
 	if (themeId === undefined || themeId === null) {
 		return THEMES[currentUIThemeId] || null;
 	}
@@ -143,6 +161,9 @@ export function getCurrentUIThemeId() {
 	return currentUIThemeId;
 }
 
+//==============================================================================
+// getCurrentUITheme.
+//==============================================================================
 export function getCurrentUITheme() {
 	return THEMES[currentUIThemeId];
 }
@@ -150,12 +171,39 @@ export function getCurrentUITheme() {
 /**
  * @param { string } themeId
  */
+//==============================================================================
+// setCurrentUITheme.
+//==============================================================================
+/**
+ * @param { * } themeId
+ */
 export function setCurrentUITheme(themeId) {
-	if (!THEMES[themeId]) return;
-	if (currentUIThemeId === themeId) return;
-	currentUIThemeId = themeId;
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } !THEMES[themeId]
+	 */
+	if (!THEMES[themeId]) {
+		return;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } currentUIThemeId
+	 */
+	if (currentUIThemeId === themeId) {
+		return;
+	}	currentUIThemeId = themeId;
 	try { System.localStorage.setItem(STORAGE_KEY_UI, themeId); } catch (e) {}
 	const theme = THEMES[themeId];
+	//==============================================================================
+	// for.
+	//==============================================================================
+	/**
+	 * @param { * } const listener of uiListeners
+	 */
 	for (const listener of uiListeners) {
 		try { listener(theme); } catch (error) { console.error("[theme/ui]", error); }
 	}
@@ -164,12 +212,24 @@ export function setCurrentUITheme(themeId) {
 /**
  * @param { (theme: object) => void } listener
  */
+//==============================================================================
+// addUIThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
+ */
 export function addUIThemeChangeListener(listener) {
 	uiListeners.add(listener);
 }
 
 /**
  * @param { (theme: object) => void } listener
+ */
+//==============================================================================
+// removeUIThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
  */
 export function removeUIThemeChangeListener(listener) {
 	uiListeners.delete(listener);
@@ -183,6 +243,9 @@ export function getCurrentGameThemeId() {
 	return currentGameThemeId;
 }
 
+//==============================================================================
+// getCurrentGameTheme.
+//==============================================================================
 export function getCurrentGameTheme() {
 	return THEMES[currentGameThemeId];
 }
@@ -190,12 +253,39 @@ export function getCurrentGameTheme() {
 /**
  * @param { string } themeId
  */
+//==============================================================================
+// setCurrentGameTheme.
+//==============================================================================
+/**
+ * @param { * } themeId
+ */
 export function setCurrentGameTheme(themeId) {
-	if (!THEMES[themeId]) return;
-	if (currentGameThemeId === themeId) return;
-	currentGameThemeId = themeId;
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } !THEMES[themeId]
+	 */
+	if (!THEMES[themeId]) {
+		return;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } currentGameThemeId
+	 */
+	if (currentGameThemeId === themeId) {
+		return;
+	}	currentGameThemeId = themeId;
 	try { System.localStorage.setItem(STORAGE_KEY_GAME, themeId); } catch (e) {}
 	const theme = THEMES[themeId];
+	//==============================================================================
+	// for.
+	//==============================================================================
+	/**
+	 * @param { * } const listener of gameListeners
+	 */
 	for (const listener of gameListeners) {
 		try { listener(theme); } catch (error) { console.error("[theme/game]", error); }
 	}
@@ -204,12 +294,24 @@ export function setCurrentGameTheme(themeId) {
 /**
  * @param { (theme: object) => void } listener
  */
+//==============================================================================
+// addGameThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
+ */
 export function addGameThemeChangeListener(listener) {
 	gameListeners.add(listener);
 }
 
 /**
  * @param { (theme: object) => void } listener
+ */
+//==============================================================================
+// removeGameThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
  */
 export function removeGameThemeChangeListener(listener) {
 	gameListeners.delete(listener);
@@ -223,18 +325,39 @@ export function getCurrentThemeId() {
 	return getCurrentUIThemeId();
 }
 
+//==============================================================================
+// getCurrentTheme.
+//==============================================================================
 export function getCurrentTheme() {
 	return getCurrentUITheme();
 }
 
+//==============================================================================
+// setCurrentTheme.
+//==============================================================================
+/**
+ * @param { * } themeId
+ */
 export function setCurrentTheme(themeId) {
 	setCurrentUITheme(themeId);
 }
 
+//==============================================================================
+// addThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
+ */
 export function addThemeChangeListener(listener) {
 	addUIThemeChangeListener(listener);
 }
 
+//==============================================================================
+// removeThemeChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
+ */
 export function removeThemeChangeListener(listener) {
 	removeUIThemeChangeListener(listener);
 }

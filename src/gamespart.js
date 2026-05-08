@@ -65,6 +65,17 @@ class UIGamesPartScrollViewItem extends WorldNode {
 	/** @private @type { Paint } */ #playCountPaint;
 	/** @private @type { Text } */ #playCountText;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } gamesPart
+	 * @param { * } text
+	 * @param { * } hex
+	 * @param { * } targetPartId
+	 * @param { * } gameId
+	 * @param { * } index
+	 */
 	constructor(gamesPart, text, hex, targetPartId, gameId, index) {
 		super();
 		this.setPivot(Pivot.middleCenter);
@@ -85,8 +96,9 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#text.setTextBaseline("middle");
 		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 		const font = getDefaultFontFace();
-		if (font) this.#text.setFont(font);
-
+		if (font) {
+			this.#text.setFont(font);
+		}
 		// 우측상단 번호 라벨. ("#1" "#2" ...) - setContentSize 에서 위치를 재계산.
 		this.#numberNode = new WorldNode();
 		this.#numberNode.setPivot(Pivot.topLeft);
@@ -97,8 +109,9 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		numberText.setTextAlign("right");
 		numberText.setTextBaseline("top");
 		numberText.setTextColor(new Color(255, 255, 255, 0.7));
-		if (font) numberText.setFont(font);
-		this.addChild(this.#numberNode);
+		if (font) {
+			numberText.setFont(font);
+		}		this.addChild(this.#numberNode);
 
 		// 하단 총점 배지. (라운드렉트 배경 + 텍스트)
 		this.#scoreNode = new WorldNode();
@@ -112,8 +125,9 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#scoreText.setTextAlign("center");
 		this.#scoreText.setTextBaseline("middle");
 		this.#scoreText.setTextColor(new Color(255, 255, 255, 0.95));
-		if (font) this.#scoreText.setFont(font);
-		this.addChild(this.#scoreNode);
+		if (font) {
+			this.#scoreText.setFont(font);
+		}		this.addChild(this.#scoreNode);
 
 		// 하단 플레이 횟수 배지. (점수 배지 위에 별도로 표시)
 		this.#playCountNode = new WorldNode();
@@ -127,8 +141,9 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#playCountText.setTextAlign("center");
 		this.#playCountText.setTextBaseline("middle");
 		this.#playCountText.setTextColor(new Color(255, 255, 255, 0.75));
-		if (font) this.#playCountText.setFont(font);
-		this.addChild(this.#playCountNode);
+		if (font) {
+			this.#playCountText.setFont(font);
+		}		this.addChild(this.#playCountNode);
 
 		this.refreshScore();
 
@@ -184,11 +199,23 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// touchPress.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchPress(viewInputPosition) {
 		if (!this.#gamesPart.isInsideViewport(viewInputPosition)) return;
 		super.touchPress(viewInputPosition);
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		// 뷰포트 밖에서 떨어지면 클릭이 발동되지 않도록 cancel 로 변환해 전달.
 		if (this.#gamesPart.isInsideViewport(viewInputPosition)) {
@@ -210,6 +237,9 @@ export class GamesPart extends Part {
 	/** @private @type { UIGamesPartScrollViewItem[] } */ #scrollViewItems;
 	/** @private @type { Array<{id: string, partId: string, title: string, color: string, visible?: boolean}> } */ #games;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#scrollViewportNode = null;
@@ -218,9 +248,18 @@ export class GamesPart extends Part {
 		this.#games = [];
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.games; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "게임 목록"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -262,6 +301,9 @@ export class GamesPart extends Part {
 		});
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.layout();
 		if (this.#scrollView) {
@@ -273,6 +315,9 @@ export class GamesPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
@@ -282,8 +327,9 @@ export class GamesPart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-		if (!this.#scrollViewportNode || contentSize.x <= 0) return;
-
+		if (!this.#scrollViewportNode || contentSize.x <= 0) {
+			return;
+		}
 		this.#scrollViewportNode.setLocalPosition(Vector2.zero());
 		this.#scrollViewportNode.setContentSize(contentSize);
 
@@ -314,8 +360,9 @@ export class GamesPart extends Part {
 	// 스크롤 뷰포트(마스크) 안 글로벌 좌표 검사. (스크롤로 잘린 항목 클릭 방지)
 	//==============================================================================
 	isInsideViewport(viewInputPosition) {
-		if (!this.#scrollViewportNode) return false;
-		return this.#scrollViewportNode.contains(viewInputPosition);
+		if (!this.#scrollViewportNode) {
+			return false;
+		}		return this.#scrollViewportNode.contains(viewInputPosition);
 	}
 
 	//==============================================================================

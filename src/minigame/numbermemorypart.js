@@ -34,6 +34,14 @@ class NMKey extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } key
+	 * @param { * } useSystemFont
+	 */
 	constructor(part, key, useSystemFont) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -48,10 +56,14 @@ class NMKey extends WorldNode {
 		this.#text.setFontSize(56);
 		this.#text.setTextAlign("center");
 		this.#text.setTextBaseline("middle");
-		if (useSystemFont) markUseSystemFont(this.#text);
-		this.refreshAppearance();
+		if (useSystemFont) {
+			markUseSystemFont(this.#text);
+		}		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		if (this.key === BACKSPACE) {
@@ -68,8 +80,20 @@ class NMKey extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setFontSize(s) { this.#text.setFontSize(s); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onKey(this.key);
@@ -100,6 +124,9 @@ export class NumberMemoryPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#keys = [];
@@ -113,13 +140,31 @@ export class NumberMemoryPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.numberMemory; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "숫자기억"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -162,6 +207,12 @@ export class NumberMemoryPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -174,21 +225,53 @@ export class NumberMemoryPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#showText) this.#showText.setTextColor(Color.createFromHEX(theme.primary));
-		if (this.#inputText) this.#inputText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const k of this.#keys) k.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#showText) {
+			this.#showText.setTextColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#inputText) {
+			this.#inputText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const k of this.#keys) k.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#level = 1;
 		this.#isStarted = true;
@@ -196,6 +279,9 @@ export class NumberMemoryPart extends Part {
 		this.startRound();
 	}
 
+	//==============================================================================
+	// startRound.
+	//==============================================================================
 	startRound() {
 		const len = this.#level + 2;     // 레벨 1 = 3자리.
 		let s = "";
@@ -211,11 +297,20 @@ export class NumberMemoryPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const len = this.#target.length;
 		this.#infoText.setText(`레벨 ${this.#level}    자릿수 ${len}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#state === STATE_SHOWING) {
@@ -228,9 +323,19 @@ export class NumberMemoryPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onKey.
+	//==============================================================================
+	/**
+	 * @param { * } key
+	 */
 	onKey(key) {
-		if (this.#isGameOver) return;
-		if (this.#state !== STATE_INPUT) return;
+		if (this.#isGameOver) {
+			return;
+		}
+		if (this.#state !== STATE_INPUT) {
+			return;
+		}
 		if (key === BACKSPACE) {
 			if (this.#input.length > 0) {
 				this.#input = this.#input.slice(0, -1);
@@ -242,11 +347,15 @@ export class NumberMemoryPart extends Part {
 			this.checkAnswer();
 			return;
 		}
-		if (this.#input.length >= this.#target.length) return;
-		this.#input += key;
+		if (this.#input.length >= this.#target.length) {
+			return;
+		}		this.#input += key;
 		this.#inputText.setText(this.#input);
 	}
 
+	//==============================================================================
+	// checkAnswer.
+	//==============================================================================
 	checkAnswer() {
 		const theme = getCurrentGameTheme();
 		if (this.#input === this.#target) {
@@ -267,6 +376,9 @@ export class NumberMemoryPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -307,6 +419,9 @@ export class NumberMemoryPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = (this.#level - 1) * 100;

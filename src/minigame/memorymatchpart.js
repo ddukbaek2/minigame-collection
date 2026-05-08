@@ -35,6 +35,13 @@ class MemoryCard extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } board
+	 * @param { * } index
+	 */
 	constructor(board, index) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -56,6 +63,12 @@ class MemoryCard extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// reset.
+	//==============================================================================
+	/**
+	 * @param { * } symbol
+	 */
 	reset(symbol) {
 		this.symbol = symbol;
 		this.isRevealed = false;
@@ -63,21 +76,33 @@ class MemoryCard extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// flipUp.
+	//==============================================================================
 	flipUp() {
 		this.isRevealed = true;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// flipDown.
+	//==============================================================================
 	flipDown() {
 		this.isRevealed = false;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setMatched.
+	//==============================================================================
 	setMatched() {
 		this.isMatched = true;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		if (this.isMatched) {
@@ -96,10 +121,22 @@ class MemoryCard extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#board.onCardTapped(this);
@@ -125,6 +162,9 @@ export class MemoryMatchPart extends Part {
 	/** @private @type { number } */ #matchedPairs;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cards = [];
@@ -137,17 +177,35 @@ export class MemoryMatchPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.memoryMatch; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "메모리 매치"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#moveCount > 0 && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -187,18 +245,36 @@ export class MemoryMatchPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
@@ -218,6 +294,9 @@ export class MemoryMatchPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#firstPick = null;
 		this.#secondPick = null;
@@ -243,10 +322,19 @@ export class MemoryMatchPart extends Part {
 		this.refreshStatusText();
 	}
 
+	//==============================================================================
+	// refreshStatusText.
+	//==============================================================================
 	refreshStatusText() {
 		this.#statusText.setText(`이동: ${this.#moveCount}    매치: ${this.#matchedPairs}/${(ROWS * COLS) / 2}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#flipBackTimer > 0) {
@@ -258,6 +346,9 @@ export class MemoryMatchPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -293,11 +384,22 @@ export class MemoryMatchPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, buttonY));
 	}
 
+	//==============================================================================
+	// onCardTapped.
+	//==============================================================================
+	/**
+	 * @param { * } card
+	 */
 	onCardTapped(card) {
-		if (this.#isGameOver) return;
-		if (this.#flipBackTimer > 0) return;
-		if (card.isRevealed || card.isMatched) return;
-
+		if (this.#isGameOver) {
+			return;
+		}
+		if (this.#flipBackTimer > 0) {
+			return;
+		}
+		if (card.isRevealed || card.isMatched) {
+			return;
+		}
 		card.flipUp();
 		if (this.#firstPick == null) {
 			this.#firstPick = card;
@@ -314,6 +416,9 @@ export class MemoryMatchPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// processPair.
+	//==============================================================================
 	processPair() {
 		if (!this.#firstPick || !this.#secondPick) {
 			this.#firstPick = null;
@@ -338,6 +443,9 @@ export class MemoryMatchPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const totalPairs = (ROWS * COLS) / 2;

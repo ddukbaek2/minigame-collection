@@ -40,6 +40,13 @@ class WhackCell extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } board
+	 * @param { * } index
+	 */
 	constructor(board, index) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -61,6 +68,9 @@ class WhackCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// reset.
+	//==============================================================================
 	reset() {
 		this.hasMole = false;
 		this.wasHit = false;
@@ -68,6 +78,12 @@ class WhackCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// spawnMole.
+	//==============================================================================
+	/**
+	 * @param { * } lifetime
+	 */
 	spawnMole(lifetime) {
 		this.hasMole = true;
 		this.wasHit = false;
@@ -75,6 +91,9 @@ class WhackCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// despawnMole.
+	//==============================================================================
 	despawnMole() {
 		this.hasMole = false;
 		this.wasHit = false;
@@ -82,12 +101,18 @@ class WhackCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// hit.
+	//==============================================================================
 	hit() {
 		this.wasHit = true;
 		this.lifetime = 0.3;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		if (this.wasHit) {
@@ -104,10 +129,22 @@ class WhackCell extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
 
+	//==============================================================================
+	// tickCell.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tickCell(timeDelta) {
 		if (this.lifetime > 0) {
 			this.lifetime -= timeDelta;
@@ -125,6 +162,12 @@ class WhackCell extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#board.onCellTapped(this);
@@ -151,6 +194,9 @@ export class WhackAMolePart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cells = [];
@@ -164,17 +210,35 @@ export class WhackAMolePart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.whackAMole; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "두더지잡기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#isStarted && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -214,18 +278,36 @@ export class WhackAMolePart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
@@ -245,6 +327,9 @@ export class WhackAMolePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#spawnTimer = MOLE_SPAWN_INTERVAL_MIN;
@@ -259,15 +344,25 @@ export class WhackAMolePart extends Part {
 		this.refreshStatusText();
 	}
 
+	//==============================================================================
+	// refreshStatusText.
+	//==============================================================================
 	refreshStatusText() {
 		const seconds = System.Math.ceil(this.#remainingTime);
 		this.#statusText.setText(`점수: ${this.#score}    시간: ${seconds}초`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}
 		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
@@ -290,17 +385,25 @@ export class WhackAMolePart extends Part {
 		this.refreshStatusText();
 	}
 
+	//==============================================================================
+	// spawnMole.
+	//==============================================================================
 	spawnMole() {
 		// 활성 두더지 수 제한.
 		const active = this.#cells.filter(c => c.hasMole && !c.wasHit);
-		if (active.length >= MAX_ACTIVE_MOLES) return;
-		const empties = this.#cells.filter(c => !c.hasMole);
-		if (empties.length === 0) return;
-		const cell = empties[System.Math.floor(System.Math.random() * empties.length)];
+		if (active.length >= MAX_ACTIVE_MOLES) {
+			return;
+		}		const empties = this.#cells.filter(c => !c.hasMole);
+		if (empties.length === 0) {
+			return;
+		}		const cell = empties[System.Math.floor(System.Math.random() * empties.length)];
 		const lifetime = MOLE_MIN_LIFETIME + System.Math.random() * (MOLE_MAX_LIFETIME - MOLE_MIN_LIFETIME);
 		cell.spawnMole(lifetime);
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -336,8 +439,16 @@ export class WhackAMolePart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, buttonY));
 	}
 
+	//==============================================================================
+	// onCellTapped.
+	//==============================================================================
+	/**
+	 * @param { * } cell
+	 */
 	onCellTapped(cell) {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (cell.hasMole && !cell.wasHit) {
 			cell.hit();
 			this.#hits += 1;
@@ -351,10 +462,16 @@ export class WhackAMolePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onMoleMissed.
+	//==============================================================================
 	onMoleMissed() {
 		this.#misses += 1;
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const total = this.#hits + this.#misses;

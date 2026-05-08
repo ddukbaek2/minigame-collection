@@ -29,6 +29,12 @@ const listeners = new System.Set();
 //==============================================================================
 try {
 	const saved = System.localStorage.getItem(STORAGE_KEY);
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } saved
+	 */
 	if (saved) {
 		const parsed = JSON.parse(saved);
 		if (parsed && typeof parsed === "object") {
@@ -63,6 +69,12 @@ function persist() {
 	try {
 		System.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
+	//==============================================================================
+	// catch.
+	//==============================================================================
+	/**
+	 * @param { * } error
+	 */
 	catch (error) {
 		// 무시.
 	}
@@ -90,8 +102,15 @@ export function getTotalScore(gameId) {
  * @param { number } score
  */
 export function addScore(gameId, score) {
-	if (!gameId) return;
-	const numeric = System.Number(score);
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } !gameId
+	 */
+	if (!gameId) {
+		return;
+	}	const numeric = System.Number(score);
 	if (!System.Number.isFinite(numeric) || numeric <= 0) return;
 	state.totals[gameId] = getTotalScore(gameId) + numeric;
 	persist();
@@ -106,8 +125,15 @@ export function addScore(gameId, score) {
  * @param { string } gameId
  */
 export function addPlay(gameId) {
-	if (!gameId) return;
-	state.playCounts[gameId] = getPlayCount(gameId) + 1;
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } !gameId
+	 */
+	if (!gameId) {
+		return;
+	}	state.playCounts[gameId] = getPlayCount(gameId) + 1;
 	persist();
 	notify(gameId);
 }
@@ -130,6 +156,12 @@ export function getPlayCount(gameId) {
 // 변경 알림.
 //==============================================================================
 function notify(gameId) {
+	//==============================================================================
+	// for.
+	//==============================================================================
+	/**
+	 * @param { * } const listener of listeners
+	 */
 	for (const listener of listeners) {
 		try {
 			listener(gameId);
@@ -161,6 +193,12 @@ export function addScoreChangeListener(listener) {
 
 /**
  * @param { (gameId: string, total: number) => void } listener
+ */
+//==============================================================================
+// removeScoreChangeListener.
+//==============================================================================
+/**
+ * @param { * } listener
  */
 export function removeScoreChangeListener(listener) {
 	listeners.delete(listener);

@@ -2,4 +2,4 @@
 // 자동 생성 파일. tools/bump-version.cjs 가 디플로이 빌드 시 갱신.
 // 직접 수정하지 말 것 — 같은 값이 package.json 의 version 필드와 동기화된다.
 //==============================================================================
-export const CURRENT_VERSION_STRING = "1.0.16";
+export const CURRENT_VERSION_STRING = "1.0.17";

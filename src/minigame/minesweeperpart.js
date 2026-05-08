@@ -43,16 +43,87 @@ const NUMBER_COLORS = [
 // 남은 시간(초)에 따른 점수 배수. 1~10.
 //==============================================================================
 function getTimeMultiplier(remainingSeconds) {
-	if (remainingSeconds >= 900) return 10;
-	if (remainingSeconds >= 800) return 9;
-	if (remainingSeconds >= 700) return 8;
-	if (remainingSeconds >= 600) return 7;
-	if (remainingSeconds >= 500) return 6;
-	if (remainingSeconds >= 400) return 5;
-	if (remainingSeconds >= 300) return 4;
-	if (remainingSeconds >= 200) return 3;
-	if (remainingSeconds >= 100) return 2;
-	return 1;
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 900) {
+		return 10;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 800) {
+		return 9;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 700) {
+		return 8;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 600) {
+		return 7;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 500) {
+		return 6;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 400) {
+		return 5;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 300) {
+		return 4;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 200) {
+		return 3;
+	}
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } remainingSeconds >
+	 */
+	if (remainingSeconds >= 100) {
+		return 2;
+	}	return 1;
 }
 
 
@@ -86,6 +157,14 @@ class MinesweeperTile extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } board
+	 * @param { * } row
+	 * @param { * } col
+	 */
 	constructor(board, row, col) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -115,6 +194,9 @@ class MinesweeperTile extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// reset.
+	//==============================================================================
 	reset() {
 		this.isMine = false;
 		this.isRevealed = false;
@@ -126,6 +208,9 @@ class MinesweeperTile extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 
@@ -172,6 +257,12 @@ class MinesweeperTile extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#isPressed) {
@@ -183,6 +274,12 @@ class MinesweeperTile extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// touchPress.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchPress(viewInputPosition) {
 		if (this.#board.isInteractionLocked()) {
 			return;
@@ -193,6 +290,12 @@ class MinesweeperTile extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// touchMove.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchMove(viewInputPosition) {
 		if (!this.#isPressed) {
 			return;
@@ -206,6 +309,12 @@ class MinesweeperTile extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.#isPressed) {
 			return;
@@ -222,6 +331,12 @@ class MinesweeperTile extends WorldNode {
 		this.#board.onTileReleased(this, longTriggered);
 	}
 
+	//==============================================================================
+	// touchCancel.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchCancel(viewInputPosition) {
 		this.#isPressed = false;
 		this.#pressDuration = 0;
@@ -229,6 +344,12 @@ class MinesweeperTile extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
@@ -254,6 +375,9 @@ export class MinesweeperPart extends Part {
 	/** @private @type { number } */ #remainingFlags; // 남은 깃발 수 (회복 안 됨)
 	/** @private @type { number } */ #remainingTime;  // 남은 시간(초)
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#boardNode = null;
@@ -274,13 +398,28 @@ export class MinesweeperPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.minesweeper; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "지뢰찾기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#isStarted && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
@@ -346,19 +485,37 @@ export class MinesweeperPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 		// UI 테마 무시. 게임 테마로만 색 결정.
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
@@ -384,6 +541,12 @@ export class MinesweeperPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#isStarted && !this.#isGameOver) {
@@ -398,6 +561,9 @@ export class MinesweeperPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// isInteractionLocked.
+	//==============================================================================
 	isInteractionLocked() {
 		return this.#isGameOver;
 	}
@@ -557,29 +723,46 @@ export class MinesweeperPart extends Part {
 			candidates[i].isMine = true;
 		}
 		for (const tile of this.#tiles) {
-			if (tile.isMine) continue;
-			let count = 0;
+			if (tile.isMine) {
+				continue;
+			}			let count = 0;
 			for (const n of this.getNeighbors(tile)) {
-				if (n.isMine) ++count;
+				if (n.isMine) {
+					++count;
+				}
 			}
 			tile.neighborCount = count;
 		}
 	}
 
+	//==============================================================================
+	// getNeighbors.
+	//==============================================================================
+	/**
+	 * @param { * } tile
+	 */
 	getNeighbors(tile) {
 		const result = [];
 		for (let dr = -1; dr <= 1; ++dr) {
 			for (let dc = -1; dc <= 1; ++dc) {
-				if (dr === 0 && dc === 0) continue;
-				const nr = tile.row + dr;
+				if (dr === 0 && dc === 0) {
+					continue;
+				}				const nr = tile.row + dr;
 				const nc = tile.col + dc;
-				if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
-				result.push(this.#tiles[nr * COLS + nc]);
+				if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) {
+					continue;
+				}				result.push(this.#tiles[nr * COLS + nc]);
 			}
 		}
 		return result;
 	}
 
+	//==============================================================================
+	// revealTile.
+	//==============================================================================
+	/**
+	 * @param { * } tile
+	 */
 	revealTile(tile) {
 		if (tile.isRevealed || tile.isFlagged) {
 			return;
@@ -599,6 +782,9 @@ export class MinesweeperPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// revealAllMines.
+	//==============================================================================
 	revealAllMines() {
 		for (const tile of this.#tiles) {
 			if (tile.isMine) {
@@ -609,6 +795,9 @@ export class MinesweeperPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// checkWin.
+	//==============================================================================
 	checkWin() {
 		if (this.#isGameOver) {
 			return;
@@ -636,8 +825,9 @@ export class MinesweeperPart extends Part {
 		let wrongFlags = 0;
 		let unflaggedMines = 0;
 		for (const tile of this.#tiles) {
-			if (tile.isFlagged && tile.isMine) correctFlags += 1;
-			else if (tile.isFlagged && !tile.isMine) wrongFlags += 1;
+			if (tile.isFlagged && tile.isMine) {
+				correctFlags += 1;
+			}			else if (tile.isFlagged && !tile.isMine) wrongFlags += 1;
 			else if (!tile.isFlagged && tile.isMine && !tile.isRevealed) unflaggedMines += 1;
 		}
 

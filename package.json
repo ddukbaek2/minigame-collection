@@ -1,6 +1,6 @@
 {
 	"name": "minigame-collection",
-	"version": "1.0.16",
+	"version": "0.0.1",
 	"description": "미니게임모음",
 	"main": "src/main.js",
 	"scripts": {

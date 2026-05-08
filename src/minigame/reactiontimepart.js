@@ -45,6 +45,9 @@ export class ReactionTimePart extends Part {
 	/** @private @type { number[] } */ #times;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#state = STATE_IDLE;
@@ -56,17 +59,35 @@ export class ReactionTimePart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.reactionTime; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "반응속도"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#round > 0 && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -111,26 +132,54 @@ export class ReactionTimePart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		this.refreshPanel();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		this.refreshPanel();
 	}
 
+	//==============================================================================
+	// refreshPanel.
+	//==============================================================================
 	refreshPanel() {
 		const theme = getCurrentGameTheme();
 		if (this.#state === STATE_IDLE) {
@@ -159,6 +208,9 @@ export class ReactionTimePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#state = STATE_IDLE;
 		this.#round = 0;
@@ -170,10 +222,19 @@ export class ReactionTimePart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`라운드 ${this.#round + (this.#state === STATE_RESULT ? 0 : 0)} / ${ROUNDS}    기록: ${this.#times.length}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#state === STATE_WAITING) {
@@ -189,8 +250,13 @@ export class ReactionTimePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onPanelTapped.
+	//==============================================================================
 	onPanelTapped() {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (this.#state === STATE_IDLE || this.#state === STATE_RESULT || this.#state === STATE_FOUL) {
 			this.startNextRound();
 		}
@@ -212,6 +278,9 @@ export class ReactionTimePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// startNextRound.
+	//==============================================================================
 	startNextRound() {
 		this.#state = STATE_WAITING;
 		this.#waitTimer = MIN_WAIT + System.Math.random() * (MAX_WAIT - MIN_WAIT);
@@ -219,6 +288,9 @@ export class ReactionTimePart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -236,6 +308,9 @@ export class ReactionTimePart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + panelHeight + gap + infoHeight + gap + buttonHeight * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const sum = this.#times.reduce((a, b) => a + b, 0);

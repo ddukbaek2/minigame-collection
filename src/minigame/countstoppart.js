@@ -43,6 +43,9 @@ export class CountStopPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#state = STATE_IDLE;
@@ -54,13 +57,31 @@ export class CountStopPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.countStop; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "카운트 스톱"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -103,6 +124,12 @@ export class CountStopPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -115,20 +142,50 @@ export class CountStopPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#targetText) this.#targetText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		this.refreshPanel();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#targetText) {
+			this.#targetText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		this.refreshPanel();
 	}
 
+	//==============================================================================
+	// refreshPanel.
+	//==============================================================================
 	refreshPanel() {
 		const theme = getCurrentGameTheme();
 		if (this.#state === STATE_IDLE) {
@@ -148,6 +205,9 @@ export class CountStopPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#state = STATE_IDLE;
 		this.#targetIndex = 0;
@@ -160,10 +220,16 @@ export class CountStopPart extends Part {
 		this.refreshTarget();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`라운드 ${this.#targetIndex + (this.#state === STATE_DONE ? 0 : 0)} / ${TARGETS.length}`);
 	}
 
+	//==============================================================================
+	// refreshTarget.
+	//==============================================================================
 	refreshTarget() {
 		if (this.#targetIndex < TARGETS.length) {
 			this.#targetText.setText(`정확히 ${TARGETS[this.#targetIndex]}초에 멈춰보세요`);
@@ -173,6 +239,12 @@ export class CountStopPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#state === STATE_RUNNING) {
@@ -180,11 +252,17 @@ export class CountStopPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onPanelTapped.
+	//==============================================================================
 	onPanelTapped() {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (this.#state === STATE_IDLE || this.#state === STATE_DONE) {
-			if (this.#targetIndex >= TARGETS.length) return;
-			this.#state = STATE_RUNNING;
+			if (this.#targetIndex >= TARGETS.length) {
+				return;
+			}			this.#state = STATE_RUNNING;
 			this.#elapsed = 0;
 			this.#isStarted = true;
 			this.refreshPanel();
@@ -205,6 +283,9 @@ export class CountStopPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -228,6 +309,9 @@ export class CountStopPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const totalErrorMs = this.#errors.reduce((a, b) => a + b * 1000, 0);

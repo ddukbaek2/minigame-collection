@@ -187,8 +187,9 @@ export class MainScene extends Scene {
 		super.drawOnLoad(graphic);
 
 		const engine = this.getEngine();
-		if (!engine) return;
-		const canvasRenderingContext = graphic.getCanvasRenderingContext();
+		if (!engine) {
+			return;
+		}		const canvasRenderingContext = graphic.getCanvasRenderingContext();
 		const viewManager = engine.getViewManager();
 		const canvasNativeSize = viewManager.getCanvasNativeSize();
 		const viewSize = viewManager.getViewSize();
@@ -607,8 +608,9 @@ export class MainScene extends Scene {
 	 * @param { (nickname: string) => void | null } onConfirm
 	 */
 	showNicknameInput(initialValue, onConfirm) {
-		if (!this.#nicknamePopup) return;
-		this.#nicknamePopup.setLocalPosition(Vector2.zero());
+		if (!this.#nicknamePopup) {
+			return;
+		}		this.#nicknamePopup.setLocalPosition(Vector2.zero());
 		this.#nicknamePopup.setContentSize(this.#safeAreaNode.getContentSize());
 		this.#nicknamePopup.show(initialValue || "", onConfirm || null);
 	}
@@ -617,8 +619,9 @@ export class MainScene extends Scene {
 	// 공지 팝업.
 	//==============================================================================
 	showNotice() {
-		if (!this.#noticePopup) return;
-		this.#noticePopup.setLocalPosition(Vector2.zero());
+		if (!this.#noticePopup) {
+			return;
+		}		this.#noticePopup.setLocalPosition(Vector2.zero());
 		this.#noticePopup.setContentSize(this.#safeAreaNode.getContentSize());
 		this.#noticePopup.show();
 	}
@@ -844,6 +847,12 @@ export class MainScene extends Scene {
 	 * @override
 	 * @param { Vector2 } viewInputPosition
 	 */
+	//==============================================================================
+	// touchPress.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchPress(viewInputPosition) {
 		if (this.isDevToolsCapturingInput()) {
 			return;
@@ -854,6 +863,12 @@ export class MainScene extends Scene {
 	/**
 	 * @override
 	 * @param { Vector2 } viewInputPosition
+	 */
+	//==============================================================================
+	// touchMove.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
 	 */
 	touchMove(viewInputPosition) {
 		if (this.isDevToolsCapturingInput()) {
@@ -866,6 +881,12 @@ export class MainScene extends Scene {
 	 * @override
 	 * @param { Vector2 } viewInputPosition
 	 */
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (this.isDevToolsCapturingInput()) {
 			return;
@@ -876,6 +897,12 @@ export class MainScene extends Scene {
 	/**
 	 * @override
 	 * @param { Vector2 } viewInputPosition
+	 */
+	//==============================================================================
+	// touchCancel.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
 	 */
 	touchCancel(viewInputPosition) {
 		if (this.isDevToolsCapturingInput()) {
@@ -888,6 +915,13 @@ export class MainScene extends Scene {
 	 * @override
 	 * @param { Vector2 } viewInputPosition
 	 * @param { Vector2 } wheelDelta
+	 */
+	//==============================================================================
+	// touchWheel.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 * @param { * } wheelDelta
 	 */
 	touchWheel(viewInputPosition, wheelDelta) {
 		if (this.isDevToolsCapturingInput()) {
@@ -924,6 +958,12 @@ export class MainScene extends Scene {
 	/**
 	 * @override
 	 * @param { Graphic } graphic
+	 */
+	//==============================================================================
+	// postDraw.
+	//==============================================================================
+	/**
+	 * @param { * } graphic
 	 */
 	postDraw(graphic) {
 		super.postDraw(graphic);

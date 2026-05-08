@@ -49,10 +49,16 @@ export class TitlePart extends Part {
 		this.#versionTextNode = null;
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() {
 		return PartId.title;
 	}
 
+	//==============================================================================
+	// hasNavigation.
+	//==============================================================================
 	hasNavigation() {
 		return false;
 	}
@@ -111,8 +117,9 @@ export class TitlePart extends Part {
 		versionText.setTextAlign("right");
 		versionText.setTextBaseline("bottom");
 		const font = getDefaultFontFace();
-		if (font) versionText.setFont(font);
-		const versionButton = this.#versionTextNode.addComponent(UIButton);
+		if (font) {
+			versionText.setFont(font);
+		}		const versionButton = this.#versionTextNode.addComponent(UIButton);
 		versionButton.setPressedTintColor(Color.transparent());
 		versionButton.setClickEvent(() => { app.showNotice(); });
 		this.addChild(this.#versionTextNode);

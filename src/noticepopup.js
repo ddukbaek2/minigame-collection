@@ -59,6 +59,14 @@ class NoticeCard extends WorldNode {
 	/** @private @type { WorldNode[] } */ #contentLineNodes;
 	/** @private @type { Text[] } */ #contentLineTexts;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } date
+	 * @param { * } version
+	 * @param { * } content
+	 */
 	constructor(date, version, content) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -78,8 +86,9 @@ class NoticeCard extends WorldNode {
 		this.#dateText.setFontSize(DATE_FONT_SIZE);
 		this.#dateText.setTextAlign("left");
 		this.#dateText.setTextBaseline("top");
-		if (font) this.#dateText.setFont(font);
-		this.addChild(this.#dateNode);
+		if (font) {
+			this.#dateText.setFont(font);
+		}		this.addChild(this.#dateNode);
 
 		this.#versionNode = null;
 		this.#versionText = null;
@@ -92,8 +101,9 @@ class NoticeCard extends WorldNode {
 			this.#versionText.setFontSize(VERSION_FONT_SIZE);
 			this.#versionText.setTextAlign("left");
 			this.#versionText.setTextBaseline("top");
-			if (font) this.#versionText.setFont(font);
-			this.addChild(this.#versionNode);
+			if (font) {
+				this.#versionText.setFont(font);
+			}			this.addChild(this.#versionNode);
 		}
 
 		// 본문: "\n" 단위로 줄별 라벨 생성.
@@ -109,13 +119,17 @@ class NoticeCard extends WorldNode {
 			lineText.setFontSize(CONTENT_FONT_SIZE);
 			lineText.setTextAlign("left");
 			lineText.setTextBaseline("top");
-			if (font) lineText.setFont(font);
-			this.addChild(lineNode);
+			if (font) {
+				lineText.setFont(font);
+			}			this.addChild(lineNode);
 			this.#contentLineNodes.push(lineNode);
 			this.#contentLineTexts.push(lineText);
 		}
 	}
 
+	//==============================================================================
+	// getDesiredHeight.
+	//==============================================================================
 	getDesiredHeight() {
 		const lineCount = this.#contentLineNodes.length;
 		return CARD_INNER_PADDING_TOP
@@ -125,6 +139,12 @@ class NoticeCard extends WorldNode {
 			+ CARD_INNER_PADDING_BOTTOM;
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
 		this.#dateText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
@@ -137,6 +157,12 @@ class NoticeCard extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setContentSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setContentSize(size) {
 		super.setContentSize(size);
 
@@ -183,6 +209,9 @@ export class NoticePopup extends WorldNode {
 	/** @private @type { number } */ #animProgress;
 	/** @private @type { number } */ #animTarget;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -219,8 +248,9 @@ export class NoticePopup extends WorldNode {
 		this.#titleText.setFontSize(TITLE_FONT_SIZE);
 		this.#titleText.setTextAlign("left");
 		this.#titleText.setTextBaseline("middle");
-		if (font) this.#titleText.setFont(font);
-		this.#boxNode.addChild(this.#titleNode);
+		if (font) {
+			this.#titleText.setFont(font);
+		}		this.#boxNode.addChild(this.#titleNode);
 
 		// 닫기 버튼 (X).
 		this.#closeButtonNode = new WorldNode();
@@ -274,14 +304,21 @@ export class NoticePopup extends WorldNode {
 		this.#animTarget = 1;
 		this.layout();
 		// 스크롤 위치 초기화.
-		if (this.#scrollView) this.#scrollView.setScrollOffset(Vector2.zero());
-		this.applyAnimation();
+		if (this.#scrollView) {
+			this.#scrollView.setScrollOffset(Vector2.zero());
+		}		this.applyAnimation();
 	}
 
+	//==============================================================================
+	// hide.
+	//==============================================================================
 	hide() {
 		this.#animTarget = 0;
 	}
 
+	//==============================================================================
+	// isShowing.
+	//==============================================================================
 	isShowing() {
 		return this.isActive() && this.#animTarget === 1;
 	}
@@ -305,8 +342,9 @@ export class NoticePopup extends WorldNode {
 	//==============================================================================
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (this.#animProgress === this.#animTarget) return;
-
+		if (this.#animProgress === this.#animTarget) {
+			return;
+		}
 		const factor = 1 - System.Math.exp(-TWEEN_RATE * timeDelta);
 		this.#animProgress += (this.#animTarget - this.#animProgress) * factor;
 
@@ -339,8 +377,9 @@ export class NoticePopup extends WorldNode {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-		if (contentSize.x <= 0 || contentSize.y <= 0) return;
-
+		if (contentSize.x <= 0 || contentSize.y <= 0) {
+			return;
+		}
 		// 박스 사이즈/중심 계산.
 		const boxWidth = System.Math.floor(contentSize.x * BOX_WIDTH_RATIO);
 		const boxHeight = System.Math.floor(contentSize.y * BOX_HEIGHT_RATIO);
@@ -375,8 +414,9 @@ export class NoticePopup extends WorldNode {
 			cursorY += cardHeight + CARD_GAP;
 		}
 		// 마지막 카드 아래 GAP 만큼은 스크롤 콘텐트에서 제거.
-		if (cursorY > 0) cursorY -= CARD_GAP;
-
+		if (cursorY > 0) {
+			cursorY -= CARD_GAP;
+		}
 		this.#scrollView.setScrollContentSize(Vector2.create(innerSize.x, cursorY));
 
 		// 박스 위치 트윈 재반영.
@@ -393,7 +433,16 @@ export class NoticePopup extends WorldNode {
 		}
 		this.hide();
 	}
+	//==============================================================================
+	// touchMove.
+	//==============================================================================
 	touchMove() {}
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
 	touchRelease() {}
+	//==============================================================================
+	// touchCancel.
+	//==============================================================================
 	touchCancel() {}
 }

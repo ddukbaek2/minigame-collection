@@ -29,6 +29,12 @@ class Target extends WorldNode {
 	/** @private @type { TargetTapPart } */ #part;
 	/** @private @type { Paint } */ #paint;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 */
 	constructor(part) {
 		super();
 		this.setPivot(Pivot.middleCenter);
@@ -41,15 +47,30 @@ class Target extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
 	}
 
+	//==============================================================================
+	// tickTarget.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tickTarget(timeDelta) {
 		this.lifetime -= timeDelta;
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onTargetHit(this);
@@ -75,6 +96,9 @@ export class TargetTapPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#current = null;
@@ -86,13 +110,31 @@ export class TargetTapPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.targetTap; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "표적탭"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -133,20 +175,53 @@ export class TargetTapPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.layout(); this.resetGame(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#fieldPaint) this.#fieldPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		if (this.#current) this.#current.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#fieldPaint) {
+			this.#fieldPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}
+		if (this.#current) {
+			this.#current.refreshAppearance();
+		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#hits = 0;
@@ -161,10 +236,14 @@ export class TargetTapPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// spawnTarget.
+	//==============================================================================
 	spawnTarget() {
 		const fieldSize = this.#fieldNode.getContentSize();
-		if (!fieldSize || fieldSize.x <= 0) return;
-		const t = new Target(this);
+		if (!fieldSize || fieldSize.x <= 0) {
+			return;
+		}		const t = new Target(this);
 		const pad = TARGET_RADIUS + 10;
 		const x = pad + System.Math.random() * (fieldSize.x - pad * 2);
 		const y = pad + System.Math.random() * (fieldSize.y - pad * 2);
@@ -174,15 +253,25 @@ export class TargetTapPart extends Part {
 		this.#current = t;
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    명중 ${this.#hits}    빗나감 ${this.#misses}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -202,22 +291,38 @@ export class TargetTapPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onTargetHit.
+	//==============================================================================
+	/**
+	 * @param { * } target
+	 */
 	onTargetHit(target) {
-		if (this.#isGameOver) return;
-		if (target !== this.#current) return;
-		this.#hits += 1;
+		if (this.#isGameOver) {
+			return;
+		}
+		if (target !== this.#current) {
+			return;
+		}		this.#hits += 1;
 		this.#current.removeFromParent();
 		this.#current = null;
 		this.spawnTarget();
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onFieldTapped.
+	//==============================================================================
 	onFieldTapped() {
-		if (this.#isGameOver) return;
-		this.#misses += 1;
+		if (this.#isGameOver) {
+			return;
+		}		this.#misses += 1;
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -234,6 +339,9 @@ export class TargetTapPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		if (this.#current) {

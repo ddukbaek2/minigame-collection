@@ -29,6 +29,12 @@ class AnswerButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 */
 	constructor(part) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -46,20 +52,41 @@ class AnswerButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setValue.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	setValue(v) {
 		this.value = v;
 		this.#text.setText(String(v));
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
 		this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onAnswer(this.value);
@@ -87,6 +114,9 @@ export class QuickMathPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#buttons = [];
@@ -99,13 +129,31 @@ export class QuickMathPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.quickMath; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "빠른계산"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -154,20 +202,50 @@ export class QuickMathPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#questionText) this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#questionText) {
+			this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
@@ -178,11 +256,17 @@ export class QuickMathPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
+	//==============================================================================
+	// nextQuestion.
+	//==============================================================================
 	nextQuestion() {
 		const ops = ["+", "-", "×"];
 		const op = ops[System.Math.floor(System.Math.random() * ops.length)];
@@ -209,9 +293,12 @@ export class QuickMathPart extends Part {
 		const choices = new System.Set([ans]);
 		while (choices.size < CHOICES) {
 			let off = System.Math.floor(System.Math.random() * 11) - 5;
-			if (off === 0) off = 1;
-			const v = ans + off;
-			if (v >= 0) choices.add(v);
+			if (off === 0) {
+				off = 1;
+			}			const v = ans + off;
+			if (v >= 0) {
+				choices.add(v);
+			}
 		}
 		const arr = System.Array.from(choices);
 		for (let i = arr.length - 1; i > 0; --i) {
@@ -223,10 +310,17 @@ export class QuickMathPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -236,8 +330,16 @@ export class QuickMathPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onAnswer.
+	//==============================================================================
+	/**
+	 * @param { * } value
+	 */
 	onAnswer(value) {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (value === this.#correctAnswer) {
 			this.#correctCount += 1;
 		}
@@ -249,6 +351,9 @@ export class QuickMathPart extends Part {
 		this.nextQuestion();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -283,6 +388,9 @@ export class QuickMathPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = System.Math.max(0, this.#correctCount * 50 - this.#wrongCount * 20);

@@ -29,6 +29,12 @@ class FindOddCell extends WorldNode {
 	/** @private @type { FindOddPart } */ #part;
 	/** @private @type { Paint } */ #paint;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 */
 	constructor(part) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -40,10 +46,22 @@ class FindOddCell extends WorldNode {
 		this.#paint.setRoundSize(8);
 	}
 
+	//==============================================================================
+	// setColor.
+	//==============================================================================
+	/**
+	 * @param { * } color
+	 */
 	setColor(color) {
 		this.#paint.setColor(color);
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onCellTapped(this);
@@ -69,6 +87,9 @@ export class FindOddPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cells = [];
@@ -81,13 +102,31 @@ export class FindOddPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.findOdd; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "다른색 찾기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -127,19 +166,47 @@ export class FindOddPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		this.applyRound();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		this.applyRound();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#score = 0;
@@ -150,6 +217,9 @@ export class FindOddPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    점수: ${this.#score}    레벨: ${this.#level}`);
@@ -193,16 +263,35 @@ export class FindOddPart extends Part {
 		this.layout();
 	}
 
+	//==============================================================================
+	// clamp.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	clamp(v) { return System.Math.max(0, System.Math.min(255, v)); }
+	//==============================================================================
+	// toHex.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	toHex(v) {
 		const s = v.toString(16);
 		return s.length === 1 ? "0" + s : s;
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -212,12 +301,21 @@ export class FindOddPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onCellTapped.
+	//==============================================================================
+	/**
+	 * @param { * } cell
+	 */
 	onCellTapped(cell) {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (cell.isOdd) {
 			this.#score += this.#level * 10;
-			if (this.#level < MAX_LEVEL) this.#level += 1;
-			this.applyRound();
+			if (this.#level < MAX_LEVEL) {
+				this.#level += 1;
+			}			this.applyRound();
 		}
 		else {
 			this.#score = System.Math.max(0, this.#score - 20);
@@ -226,6 +324,9 @@ export class FindOddPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -262,6 +363,9 @@ export class FindOddPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, boardY + boardSize + vGap + buttonH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const app = this.getApp();

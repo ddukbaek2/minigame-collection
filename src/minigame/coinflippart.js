@@ -39,6 +39,14 @@ class CoinButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } choice
+	 * @param { * } text
+	 */
 	constructor(part, choice, text) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -56,14 +64,29 @@ class CoinButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const isHead = this.choice === "head";
 		this.#paint.setColor(Color.createFromHEX(isHead ? "#eab308" : "#a16207"));
 		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setFontSize(s) { this.#text.setFontSize(s); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onChoice(this.choice);
@@ -94,6 +117,9 @@ export class CoinFlipPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#buttons = [];
@@ -104,13 +130,31 @@ export class CoinFlipPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.coinFlip; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "동전 베팅"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -167,6 +211,12 @@ export class CoinFlipPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -179,18 +229,45 @@ export class CoinFlipPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
 	//==============================================================================
@@ -218,6 +295,9 @@ export class CoinFlipPart extends Part {
 		this.#coinText.setText(text);
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#chips = STARTING_CHIPS;
 		this.#flips = 0;
@@ -228,14 +308,26 @@ export class CoinFlipPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`칩: ${this.#chips}    플립 ${this.#flips}/${TOTAL_FLIPS}`);
 	}
 
+	//==============================================================================
+	// onChoice.
+	//==============================================================================
+	/**
+	 * @param { * } choice
+	 */
 	onChoice(choice) {
-		if (this.#isGameOver) return;
-		if (this.#chips < BET_AMOUNT) return;
-		this.#chips -= BET_AMOUNT;
+		if (this.#isGameOver) {
+			return;
+		}
+		if (this.#chips < BET_AMOUNT) {
+			return;
+		}		this.#chips -= BET_AMOUNT;
 		const result = System.Math.random() < 0.5 ? "head" : "tail";
 		this.setCoinFace(result);
 		const theme = getCurrentGameTheme();
@@ -256,6 +348,9 @@ export class CoinFlipPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -300,6 +395,9 @@ export class CoinFlipPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const profit = this.#chips - STARTING_CHIPS;

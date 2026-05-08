@@ -31,6 +31,13 @@ class SimonPad extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { boolean } */ #isFlashing;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } index
+	 */
 	constructor(part, index) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -44,16 +51,31 @@ class SimonPad extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setFlashing.
+	//==============================================================================
+	/**
+	 * @param { * } on
+	 */
 	setFlashing(on) {
 		this.#isFlashing = on;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const hex = this.#isFlashing ? PAD_COLORS_BRIGHT[this.index] : PAD_COLORS_BASE[this.index];
 		this.#paint.setColor(Color.createFromHEX(hex));
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onPadTapped(this.index);
@@ -81,6 +103,9 @@ export class SimonPart extends Part {
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { number } */ #score;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#pads = [];
@@ -95,15 +120,33 @@ export class SimonPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.simon; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "사이먼"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#sequence.length > 0 && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -143,18 +186,47 @@ export class SimonPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#statusText) this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#sequence = [];
 		this.#userIndex = 0;
@@ -168,6 +240,9 @@ export class SimonPart extends Part {
 		this.startNextRound();
 	}
 
+	//==============================================================================
+	// startNextRound.
+	//==============================================================================
 	startNextRound() {
 		this.#sequence.push(System.Math.floor(System.Math.random() * 4));
 		this.#userIndex = 0;
@@ -178,16 +253,27 @@ export class SimonPart extends Part {
 		this.refreshStatus();
 	}
 
+	//==============================================================================
+	// refreshStatus.
+	//==============================================================================
 	refreshStatus() {
 		this.#statusText.setText(`라운드 ${this.#sequence.length}    점수 ${this.#score}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isPlaying) return;
-		this.#playTimer -= timeDelta;
-		if (this.#playTimer > 0) return;
-
+		if (!this.#isPlaying) {
+			return;
+		}		this.#playTimer -= timeDelta;
+		if (this.#playTimer > 0) {
+			return;
+		}
 		if (this.#playIndex >= this.#sequence.length * 2) {
 			// 모든 페어 종료.
 			this.#isPlaying = false;
@@ -212,10 +298,19 @@ export class SimonPart extends Part {
 		this.#playIndex += 1;
 	}
 
+	//==============================================================================
+	// onPadTapped.
+	//==============================================================================
+	/**
+	 * @param { * } index
+	 */
 	onPadTapped(index) {
-		if (this.#isGameOver) return;
-		if (!this.#isUserTurn) return;
-		// 사용자 입력 시각적 피드백.
+		if (this.#isGameOver) {
+			return;
+		}
+		if (!this.#isUserTurn) {
+			return;
+		}		// 사용자 입력 시각적 피드백.
 		const pad = this.#pads[index];
 		pad.setFlashing(true);
 		// 짧은 지연 후 끄기 위해 setTimeout 대신 다음 tick 에서 처리. 단순히 즉시 끔.
@@ -232,11 +327,15 @@ export class SimonPart extends Part {
 			this.refreshStatus();
 			this.#isUserTurn = false;
 			System.setTimeout(() => {
-				if (!this.#isGameOver) this.startNextRound();
-			}, 600);
+				if (!this.#isGameOver) {
+					this.startNextRound();
+				}			}, 600);
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -268,6 +367,9 @@ export class SimonPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, boardY + boardSize + verticalGap + buttonH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = this.#score * 100;

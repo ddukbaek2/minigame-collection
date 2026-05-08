@@ -30,6 +30,13 @@ class SeqCell extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } value
+	 */
 	constructor(part, value) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -48,6 +55,12 @@ class SeqCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setValue.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	setValue(v) {
 		this.value = v;
 		this.isCleared = false;
@@ -55,11 +68,17 @@ class SeqCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// clear.
+	//==============================================================================
 	clear() {
 		this.isCleared = true;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		if (this.isCleared) {
@@ -73,14 +92,29 @@ class SeqCell extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// flashError.
+	//==============================================================================
 	flashError() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.error));
 		System.setTimeout(() => this.refreshAppearance(), 200);
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onCellTapped(this);
@@ -105,6 +139,9 @@ export class SequencePart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cells = [];
@@ -116,13 +153,31 @@ export class SequencePart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.sequence; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "순서맞추기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -162,19 +217,47 @@ export class SequencePart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#statusText) this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const c of this.#cells) c.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const c of this.#cells) c.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#nextNumber = 1;
 		this.#elapsed = 0;
@@ -195,11 +278,20 @@ export class SequencePart extends Part {
 		this.refreshStatus();
 	}
 
+	//==============================================================================
+	// refreshStatus.
+	//==============================================================================
 	refreshStatus() {
 		const sec = this.#elapsed.toFixed(1);
 		this.#statusText.setText(`다음: ${this.#nextNumber}    시간: ${sec}초    오답: ${this.#wrongCount}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#isStarted && !this.#isGameOver) {
@@ -208,9 +300,19 @@ export class SequencePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// onCellTapped.
+	//==============================================================================
+	/**
+	 * @param { * } cell
+	 */
 	onCellTapped(cell) {
-		if (this.#isGameOver) return;
-		if (cell.isCleared) return;
+		if (this.#isGameOver) {
+			return;
+		}
+		if (cell.isCleared) {
+			return;
+		}
 		if (cell.value === this.#nextNumber) {
 			cell.clear();
 			this.#nextNumber += 1;
@@ -225,6 +327,9 @@ export class SequencePart extends Part {
 		this.refreshStatus();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -256,6 +361,9 @@ export class SequencePart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, boardY + boardSize + vGap + buttonH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const sec = this.#elapsed;

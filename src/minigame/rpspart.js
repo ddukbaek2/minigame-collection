@@ -31,6 +31,13 @@ class RpsButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } choice
+	 */
 	constructor(part, choice) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -49,13 +56,28 @@ class RpsButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onChoice(this.choice);
@@ -84,6 +106,9 @@ export class RpsPart extends Part {
 	/** @private @type { number } */ #round;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#buttons = [];
@@ -95,13 +120,31 @@ export class RpsPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.rps; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "가위바위보"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#round > 0 && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -143,6 +186,12 @@ export class RpsPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } fontSize
+	 */
 	makeText(fontSize) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -155,21 +204,53 @@ export class RpsPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#scoreText) this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#showText) this.#showText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#scoreText) {
+			this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#showText) {
+			this.#showText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#wins = 0;
 		this.#losses = 0;
@@ -181,13 +262,23 @@ export class RpsPart extends Part {
 		this.refreshScore();
 	}
 
+	//==============================================================================
+	// refreshScore.
+	//==============================================================================
 	refreshScore() {
 		this.#scoreText.setText(`${this.#round}/${TOTAL_ROUNDS}    승 ${this.#wins}  무 ${this.#draws}  패 ${this.#losses}`);
 	}
 
+	//==============================================================================
+	// onChoice.
+	//==============================================================================
+	/**
+	 * @param { * } playerChoice
+	 */
 	onChoice(playerChoice) {
-		if (this.#isGameOver) return;
-		const cpu = System.Math.floor(System.Math.random() * 3);
+		if (this.#isGameOver) {
+			return;
+		}		const cpu = System.Math.floor(System.Math.random() * 3);
 		const theme = getCurrentGameTheme();
 		this.#showText.setText(`${ICONS[playerChoice]}  vs  ${ICONS[cpu]}`);
 		// 승패 판정. (player - cpu + 3) % 3 → 0=무, 1=승(player), 2=패.
@@ -214,6 +305,9 @@ export class RpsPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -249,6 +343,9 @@ export class RpsPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const isWon = this.#wins > this.#losses;

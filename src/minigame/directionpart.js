@@ -30,6 +30,13 @@ class DirBtn extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } dir
+	 */
 	constructor(part, dir) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -48,14 +55,29 @@ class DirBtn extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
 		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setFontSize(s) { this.#text.setFontSize(s); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onChoice(this.dir);
@@ -83,6 +105,9 @@ export class DirectionPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#buttons = [];
@@ -95,13 +120,31 @@ export class DirectionPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.direction; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "방향맞추기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -139,6 +182,12 @@ export class DirectionPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -151,20 +200,50 @@ export class DirectionPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#arrowText) this.#arrowText.setTextColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#arrowText) {
+			this.#arrowText.setTextColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
@@ -175,20 +254,33 @@ export class DirectionPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// nextArrow.
+	//==============================================================================
 	nextArrow() {
 		this.#targetDir = DIRS[System.Math.floor(System.Math.random() * DIRS.length)];
 		this.#arrowText.setText(ICONS[this.#targetDir]);
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -198,14 +290,26 @@ export class DirectionPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onChoice.
+	//==============================================================================
+	/**
+	 * @param { * } dir
+	 */
 	onChoice(dir) {
-		if (this.#isGameOver) return;
-		if (dir === this.#targetDir) this.#correctCount += 1;
-		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 2); }
+		if (this.#isGameOver) {
+			return;
+		}
+		if (dir === this.#targetDir) {
+			this.#correctCount += 1;
+		}		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 2); }
 		this.nextArrow();
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -247,6 +351,9 @@ export class DirectionPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = System.Math.max(0, this.#correctCount * 30 - this.#wrongCount * 15);

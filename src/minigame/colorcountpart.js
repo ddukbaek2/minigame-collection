@@ -37,6 +37,12 @@ class CCButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 */
 	constructor(part) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -54,19 +60,40 @@ class CCButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setValue.
+	//==============================================================================
+	/**
+	 * @param { * } v
+	 */
 	setValue(v) {
 		this.value = v;
 		this.#text.setText(String(v));
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
 		this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setFontSize(s) { this.#text.setFontSize(s); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onAnswer(this.value);
@@ -97,6 +124,9 @@ export class ColorCountPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cells = [];
@@ -111,13 +141,31 @@ export class ColorCountPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.colorCount; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "컬러카운트"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -169,6 +217,12 @@ export class ColorCountPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -181,20 +235,50 @@ export class ColorCountPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#questionText) this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#questionText) {
+			this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
@@ -205,6 +289,9 @@ export class ColorCountPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// nextQuestion.
+	//==============================================================================
 	nextQuestion() {
 		const target = COLORS[System.Math.floor(System.Math.random() * COLORS.length)];
 		// 셀에 색을 무작위로 채우되 target 색이 적어도 1개는 들어가게.
@@ -212,7 +299,9 @@ export class ColorCountPart extends Part {
 		for (let i = 0; i < this.#cells.length; ++i) {
 			const c = COLORS[System.Math.floor(System.Math.random() * COLORS.length)];
 			this.#cellPaints[i].setColor(Color.createFromHEX(c.hex));
-			if (c.name === target.name) count += 1;
+			if (c.name === target.name) {
+				count += 1;
+			}
 		}
 		this.#correctAnswer = count;
 		this.#questionText.setText(`'${target.name}' 의 개수는?`);
@@ -221,9 +310,12 @@ export class ColorCountPart extends Part {
 		const choices = new System.Set([count]);
 		while (choices.size < CHOICES) {
 			let off = System.Math.floor(System.Math.random() * 5) - 2;
-			if (off === 0) off = 1;
-			const v = count + off;
-			if (v >= 0 && v <= 25) choices.add(v);
+			if (off === 0) {
+				off = 1;
+			}			const v = count + off;
+			if (v >= 0 && v <= 25) {
+				choices.add(v);
+			}
 		}
 		const arr = System.Array.from(choices);
 		for (let i = arr.length - 1; i > 0; --i) {
@@ -235,15 +327,25 @@ export class ColorCountPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -253,14 +355,26 @@ export class ColorCountPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onAnswer.
+	//==============================================================================
+	/**
+	 * @param { * } value
+	 */
 	onAnswer(value) {
-		if (this.#isGameOver) return;
-		if (value === this.#correctAnswer) this.#correctCount += 1;
-		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 3); }
+		if (this.#isGameOver) {
+			return;
+		}
+		if (value === this.#correctAnswer) {
+			this.#correctCount += 1;
+		}else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 3); }
 		this.nextQuestion();
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -309,6 +423,9 @@ export class ColorCountPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = System.Math.max(0, this.#correctCount * 50 - this.#wrongCount * 30);

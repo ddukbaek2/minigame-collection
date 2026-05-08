@@ -29,6 +29,13 @@ class IconNode extends WorldNode {
 	/** @private @type { SameIconPart } */ #part;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } symbol
+	 */
 	constructor(part, symbol) {
 		super();
 		this.setPivot(Pivot.middleCenter);
@@ -44,8 +51,20 @@ class IconNode extends WorldNode {
 		markUseSystemFont(this.#text);
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setFontSize(s) { this.#text.setFontSize(s); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onSymbolTapped(this.symbol);
@@ -75,6 +94,9 @@ export class SameIconPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cardAIcons = [];
@@ -88,13 +110,31 @@ export class SameIconPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.sameIcon; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "공통아이콘"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -139,6 +179,9 @@ export class SameIconPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeCard.
+	//==============================================================================
 	makeCard() {
 		const node = new WorldNode();
 		node.setPivot(Pivot.topLeft);
@@ -148,20 +191,53 @@ export class SameIconPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#cardAPaint) this.#cardAPaint.setColor(Color.createFromHEX(theme.surface));
-		if (this.#cardBPaint) this.#cardBPaint.setColor(Color.createFromHEX(theme.surface));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#cardAPaint) {
+			this.#cardAPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#cardBPaint) {
+			this.#cardBPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#remainingTime = GAME_DURATION;
 		this.#correctCount = 0;
@@ -172,6 +248,9 @@ export class SameIconPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// nextRound.
+	//==============================================================================
 	nextRound() {
 		// 카드 A 와 B 모두 ICONS_PER_CARD 개의 아이콘을 가지며, 정확히 1개가 공통.
 		const pool = SYMBOL_POOL.slice();
@@ -201,15 +280,25 @@ export class SameIconPart extends Part {
 		this.#commonSymbol = common;
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
 		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isStarted || this.#isGameOver) return;
-		this.#remainingTime -= timeDelta;
+		if (!this.#isStarted || this.#isGameOver) {
+			return;
+		}		this.#remainingTime -= timeDelta;
 		if (this.#remainingTime <= 0) {
 			this.#remainingTime = 0;
 			this.refreshInfo();
@@ -219,14 +308,26 @@ export class SameIconPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// onSymbolTapped.
+	//==============================================================================
+	/**
+	 * @param { * } symbol
+	 */
 	onSymbolTapped(symbol) {
-		if (this.#isGameOver) return;
-		if (symbol === this.#commonSymbol) this.#correctCount += 1;
-		else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 3); }
+		if (this.#isGameOver) {
+			return;
+		}
+		if (symbol === this.#commonSymbol) {
+			this.#correctCount += 1;
+		}else { this.#wrongCount += 1; this.#remainingTime = System.Math.max(0, this.#remainingTime - 3); }
 		this.nextRound();
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -254,6 +355,14 @@ export class SameIconPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// layoutCardIcons.
+	//==============================================================================
+	/**
+	 * @param { * } icons
+	 * @param { * } w
+	 * @param { * } h
+	 */
 	layoutCardIcons(icons, w, h) {
 		// 카드 안에 5개 아이콘을 무작위 같지만 안정된 위치에 배치.
 		// 간단히 그리드: 3 위 + 2 아래 (또는 적절히).
@@ -271,6 +380,9 @@ export class SameIconPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = System.Math.max(0, this.#correctCount * 80 - this.#wrongCount * 30);

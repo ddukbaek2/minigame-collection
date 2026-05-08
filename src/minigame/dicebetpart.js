@@ -34,6 +34,15 @@ class BetButton extends WorldNode {
 	/** @private @type { WorldNode } */ #subNode;
 	/** @private @type { Text } */ #subText;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } choice
+	 * @param { * } title
+	 * @param { * } sub
+	 */
 	constructor(part, choice, title, sub) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -67,6 +76,9 @@ class BetButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
@@ -74,12 +86,21 @@ class BetButton extends WorldNode {
 		this.#subText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
+	//==============================================================================
+	// updateLayout.
+	//==============================================================================
 	updateLayout() {
 		const size = this.getContentSize();
 		this.#titleNode.setLocalPosition(Vector2.create(size.x * 0.5, size.y * 0.4));
 		this.#subNode.setLocalPosition(Vector2.create(size.x * 0.5, size.y * 0.7));
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onBet(this.choice);
@@ -107,6 +128,9 @@ export class DiceBetPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#betButtons = [];
@@ -117,13 +141,31 @@ export class DiceBetPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.diceBet; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "주사위 베팅"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -164,6 +206,12 @@ export class DiceBetPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -176,21 +224,53 @@ export class DiceBetPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#diceText) this.#diceText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#betButtons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#diceText) {
+			this.#diceText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#betButtons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#chips = STARTING_CHIPS;
 		this.#rolls = 0;
@@ -201,14 +281,26 @@ export class DiceBetPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`칩: ${this.#chips}    라운드 ${this.#rolls}/${TOTAL_ROLLS}`);
 	}
 
+	//==============================================================================
+	// onBet.
+	//==============================================================================
+	/**
+	 * @param { * } choice
+	 */
 	onBet(choice) {
-		if (this.#isGameOver) return;
-		if (this.#chips < BET_AMOUNT) return;
-		this.#chips -= BET_AMOUNT;
+		if (this.#isGameOver) {
+			return;
+		}
+		if (this.#chips < BET_AMOUNT) {
+			return;
+		}		this.#chips -= BET_AMOUNT;
 		const d1 = System.Math.floor(System.Math.random() * 6) + 1;
 		const d2 = System.Math.floor(System.Math.random() * 6) + 1;
 		const sum = d1 + d2;
@@ -237,6 +329,9 @@ export class DiceBetPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -272,6 +367,9 @@ export class DiceBetPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const profit = this.#chips - STARTING_CHIPS;

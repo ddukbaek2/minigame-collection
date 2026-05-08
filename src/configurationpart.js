@@ -69,7 +69,13 @@ export class ConfigurationPart extends Part {
 		this.#sections = [];
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.configuration; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "설정"; }
 
 	//==============================================================================
@@ -234,6 +240,15 @@ export class ConfigurationPart extends Part {
 	 * @param { () => void } onClick
 	 * @returns { object }
 	 */
+	//==============================================================================
+	// createActionSection.
+	//==============================================================================
+	/**
+	 * @param { * } title
+	 * @param { * } getButtonText
+	 * @param { * } kind
+	 * @param { * } onClick
+	 */
 	createActionSection(title, getButtonText, kind, onClick) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.topLeft);
@@ -275,8 +290,9 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	handleChangeNickname() {
 		const app = this.getApp();
-		if (!app || typeof app.showNicknameInput !== "function") return;
-		app.showNicknameInput(getNickname(), () => {
+		if (!app || typeof app.showNicknameInput !== "function") {
+			return;
+		}		app.showNicknameInput(getNickname(), () => {
 			this.refreshAllSections();
 		});
 	}
@@ -287,8 +303,9 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	handleResetAllData() {
 		const app = this.getApp();
-		if (!app) return;
-		app.showConfirm(
+		if (!app) {
+			return;
+		}		app.showConfirm(
 			"정말 모든 데이터를 초기화하시겠습니까?",
 			() => {
 				try { System.localStorage.clear(); } catch (error) { /* 무시 */ }
@@ -397,8 +414,9 @@ export class ConfigurationPart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-		if (!this.#scrollContainerNode || contentSize.x <= 0) return;
-
+		if (!this.#scrollContainerNode || contentSize.x <= 0) {
+			return;
+		}
 		// 스크롤 컨테이너 = 파트 영역 전체.
 		this.#scrollContainerNode.setLocalPosition(Vector2.zero());
 		this.#scrollContainerNode.setContentSize(contentSize);

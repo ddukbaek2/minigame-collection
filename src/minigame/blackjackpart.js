@@ -30,6 +30,15 @@ class ActionButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } action
+	 * @param { * } text
+	 * @param { * } color
+	 */
 	constructor(part, action, text, color) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -48,8 +57,20 @@ class ActionButton extends WorldNode {
 		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onAction(this.action);
@@ -83,6 +104,9 @@ export class BlackjackPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#actionButtons = [];
@@ -97,13 +121,31 @@ export class BlackjackPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.blackjack; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "블랙잭"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -147,6 +189,12 @@ export class BlackjackPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -159,21 +207,56 @@ export class BlackjackPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#dealerText) this.#dealerText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#playerText) this.#playerText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#dealerText) {
+			this.#dealerText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#playerText) {
+			this.#playerText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#chips = STARTING_CHIPS;
 		this.#handsPlayed = 0;
@@ -182,6 +265,9 @@ export class BlackjackPart extends Part {
 		this.startNewHand();
 	}
 
+	//==============================================================================
+	// startNewHand.
+	//==============================================================================
 	startNewHand() {
 		this.#playerHand = [this.drawCard(), this.drawCard()];
 		this.#dealerHand = [this.drawCard(), this.drawCard()];
@@ -195,18 +281,29 @@ export class BlackjackPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// drawCard.
+	//==============================================================================
 	drawCard() {
 		// 1..10 (J/Q/K=10, A=1 또는 11). 단순 스택리스 무한덱.
 		const r = System.Math.floor(System.Math.random() * 13) + 1;
 		return r > 10 ? 10 : r;
 	}
 
+	//==============================================================================
+	// handValue.
+	//==============================================================================
+	/**
+	 * @param { * } hand
+	 */
 	handValue(hand) {
 		let sum = 0;
 		let aces = 0;
 		for (const v of hand) {
 			sum += v;
-			if (v === 1) aces += 1;
+			if (v === 1) {
+				aces += 1;
+			}
 		}
 		// A를 11로 쓸 수 있으면 그렇게.
 		while (aces > 0 && sum + 10 <= 21) {
@@ -216,6 +313,12 @@ export class BlackjackPart extends Part {
 		return sum;
 	}
 
+	//==============================================================================
+	// refreshTexts.
+	//==============================================================================
+	/**
+	 * @param { * } hideDealer
+	 */
 	refreshTexts(hideDealer) {
 		this.#infoText.setText(`칩: ${this.#chips}    핸드 ${this.#handsPlayed}/${TOTAL_HANDS}`);
 		const playerVal = this.handValue(this.#playerHand);
@@ -229,6 +332,9 @@ export class BlackjackPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// refreshActions.
+	//==============================================================================
 	refreshActions() {
 		// 핸드 진행 중에는 hit/stand 활성, next 비활성. 핸드 종료 시 반대.
 		this.#actionButtons[0].setActive(!this.#handOver);
@@ -237,8 +343,16 @@ export class BlackjackPart extends Part {
 		this.layout();
 	}
 
+	//==============================================================================
+	// onAction.
+	//==============================================================================
+	/**
+	 * @param { * } action
+	 */
 	onAction(action) {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (action === "hit" && !this.#handOver) {
 			this.#playerHand.push(this.drawCard());
 			this.refreshTexts(true);
@@ -259,6 +373,9 @@ export class BlackjackPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// playerStand.
+	//==============================================================================
 	playerStand() {
 		this.#playerStood = true;
 		// 딜러 17 이상까지 히트.
@@ -274,6 +391,13 @@ export class BlackjackPart extends Part {
 		this.endHand(msg, delta);
 	}
 
+	//==============================================================================
+	// endHand.
+	//==============================================================================
+	/**
+	 * @param { * } message
+	 * @param { * } delta
+	 */
 	endHand(message, delta) {
 		this.#handOver = true;
 		this.#chips += delta;
@@ -286,6 +410,9 @@ export class BlackjackPart extends Part {
 		this.refreshActions();
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -329,6 +456,9 @@ export class BlackjackPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const profit = this.#chips - STARTING_CHIPS;

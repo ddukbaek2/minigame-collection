@@ -42,6 +42,13 @@ class PuzzleTile extends WorldNode {
 	/** @private @type { number } */ #targetY;
 	/** @private @type { boolean } */ #isAnimating;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } board
+	 * @param { * } value
+	 */
 	constructor(board, value) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -65,12 +72,21 @@ class PuzzleTile extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
 		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
@@ -95,10 +111,17 @@ class PuzzleTile extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isAnimating) return;
-		// 지수 감쇠 lerp. (frame-rate 독립적인 부드러운 수렴)
+		if (!this.#isAnimating) {
+			return;
+		}		// 지수 감쇠 lerp. (frame-rate 독립적인 부드러운 수렴)
 		const factor = 1 - System.Math.exp(-SLIDE_RATE * timeDelta);
 		this.#currentX += (this.#targetX - this.#currentX) * factor;
 		this.#currentY += (this.#targetY - this.#currentY) * factor;
@@ -112,6 +135,12 @@ class PuzzleTile extends WorldNode {
 		this.setLocalPosition(Vector2.create(this.#currentX, this.#currentY));
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#board.onTileTapped(this);
@@ -140,6 +169,9 @@ export class Puzzle15Part extends Part {
 	/** @private @type { number } */ #boardX;
 	/** @private @type { number } */ #boardY;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#tiles = [];
@@ -155,17 +187,35 @@ export class Puzzle15Part extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.puzzle15; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "15퍼즐"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#isStarted && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -206,18 +256,36 @@ export class Puzzle15Part extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
@@ -237,6 +305,9 @@ export class Puzzle15Part extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#moveCount = 0;
 		this.#elapsedSeconds = 0;
@@ -271,11 +342,20 @@ export class Puzzle15Part extends Part {
 		}
 	}
 
+	//==============================================================================
+	// refreshStatusText.
+	//==============================================================================
 	refreshStatusText() {
 		const seconds = System.Math.floor(this.#elapsedSeconds);
 		this.#statusText.setText(`이동: ${this.#moveCount}    시간: ${seconds}초`);
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#isStarted && !this.#isGameOver) {
@@ -284,15 +364,28 @@ export class Puzzle15Part extends Part {
 		}
 	}
 
+	//==============================================================================
+	// getAdjacentIndices.
+	//==============================================================================
+	/**
+	 * @param { * } index
+	 */
 	getAdjacentIndices(index) {
 		const row = System.Math.floor(index / SIZE);
 		const col = index % SIZE;
 		const out = [];
-		if (row > 0) out.push((row - 1) * SIZE + col);
-		if (row < SIZE - 1) out.push((row + 1) * SIZE + col);
-		if (col > 0) out.push(row * SIZE + (col - 1));
-		if (col < SIZE - 1) out.push(row * SIZE + (col + 1));
-		return out;
+		if (row > 0) {
+			out.push((row - 1) * SIZE + col);
+		}
+		if (row < SIZE - 1) {
+			out.push((row + 1) * SIZE + col);
+		}
+		if (col > 0) {
+			out.push(row * SIZE + (col - 1));
+		}
+		if (col < SIZE - 1) {
+			out.push(row * SIZE + (col + 1));
+		}		return out;
 	}
 
 	//==============================================================================
@@ -301,6 +394,12 @@ export class Puzzle15Part extends Part {
 	slotToPixelX(slotIndex) {
 		return (slotIndex % SIZE) * (this.#tileSize + TILE_GAP);
 	}
+	//==============================================================================
+	// slotToPixelY.
+	//==============================================================================
+	/**
+	 * @param { * } slotIndex
+	 */
 	slotToPixelY(slotIndex) {
 		return System.Math.floor(slotIndex / SIZE) * (this.#tileSize + TILE_GAP);
 	}
@@ -330,6 +429,9 @@ export class Puzzle15Part extends Part {
 		tile.setSlotPosition(toSlot, x, y, instant);
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -366,29 +468,45 @@ export class Puzzle15Part extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, buttonY));
 	}
 
+	//==============================================================================
+	// onTileTapped.
+	//==============================================================================
+	/**
+	 * @param { * } tile
+	 */
 	onTileTapped(tile) {
-		if (this.#isGameOver) return;
-		const fromSlot = tile.slotIndex;
+		if (this.#isGameOver) {
+			return;
+		}		const fromSlot = tile.slotIndex;
 		const adjacents = this.getAdjacentIndices(fromSlot);
 		if (!adjacents.includes(this.#emptyIndex)) return;
 
 		this.moveTileToEmpty(tile, false);
 		this.#moveCount += 1;
-		if (!this.#isStarted) this.#isStarted = true;
-		this.refreshStatusText();
+		if (!this.#isStarted) {
+			this.#isStarted = true;
+		}		this.refreshStatusText();
 		if (this.isSolved()) {
 			this.endGame();
 		}
 	}
 
+	//==============================================================================
+	// isSolved.
+	//==============================================================================
 	isSolved() {
 		for (let i = 0; i < SIZE * SIZE - 1; ++i) {
 			const tile = this.#slotToTile[i];
-			if (!tile || tile.value !== i + 1) return false;
+			if (!tile || tile.value !== i + 1) {
+				return false;
+			}
 		}
 		return this.#slotToTile[SIZE * SIZE - 1] === null;
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const seconds = System.Math.floor(this.#elapsedSeconds);

@@ -32,6 +32,13 @@ class TicTacToeCell extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } board
+	 * @param { * } index
+	 */
 	constructor(board, index) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -51,16 +58,28 @@ class TicTacToeCell extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// reset.
+	//==============================================================================
 	reset() {
 		this.mark = "";
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setMark.
+	//==============================================================================
+	/**
+	 * @param { * } mark
+	 */
 	setMark(mark) {
 		this.mark = mark;
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
@@ -76,10 +95,22 @@ class TicTacToeCell extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#board.onCellTapped(this);
@@ -102,6 +133,9 @@ export class TicTacToePart extends Part {
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { number } */ #moveCount;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#cells = [];
@@ -111,17 +145,35 @@ export class TicTacToePart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.ticTacToe; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "틱택토"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#moveCount > 0 && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -161,18 +213,36 @@ export class TicTacToePart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
@@ -192,6 +262,9 @@ export class TicTacToePart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#isPlayerTurn = true;
 		this.#isGameOver = false;
@@ -202,11 +275,18 @@ export class TicTacToePart extends Part {
 		this.refreshStatusText();
 	}
 
+	//==============================================================================
+	// refreshStatusText.
+	//==============================================================================
 	refreshStatusText() {
-		if (this.#isGameOver) return;
-		this.#statusText.setText(this.#isPlayerTurn ? "당신 차례 (O)" : "AI 차례 (X)");
+		if (this.#isGameOver) {
+			return;
+		}		this.#statusText.setText(this.#isPlayerTurn ? "당신 차례 (O)" : "AI 차례 (X)");
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -242,11 +322,22 @@ export class TicTacToePart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, buttonY));
 	}
 
+	//==============================================================================
+	// onCellTapped.
+	//==============================================================================
+	/**
+	 * @param { * } cell
+	 */
 	onCellTapped(cell) {
-		if (this.#isGameOver) return;
-		if (!this.#isPlayerTurn) return;
-		if (cell.mark !== "") return;
-		cell.setMark(PLAYER_MARK);
+		if (this.#isGameOver) {
+			return;
+		}
+		if (!this.#isPlayerTurn) {
+			return;
+		}
+		if (cell.mark !== "") {
+			return;
+		}		cell.setMark(PLAYER_MARK);
 		this.#moveCount += 1;
 		if (this.evaluate(PLAYER_MARK, "승리!")) return;
 		this.#isPlayerTurn = false;
@@ -254,21 +345,34 @@ export class TicTacToePart extends Part {
 		this.aiMove();
 	}
 
+	//==============================================================================
+	// aiMove.
+	//==============================================================================
 	aiMove() {
-		if (this.#isGameOver) return;
-		// 간단한 AI: 1) 이길 수 있으면 이긴다. 2) 막을 수 있으면 막는다. 3) 가운데 → 모서리 → 변.
+		if (this.#isGameOver) {
+			return;
+		}		// 간단한 AI: 1) 이길 수 있으면 이긴다. 2) 막을 수 있으면 막는다. 3) 가운데 → 모서리 → 변.
 		const empties = [];
 		for (let i = 0; i < this.#cells.length; ++i) {
-			if (this.#cells[i].mark === "") empties.push(i);
+			if (this.#cells[i].mark === "") {
+				empties.push(i);
+			}
 		}
-		if (empties.length === 0) return;
-
+		if (empties.length === 0) {
+			return;
+		}
 		let move = this.findWinningMove(AI_MARK);
-		if (move < 0) move = this.findWinningMove(PLAYER_MARK);
-		if (move < 0 && this.#cells[4].mark === "") move = 4;
+		if (move < 0) {
+			move = this.findWinningMove(PLAYER_MARK);
+		}
+		if (move < 0 && this.#cells[4].mark === "") {
+			move = 4;
+		}
 		if (move < 0) {
 			const corners = [0, 2, 6, 8].filter(i => this.#cells[i].mark === "");
-			if (corners.length > 0) move = corners[System.Math.floor(System.Math.random() * corners.length)];
+			if (corners.length > 0) {
+				move = corners[System.Math.floor(System.Math.random() * corners.length)];
+			}
 		}
 		if (move < 0) {
 			move = empties[System.Math.floor(System.Math.random() * empties.length)];
@@ -290,15 +394,21 @@ export class TicTacToePart extends Part {
 			let countMark = 0;
 			let emptyIndex = -1;
 			for (const i of line) {
-				if (this.#cells[i].mark === mark) countMark += 1;
-				else if (this.#cells[i].mark === "") emptyIndex = i;
+				if (this.#cells[i].mark === mark) {
+					countMark += 1;
+				}				else if (this.#cells[i].mark === "") emptyIndex = i;
 				else { countMark = -1; break; }
 			}
-			if (countMark === 2 && emptyIndex >= 0) return emptyIndex;
+			if (countMark === 2 && emptyIndex >= 0) {
+				return emptyIndex;
+			}
 		}
 		return -1;
 	}
 
+	//==============================================================================
+	// getWinLines.
+	//==============================================================================
 	getWinLines() {
 		return [
 			[0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -325,6 +435,13 @@ export class TicTacToePart extends Part {
 		return false;
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
+	/**
+	 * @param { * } isWon
+	 * @param { * } mainMessage
+	 */
 	endGame(isWon, mainMessage) {
 		this.#isGameOver = true;
 		this.#statusText.setText(mainMessage);

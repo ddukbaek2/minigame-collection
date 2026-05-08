@@ -22,14 +22,28 @@ let entries = null;
  * @returns { Promise<Array<object>> }
  */
 export async function loadNotices(url) {
-	if (entries) return entries;
-	try {
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } entries
+	 */
+	if (entries) {
+		return entries;
+	}	try {
 		const response = await System.fetch(url || DEFAULT_URL);
-		if (!response.ok) throw new Error(`HTTP ${response.status}`);
-		const json = await response.json();
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}		const json = await response.json();
 		const raw = (json && System.Array.isArray(json.notices)) ? json.notices : [];
 		entries = raw.filter((entry) => entry && typeof entry.date === "string" && typeof entry.content === "string");
 	}
+	//==============================================================================
+	// catch.
+	//==============================================================================
+	/**
+	 * @param { * } error
+	 */
 	catch (error) {
 		console.error("[notice] 로드 실패:", error);
 		entries = [];
@@ -45,10 +59,20 @@ export async function loadNotices(url) {
  * @returns { Array<object> }
  */
 export function getNotices() {
-	if (!entries) return [];
-	return entries.slice().sort((a, b) => {
-		if (a.date < b.date) return 1;
-		if (a.date > b.date) return -1;
-		return 0;
+	//==============================================================================
+	// if.
+	//==============================================================================
+	/**
+	 * @param { * } !entries
+	 */
+	if (!entries) {
+		return [];
+	}	return entries.slice().sort((a, b) => {
+		if (a.date < b.date) {
+			return 1;
+		}
+		if (a.date > b.date) {
+			return -1;
+		}		return 0;
 	});
 }

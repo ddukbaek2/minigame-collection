@@ -30,6 +30,14 @@ class HLButton extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } choice
+	 * @param { * } text
+	 */
 	constructor(part, choice, text) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -47,14 +55,29 @@ class HLButton extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const isHigh = this.choice === "high";
 		this.#paint.setColor(Color.createFromHEX(isHigh ? "#22c55e" : "#ef4444"));
 		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onChoice(this.choice);
@@ -84,6 +107,9 @@ export class HighLowPart extends Part {
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#buttons = [];
@@ -95,13 +121,31 @@ export class HighLowPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.highLow; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "하이로우"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -148,6 +192,12 @@ export class HighLowPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -160,22 +210,56 @@ export class HighLowPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#cardPaint) this.#cardPaint.setColor(Color.createFromHEX(theme.surface));
-		if (this.#cardText) this.#cardText.setTextColor(Color.createFromHEX(theme.onSurface));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const b of this.#buttons) b.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#cardPaint) {
+			this.#cardPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#cardText) {
+			this.#cardText.setTextColor(Color.createFromHEX(theme.onSurface));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#current = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
 		this.#round = 0;
@@ -187,13 +271,23 @@ export class HighLowPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`라운드 ${this.#round}/${TOTAL_ROUNDS}    정답 ${this.#correctCount}`);
 	}
 
+	//==============================================================================
+	// onChoice.
+	//==============================================================================
+	/**
+	 * @param { * } choice
+	 */
 	onChoice(choice) {
-		if (this.#isGameOver) return;
-		let next = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
+		if (this.#isGameOver) {
+			return;
+		}		let next = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
 		while (next === this.#current) {
 			next = MIN_CARD + System.Math.floor(System.Math.random() * (MAX_CARD - MIN_CARD + 1));
 		}
@@ -217,6 +311,9 @@ export class HighLowPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -253,6 +350,9 @@ export class HighLowPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const score = this.#correctCount * 100;

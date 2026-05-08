@@ -32,6 +32,9 @@ class SlotReel extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -48,16 +51,31 @@ class SlotReel extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// setSymbol.
+	//==============================================================================
+	/**
+	 * @param { * } s
+	 */
 	setSymbol(s) {
 		this.symbol = s;
 		this.#text.setText(s);
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surface));
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) { this.#text.setFontSize(size); }
 }
 
@@ -86,6 +104,9 @@ export class SlotPart extends Part {
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { string[] } */ #targetSymbols;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#reels = [];
@@ -99,13 +120,31 @@ export class SlotPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.slot; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "슬롯머신"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() { return this.#isStarted && !this.#isGameOver; }
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() { return "현재 게임을 그만두시겠습니까?"; }
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -154,6 +193,12 @@ export class SlotPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// makeText.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
@@ -166,22 +211,56 @@ export class SlotPart extends Part {
 		return node;
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() { this.resetGame(); this.layout(); }
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() { this.layout(); }
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
-		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#spinButtonPaint) this.#spinButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#spinButtonText) this.#spinButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.secondary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onSecondary));
-		for (const r of this.#reels) r.refreshAppearance();
+		if (bg) {
+			bg.setColor(Color.createFromHEX(theme.background));
+		}
+		if (this.#infoText) {
+			this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#resultText) {
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#spinButtonPaint) {
+			this.#spinButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#spinButtonText) {
+			this.#spinButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.secondary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onSecondary));
+		}		for (const r of this.#reels) r.refreshAppearance();
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#chips = STARTING_CHIPS;
 		this.#spinsDone = 0;
@@ -193,14 +272,23 @@ export class SlotPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// refreshInfo.
+	//==============================================================================
 	refreshInfo() {
 		this.#infoText.setText(`칩: ${this.#chips}    스핀 ${this.#spinsDone}/${TOTAL_SPINS}`);
 	}
 
+	//==============================================================================
+	// spin.
+	//==============================================================================
 	spin() {
-		if (this.#isGameOver || this.#isSpinning) return;
-		if (this.#chips < BET_AMOUNT) return;
-		this.#chips -= BET_AMOUNT;
+		if (this.#isGameOver || this.#isSpinning) {
+			return;
+		}
+		if (this.#chips < BET_AMOUNT) {
+			return;
+		}		this.#chips -= BET_AMOUNT;
 		this.#isSpinning = true;
 		this.#spinTimer = SPIN_DURATION;
 		this.#targetSymbols = [
@@ -212,10 +300,17 @@ export class SlotPart extends Part {
 		this.refreshInfo();
 	}
 
+	//==============================================================================
+	// tick.
+	//==============================================================================
+	/**
+	 * @param { * } timeDelta
+	 */
 	tick(timeDelta) {
 		super.tick(timeDelta);
-		if (!this.#isSpinning) return;
-		this.#spinTimer -= timeDelta;
+		if (!this.#isSpinning) {
+			return;
+		}		this.#spinTimer -= timeDelta;
 		// 빙글빙글: 매 프레임마다 무작위 심볼.
 		if (this.#spinTimer > 0) {
 			for (const r of this.#reels) {
@@ -233,6 +328,9 @@ export class SlotPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// evaluateSpin.
+	//==============================================================================
 	evaluateSpin() {
 		const [a, b, c] = this.#targetSymbols;
 		const theme = getCurrentGameTheme();
@@ -255,6 +353,9 @@ export class SlotPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 40;
@@ -290,6 +391,9 @@ export class SlotPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resetH * 0.5));
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
 	endGame() {
 		this.#isGameOver = true;
 		const profit = this.#chips - STARTING_CHIPS;

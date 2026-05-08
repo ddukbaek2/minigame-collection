@@ -35,6 +35,14 @@ class KeypadKey extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { Text } */ #text;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
+	/**
+	 * @param { * } part
+	 * @param { * } key
+	 * @param { * } useSystemFont
+	 */
 	constructor(part, key, useSystemFont) {
 		super();
 		this.setPivot(Pivot.topLeft);
@@ -55,6 +63,9 @@ class KeypadKey extends WorldNode {
 		this.refreshAppearance();
 	}
 
+	//==============================================================================
+	// refreshAppearance.
+	//==============================================================================
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		if (this.key === BACKSPACE) {
@@ -71,10 +82,22 @@ class KeypadKey extends WorldNode {
 		}
 	}
 
+	//==============================================================================
+	// setFontSize.
+	//==============================================================================
+	/**
+	 * @param { * } size
+	 */
 	setFontSize(size) {
 		this.#text.setFontSize(size);
 	}
 
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	/**
+	 * @param { * } viewInputPosition
+	 */
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
 		this.#part.onKeyTapped(this.key);
@@ -106,6 +129,9 @@ export class NumberGuessPart extends Part {
 	/** @private @type { number } */ #guessCount;
 	/** @private @type { boolean } */ #isGameOver;
 
+	//==============================================================================
+	// constructor.
+	//==============================================================================
 	constructor() {
 		super();
 		this.#keys = [];
@@ -118,17 +144,35 @@ export class NumberGuessPart extends Part {
 		addGameThemeChangeListener((theme) => this.applyGameTheme(theme));
 	}
 
+	//==============================================================================
+	// getPartId.
+	//==============================================================================
 	getPartId() { return PartId.numberGuess; }
+	//==============================================================================
+	// getNavigationTitle.
+	//==============================================================================
 	getNavigationTitle() { return "숫자맞추기"; }
+	//==============================================================================
+	// getNavigationBackIcon.
+	//==============================================================================
 	getNavigationBackIcon() { return "❌"; }
 
+	//==============================================================================
+	// shouldConfirmExit.
+	//==============================================================================
 	shouldConfirmExit() {
 		return this.#guessCount > 0 && !this.#isGameOver;
 	}
+	//==============================================================================
+	// getExitConfirmMessage.
+	//==============================================================================
 	getExitConfirmMessage() {
 		return "현재 게임을 그만두시겠습니까?";
 	}
 
+	//==============================================================================
+	// onBuild.
+	//==============================================================================
 	onBuild() {
 		this.setupBackground();
 
@@ -201,37 +245,67 @@ export class NumberGuessPart extends Part {
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
+	//==============================================================================
+	// enter.
+	//==============================================================================
 	enter() {
 		this.resetGame();
 		this.layout();
 	}
 
+	//==============================================================================
+	// onResize.
+	//==============================================================================
 	onResize() {
 		this.layout();
 	}
 
+	//==============================================================================
+	// applyTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyTheme(theme) {
 	}
 
+	//==============================================================================
+	// applyGameTheme.
+	//==============================================================================
+	/**
+	 * @param { * } theme
+	 */
 	applyGameTheme(theme) {
 		const backgroundPaint = this.getBackgroundPaint();
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#titleText) this.#titleText.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#rangeText) this.#rangeText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-		if (this.#inputText) this.#inputText.setTextColor(Color.createFromHEX(theme.primary));
+		if (this.#titleText) {
+			this.#titleText.setTextColor(Color.createFromHEX(theme.onBackground));
+		}
+		if (this.#rangeText) {
+			this.#rangeText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
+		if (this.#inputText) {
+			this.#inputText.setTextColor(Color.createFromHEX(theme.primary));
+		}
 		if (this.#hintText) {
 			// 힌트 색은 상황에 따라 (refreshHintText 에서 다시 갱신).
 			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
-		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
-		for (const key of this.#keys) {
+		if (this.#resetButtonPaint) {
+			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
+		}
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
+		}		for (const key of this.#keys) {
 			key.refreshAppearance();
 		}
 	}
 
+	//==============================================================================
+	// resetGame.
+	//==============================================================================
 	resetGame() {
 		this.#target = MIN_NUMBER + System.Math.floor(System.Math.random() * (MAX_NUMBER - MIN_NUMBER + 1));
 		this.#lowerBound = MIN_NUMBER;
@@ -247,19 +321,31 @@ export class NumberGuessPart extends Part {
 		this.refreshInputText();
 	}
 
+	//==============================================================================
+	// refreshTitleText.
+	//==============================================================================
 	refreshTitleText() {
 		const remaining = MAX_GUESSES - this.#guessCount;
 		this.#titleText.setText(`${MIN_NUMBER}~${MAX_NUMBER} 중 하나를 맞히세요  (남은 기회: ${remaining})`);
 	}
 
+	//==============================================================================
+	// refreshRangeText.
+	//==============================================================================
 	refreshRangeText() {
 		this.#rangeText.setText(`현재 범위: ${this.#lowerBound} ~ ${this.#upperBound}`);
 	}
 
+	//==============================================================================
+	// refreshInputText.
+	//==============================================================================
 	refreshInputText() {
 		this.#inputText.setText(this.#currentInput === "" ? "_" : this.#currentInput);
 	}
 
+	//==============================================================================
+	// layout.
+	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
 		const margin = 60;
@@ -308,8 +394,16 @@ export class NumberGuessPart extends Part {
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + buttonHeight * 0.5));
 	}
 
+	//==============================================================================
+	// onKeyTapped.
+	//==============================================================================
+	/**
+	 * @param { * } key
+	 */
 	onKeyTapped(key) {
-		if (this.#isGameOver) return;
+		if (this.#isGameOver) {
+			return;
+		}
 		if (key === BACKSPACE) {
 			if (this.#currentInput.length > 0) {
 				this.#currentInput = this.#currentInput.slice(0, -1);
@@ -322,16 +416,22 @@ export class NumberGuessPart extends Part {
 			return;
 		}
 		// 숫자.
-		if (this.#currentInput.length >= 3) return;
-		// 선행 0 방지.
-		if (this.#currentInput === "" && key === "0") return;
-		this.#currentInput += key;
+		if (this.#currentInput.length >= 3) {
+			return;
+		}		// 선행 0 방지.
+		if (this.#currentInput === "" && key === "0") {
+			return;
+		}		this.#currentInput += key;
 		this.refreshInputText();
 	}
 
+	//==============================================================================
+	// submitGuess.
+	//==============================================================================
 	submitGuess() {
-		if (this.#currentInput === "") return;
-		const value = System.Number.parseInt(this.#currentInput, 10);
+		if (this.#currentInput === "") {
+			return;
+		}		const value = System.Number.parseInt(this.#currentInput, 10);
 		const theme = getCurrentGameTheme();
 		if (System.Number.isNaN(value) || value < MIN_NUMBER || value > MAX_NUMBER) {
 			this.#hintText.setText(`${MIN_NUMBER}~${MAX_NUMBER} 사이의 숫자만`);
@@ -354,12 +454,16 @@ export class NumberGuessPart extends Part {
 		if (value < this.#target) {
 			this.#hintText.setText(`${value} 보다 큽니다 ↑`);
 			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
-			if (value >= this.#lowerBound) this.#lowerBound = value + 1;
+			if (value >= this.#lowerBound) {
+				this.#lowerBound = value + 1;
+			}
 		}
 		else {
 			this.#hintText.setText(`${value} 보다 작습니다 ↓`);
 			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
-			if (value <= this.#upperBound) this.#upperBound = value - 1;
+			if (value <= this.#upperBound) {
+				this.#upperBound = value - 1;
+			}
 		}
 		this.refreshRangeText();
 		this.refreshTitleText();
@@ -371,6 +475,12 @@ export class NumberGuessPart extends Part {
 		}
 	}
 
+	//==============================================================================
+	// endGame.
+	//==============================================================================
+	/**
+	 * @param { * } isWon
+	 */
 	endGame(isWon) {
 		this.#isGameOver = true;
 		// 점수: 적은 시도로 맞힐수록 높음. 최대 1000.

@@ -88,8 +88,12 @@ export class NicknamePopup extends WorldNode {
 		this.#inputField.setRoundSize(16);
 		this.#inputField.setPadding(20);
 		const font = getDefaultFontFace();
-		if (font) this.#inputField.setFont(font);
-		this.#inputField.setOnSubmit(() => this.handleOk());
+		if (font) {
+			this.#inputField.setFont(font);
+		}
+		this.#inputField.setOnSubmit(() => {
+			this.handleOk();
+		});
 		this.#boxNode.addChild(this.#inputField);
 
 		this.#okButtonNode = createButtonNode(
@@ -98,7 +102,9 @@ export class NicknamePopup extends WorldNode {
 			Color.createFromHEX("#5b8def"),
 			Color.createFromHEX("#ffffff"),
 			BUTTON_FONT_SIZE,
-			() => this.handleOk(),
+			() => {
+				this.handleOk();
+			},
 		);
 		this.#okButtonText = this.#okButtonNode.getComponent(Text);
 		this.#boxNode.addChild(this.#okButtonNode);
@@ -106,8 +112,11 @@ export class NicknamePopup extends WorldNode {
 		this.#onConfirm = null;
 		this.#engine = null;
 
-		addThemeChangeListener((theme) => this.applyTheme(theme));
-		this.applyTheme(getCurrentTheme());
+		addThemeChangeListener((theme) => {
+			this.applyTheme(theme);
+		});
+		const currentTheme = getCurrentTheme();
+		this.applyTheme(currentTheme);
 	}
 
 	//==============================================================================
@@ -115,7 +124,9 @@ export class NicknamePopup extends WorldNode {
 	//==============================================================================
 	setEngine(engine) {
 		this.#engine = engine;
-		if (this.#inputField) this.#inputField.setEngine(engine);
+		if (this.#inputField) {
+			this.#inputField.setEngine(engine);
+		}
 	}
 
 	//==============================================================================
@@ -156,7 +167,11 @@ export class NicknamePopup extends WorldNode {
 		this.#inputField.setText(initialValue || "");
 		this.#inputField.attach();
 		// 자동 포커스 시도. 모바일 정책상 키보드는 사용자 탭이 있어야 뜰 수 있다.
-		setTimeout(() => this.#inputField && this.#inputField.focus(), 0);
+		setTimeout(() => {
+			if (this.#inputField) {
+				this.#inputField.focus();
+			}
+		}, 0);
 	}
 
 	//==============================================================================
@@ -186,7 +201,9 @@ export class NicknamePopup extends WorldNode {
 		setNickname(value);
 		const callback = this.#onConfirm;
 		this.hide();
-		if (callback) callback(value);
+		if (callback) {
+			callback(value);
+		}
 	}
 
 	//==============================================================================
@@ -207,8 +224,21 @@ export class NicknamePopup extends WorldNode {
 	//==============================================================================
 	// 팝업 자체는 입력을 모두 흡수. (뒤 파트로 터치가 새지 않도록)
 	//==============================================================================
-	touchPress() {}
-	touchMove() {}
-	touchRelease() {}
-	touchCancel() {}
+	touchPress() {
+	}
+	//==============================================================================
+	// touchMove.
+	//==============================================================================
+	touchMove() {
+	}
+	//==============================================================================
+	// touchRelease.
+	//==============================================================================
+	touchRelease() {
+	}
+	//==============================================================================
+	// touchCancel.
+	//==============================================================================
+	touchCancel() {
+	}
 }
