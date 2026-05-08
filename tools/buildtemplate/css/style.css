@@ -16,7 +16,8 @@ body {
 canvas {
 	display: block;
 	width: 100vw;
-	height: 100vh;
+	height: 100vh;        /* fallback for older browsers */
+	height: 100dvh;       /* dynamic viewport — URL 바 표시/숨김에 따라 자동 조정 */
 	max-width: <canvasMaxWidth>;
 	margin: 0 auto;
 }
