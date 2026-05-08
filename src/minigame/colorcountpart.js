@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -35,7 +35,7 @@ class CCButton extends WorldNode {
 	/** @type { number } */ value;
 	/** @private @type { ColorCountPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part) {
 		super();
@@ -46,26 +46,26 @@ class CCButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(64);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText("");
+		this.#text.setFontSize(64);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	setValue(v) {
 		this.value = v;
-		this.#label.setText(String(v));
+		this.#text.setText(String(v));
 	}
 
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
-	setFontSize(s) { this.#label.setFontSize(s); }
+	setFontSize(s) { this.#text.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -78,10 +78,10 @@ class CCButton extends WorldNode {
 // 컬러카운트 파트.
 //==============================================================================
 export class ColorCountPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #questionLabelNode;
-	/** @private @type { Label } */ #questionLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #questionTextNode;
+	/** @private @type { Text } */ #questionText;
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { WorldNode[] } */ #cells;
 	/** @private @type { Paint[] } */ #cellPaints;
@@ -89,7 +89,7 @@ export class ColorCountPart extends Part {
 	/** @private @type { CCButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
 	/** @private @type { number } */ #wrongCount;
@@ -121,13 +121,13 @@ export class ColorCountPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#questionLabelNode = this.makeLabel(56);
-		this.addChild(this.#questionLabelNode);
-		this.#questionLabel = this.#questionLabelNode.getComponent(Label);
+		this.#questionTextNode = this.makeText(56);
+		this.addChild(this.#questionTextNode);
+		this.#questionText = this.#questionTextNode.getComponent(Text);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -163,21 +163,21 @@ export class ColorCountPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(s) {
+	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(s);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(s);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -188,10 +188,10 @@ export class ColorCountPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#questionLabel) this.#questionLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#questionText) this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -215,7 +215,7 @@ export class ColorCountPart extends Part {
 			if (c.name === target.name) count += 1;
 		}
 		this.#correctAnswer = count;
-		this.#questionLabel.setText(`'${target.name}' 의 개수는?`);
+		this.#questionText.setText(`'${target.name}' 의 개수는?`);
 
 		// 정답 + 오답 3개.
 		const choices = new System.Set([count]);
@@ -237,7 +237,7 @@ export class ColorCountPart extends Part {
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -281,9 +281,9 @@ export class ColorCountPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#questionLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + questionH * 0.5));
+		this.#questionTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + questionH * 0.5));
 		cy += questionH + vGap;
 		const boardX = (contentSize.x - boardSize) * 0.5;
 		this.#boardNode.setLocalPosition(Vector2.create(boardX, cy));

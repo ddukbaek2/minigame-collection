@@ -6,7 +6,7 @@ import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { UIToggleButton } from "../libs/vanilla.js/src/ui/uitogglebutton.js";
 
@@ -42,14 +42,14 @@ export function getDefaultFontFace() {
 
 //==============================================================================
 // 라벨에 "시스템 폰트 사용" 마커 부착. (이모지/특수문자 fallback이 필요한 경우)
-// - 이 마커가 붙은 라벨은 applyDefaultFontToAllLabels 가 건너뛴다.
+// - 이 마커가 붙은 라벨은 applyDefaultFontToAllTexts 가 건너뛴다.
 //==============================================================================
 /**
- * @param { Label } label
+ * @param { Text } text
  */
-export function markUseSystemFont(label) {
-	if (label) {
-		label.useSystemFont = true;
+export function markUseSystemFont(text) {
+	if (text) {
+		text.useSystemFont = true;
 	}
 }
 
@@ -58,11 +58,11 @@ export function markUseSystemFont(label) {
 // 라벨이 시스템 폰트 사용 마커가 부착됐는지 여부 반환.
 //==============================================================================
 /**
- * @param { Label } label
+ * @param { Text } text
  * @returns { boolean }
  */
-export function isUseSystemFont(label) {
-	return label && label.useSystemFont === true;
+export function isUseSystemFont(text) {
+	return text && text.useSystemFont === true;
 }
 
 
@@ -75,17 +75,17 @@ export function isUseSystemFont(label) {
  * @param { Color } color
  * @returns { WorldNode }
  */
-export function createIconLabelNode(text, fontSize, color) {
+export function createIconTextNode(text, fontSize, color) {
 	const node = new WorldNode();
 	node.setPivot(Pivot.middleCenter);
 	node.setAnchor(Pivot.middleCenter);
-	const label = node.addComponent(Label);
-	label.setText(text);
-	label.setFontSize(fontSize);
-	label.setTextColor(color);
-	label.setTextAlign("center");
-	label.setTextBaseline("middle");
-	markUseSystemFont(label);
+	const textComponent = node.addComponent(Text);
+	textComponent.setText(text);
+	textComponent.setFontSize(fontSize);
+	textComponent.setTextColor(color);
+	textComponent.setTextAlign("center");
+	textComponent.setTextBaseline("middle");
+	markUseSystemFont(textComponent);
 	return node;
 }
 
@@ -113,13 +113,13 @@ export function createIconButtonNode(icon, size, backgroundColor, iconColor, fon
 	paint.setColor(backgroundColor);
 	paint.setRoundSize(16);
 
-	const label = node.addComponent(Label);
-	label.setText(icon);
-	label.setFontSize(fontSize);
-	label.setTextColor(iconColor);
-	label.setTextAlign("center");
-	label.setTextBaseline("middle");
-	markUseSystemFont(label);
+	const text = node.addComponent(Text);
+	text.setText(icon);
+	text.setFontSize(fontSize);
+	text.setTextColor(iconColor);
+	text.setTextAlign("center");
+	text.setTextBaseline("middle");
+	markUseSystemFont(text);
 
 	const button = node.addComponent(UIButton);
 	button.setClickEvent(onClick);
@@ -137,18 +137,18 @@ export function createIconButtonNode(icon, size, backgroundColor, iconColor, fon
  * @param { Color } color
  * @returns { WorldNode }
  */
-export function createLabelNode(text, fontSize, color) {
+export function createTextNode(text, fontSize, color) {
 	const node = new WorldNode();
 	node.setPivot(Pivot.middleCenter);
 	node.setAnchor(Pivot.middleCenter);
-	const label = node.addComponent(Label);
-	label.setText(text);
-	label.setFontSize(fontSize);
-	label.setTextColor(color);
-	label.setTextAlign("center");
-	label.setTextBaseline("middle");
+	const textComponent = node.addComponent(Text);
+	textComponent.setText(text);
+	textComponent.setFontSize(fontSize);
+	textComponent.setTextColor(color);
+	textComponent.setTextAlign("center");
+	textComponent.setTextBaseline("middle");
 	if (defaultFontFace) {
-		label.setFont(defaultFontFace);
+		textComponent.setFont(defaultFontFace);
 	}
 	return node;
 }
@@ -156,7 +156,7 @@ export function createLabelNode(text, fontSize, color) {
 
 //==============================================================================
 // 토글 버튼 노드 생성. (배경 + 라벨 + UIButton)
-// - 라디오 그룹용. 토글 상태(on/off) 색은 외부에서 paint/label 색을 직접 갱신.
+// - 라디오 그룹용. 토글 상태(on/off) 색은 외부에서 paint/text 색을 직접 갱신.
 // - UIButton 의 pressedTintColor 를 transparent 로 두어 매 tick tint 가 라벨 색을
 //   덮어쓰는 일이 없도록 한다. (UIToggleButton 을 쓰면 자동 토글/tint 사이클이
 //   외부 색 갱신과 충돌해 라벨 색이 깜빡이는 문제가 있음)
@@ -181,14 +181,14 @@ export function createToggleButtonNode(text, size, backgroundColor, textColor, f
 	paint.setColor(backgroundColor);
 	paint.setRoundSize(16);
 
-	const label = node.addComponent(Label);
-	label.setText(text);
-	label.setFontSize(fontSize);
-	label.setTextColor(textColor);
-	label.setTextAlign("center");
-	label.setTextBaseline("middle");
+	const textComponent = node.addComponent(Text);
+	textComponent.setText(text);
+	textComponent.setFontSize(fontSize);
+	textComponent.setTextColor(textColor);
+	textComponent.setTextAlign("center");
+	textComponent.setTextBaseline("middle");
 	if (defaultFontFace) {
-		label.setFont(defaultFontFace);
+		textComponent.setFont(defaultFontFace);
 	}
 
 	const button = node.addComponent(UIButton);
@@ -237,13 +237,13 @@ export function createIconTextButtonNode(icon, text, size, backgroundColor, text
 	iconNode.setPivot(Pivot.middleCenter);
 	iconNode.setAnchor(Pivot.topLeft);
 	iconNode.setLocalPosition(Vector2.create(centerX - halfGap, centerY));
-	const iconLabel = iconNode.addComponent(Label);
-	iconLabel.setText(icon);
-	iconLabel.setFontSize(fontSize);
-	iconLabel.setTextColor(textColor);
-	iconLabel.setTextAlign("right");
-	iconLabel.setTextBaseline("middle");
-	markUseSystemFont(iconLabel);
+	const iconText = iconNode.addComponent(Text);
+	iconText.setText(icon);
+	iconText.setFontSize(fontSize);
+	iconText.setTextColor(textColor);
+	iconText.setTextAlign("right");
+	iconText.setTextBaseline("middle");
+	markUseSystemFont(iconText);
 	node.addChild(iconNode);
 
 	// 텍스트: 왼쪽 끝이 (중앙 + halfGap) 에 닿도록 left-aligned.
@@ -251,14 +251,14 @@ export function createIconTextButtonNode(icon, text, size, backgroundColor, text
 	textNode.setPivot(Pivot.middleCenter);
 	textNode.setAnchor(Pivot.topLeft);
 	textNode.setLocalPosition(Vector2.create(centerX + halfGap, centerY));
-	const textLabel = textNode.addComponent(Label);
-	textLabel.setText(text);
-	textLabel.setFontSize(fontSize);
-	textLabel.setTextColor(textColor);
-	textLabel.setTextAlign("left");
-	textLabel.setTextBaseline("middle");
+	const textComponent = textNode.addComponent(Text);
+	textComponent.setText(text);
+	textComponent.setFontSize(fontSize);
+	textComponent.setTextColor(textColor);
+	textComponent.setTextAlign("left");
+	textComponent.setTextBaseline("middle");
 	if (defaultFontFace) {
-		textLabel.setFont(defaultFontFace);
+		textComponent.setFont(defaultFontFace);
 	}
 	node.addChild(textNode);
 
@@ -292,14 +292,14 @@ export function createButtonNode(text, size, backgroundColor, textColor, fontSiz
 	paint.setColor(backgroundColor);
 	paint.setRoundSize(16);
 
-	const label = node.addComponent(Label);
-	label.setText(text);
-	label.setFontSize(fontSize);
-	label.setTextColor(textColor);
-	label.setTextAlign("center");
-	label.setTextBaseline("middle");
+	const textComponent = node.addComponent(Text);
+	textComponent.setText(text);
+	textComponent.setFontSize(fontSize);
+	textComponent.setTextColor(textColor);
+	textComponent.setTextAlign("center");
+	textComponent.setTextBaseline("middle");
 	if (defaultFontFace) {
-		label.setFont(defaultFontFace);
+		textComponent.setFont(defaultFontFace);
 	}
 
 	const button = node.addComponent(UIButton);

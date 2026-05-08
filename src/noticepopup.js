@@ -7,7 +7,7 @@ import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
@@ -53,11 +53,11 @@ const TWEEN_SNAP_EPSILON = 0.005;
 class NoticeCard extends WorldNode {
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { WorldNode } */ #dateNode;
-	/** @private @type { Label } */ #dateLabel;
+	/** @private @type { Text } */ #dateText;
 	/** @private @type { WorldNode | null } */ #versionNode;
-	/** @private @type { Label | null } */ #versionLabel;
+	/** @private @type { Text | null } */ #versionText;
 	/** @private @type { WorldNode[] } */ #contentLineNodes;
-	/** @private @type { Label[] } */ #contentLineLabels;
+	/** @private @type { Text[] } */ #contentLineTexts;
 
 	constructor(date, version, content) {
 		super();
@@ -73,46 +73,46 @@ class NoticeCard extends WorldNode {
 		this.#dateNode = new WorldNode();
 		this.#dateNode.setPivot(Pivot.topLeft);
 		this.#dateNode.setAnchor(Pivot.topLeft);
-		this.#dateLabel = this.#dateNode.addComponent(Label);
-		this.#dateLabel.setText(date);
-		this.#dateLabel.setFontSize(DATE_FONT_SIZE);
-		this.#dateLabel.setTextAlign("left");
-		this.#dateLabel.setTextBaseline("top");
-		if (font) this.#dateLabel.setFont(font);
+		this.#dateText = this.#dateNode.addComponent(Text);
+		this.#dateText.setText(date);
+		this.#dateText.setFontSize(DATE_FONT_SIZE);
+		this.#dateText.setTextAlign("left");
+		this.#dateText.setTextBaseline("top");
+		if (font) this.#dateText.setFont(font);
 		this.addChild(this.#dateNode);
 
 		this.#versionNode = null;
-		this.#versionLabel = null;
+		this.#versionText = null;
 		if (typeof version === "string" && version.length > 0) {
 			this.#versionNode = new WorldNode();
 			this.#versionNode.setPivot(Pivot.topLeft);
 			this.#versionNode.setAnchor(Pivot.topLeft);
-			this.#versionLabel = this.#versionNode.addComponent(Label);
-			this.#versionLabel.setText(`v${version}`);
-			this.#versionLabel.setFontSize(VERSION_FONT_SIZE);
-			this.#versionLabel.setTextAlign("left");
-			this.#versionLabel.setTextBaseline("top");
-			if (font) this.#versionLabel.setFont(font);
+			this.#versionText = this.#versionNode.addComponent(Text);
+			this.#versionText.setText(`v${version}`);
+			this.#versionText.setFontSize(VERSION_FONT_SIZE);
+			this.#versionText.setTextAlign("left");
+			this.#versionText.setTextBaseline("top");
+			if (font) this.#versionText.setFont(font);
 			this.addChild(this.#versionNode);
 		}
 
 		// 본문: "\n" 단위로 줄별 라벨 생성.
 		const lines = String(content || "").split("\n");
 		this.#contentLineNodes = [];
-		this.#contentLineLabels = [];
+		this.#contentLineTexts = [];
 		for (const line of lines) {
 			const lineNode = new WorldNode();
 			lineNode.setPivot(Pivot.topLeft);
 			lineNode.setAnchor(Pivot.topLeft);
-			const lineLabel = lineNode.addComponent(Label);
-			lineLabel.setText(line);
-			lineLabel.setFontSize(CONTENT_FONT_SIZE);
-			lineLabel.setTextAlign("left");
-			lineLabel.setTextBaseline("top");
-			if (font) lineLabel.setFont(font);
+			const lineText = lineNode.addComponent(Text);
+			lineText.setText(line);
+			lineText.setFontSize(CONTENT_FONT_SIZE);
+			lineText.setTextAlign("left");
+			lineText.setTextBaseline("top");
+			if (font) lineText.setFont(font);
 			this.addChild(lineNode);
 			this.#contentLineNodes.push(lineNode);
-			this.#contentLineLabels.push(lineLabel);
+			this.#contentLineTexts.push(lineText);
 		}
 	}
 
@@ -127,13 +127,13 @@ class NoticeCard extends WorldNode {
 
 	applyTheme(theme) {
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#dateLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-		if (this.#versionLabel) {
-			this.#versionLabel.setTextColor(Color.createFromHEX(theme.primary));
+		this.#dateText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#versionText) {
+			this.#versionText.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		const contentColor = Color.createFromHEX(theme.onSurface);
-		for (const label of this.#contentLineLabels) {
-			label.setTextColor(contentColor);
+		for (const text of this.#contentLineTexts) {
+			text.setTextColor(contentColor);
 		}
 	}
 
@@ -172,10 +172,10 @@ export class NoticePopup extends WorldNode {
 	/** @private @type { WorldNode } */ #boxNode;
 	/** @private @type { Paint } */ #boxPaint;
 	/** @private @type { WorldNode } */ #titleNode;
-	/** @private @type { Label } */ #titleLabel;
+	/** @private @type { Text } */ #titleText;
 	/** @private @type { WorldNode } */ #closeButtonNode;
 	/** @private @type { Paint } */ #closeButtonPaint;
-	/** @private @type { Label } */ #closeButtonLabel;
+	/** @private @type { Text } */ #closeButtonText;
 	/** @private @type { WorldNode } */ #scrollContainerNode;
 	/** @private @type { UIScrollView } */ #scrollView;
 	/** @private @type { NoticeCard[] } */ #cards;
@@ -214,12 +214,12 @@ export class NoticePopup extends WorldNode {
 		this.#titleNode = new WorldNode();
 		this.#titleNode.setPivot(Pivot.topLeft);
 		this.#titleNode.setAnchor(Pivot.topLeft);
-		this.#titleLabel = this.#titleNode.addComponent(Label);
-		this.#titleLabel.setText("공지 및 업데이트");
-		this.#titleLabel.setFontSize(TITLE_FONT_SIZE);
-		this.#titleLabel.setTextAlign("left");
-		this.#titleLabel.setTextBaseline("middle");
-		if (font) this.#titleLabel.setFont(font);
+		this.#titleText = this.#titleNode.addComponent(Text);
+		this.#titleText.setText("공지 및 업데이트");
+		this.#titleText.setFontSize(TITLE_FONT_SIZE);
+		this.#titleText.setTextAlign("left");
+		this.#titleText.setTextBaseline("middle");
+		if (font) this.#titleText.setFont(font);
 		this.#boxNode.addChild(this.#titleNode);
 
 		// 닫기 버튼 (X).
@@ -230,12 +230,12 @@ export class NoticePopup extends WorldNode {
 		this.#closeButtonNode.setInteractable(true);
 		this.#closeButtonPaint = this.#closeButtonNode.addComponent(Paint);
 		this.#closeButtonPaint.setRoundSize(CLOSE_BUTTON_SIZE * 0.5);
-		this.#closeButtonLabel = this.#closeButtonNode.addComponent(Label);
-		this.#closeButtonLabel.setText("✕");
-		this.#closeButtonLabel.setFontSize(CLOSE_BUTTON_FONT_SIZE);
-		this.#closeButtonLabel.setTextAlign("center");
-		this.#closeButtonLabel.setTextBaseline("middle");
-		markUseSystemFont(this.#closeButtonLabel);
+		this.#closeButtonText = this.#closeButtonNode.addComponent(Text);
+		this.#closeButtonText.setText("✕");
+		this.#closeButtonText.setFontSize(CLOSE_BUTTON_FONT_SIZE);
+		this.#closeButtonText.setTextAlign("center");
+		this.#closeButtonText.setTextBaseline("middle");
+		markUseSystemFont(this.#closeButtonText);
 		const closeButton = this.#closeButtonNode.addComponent(UIButton);
 		closeButton.setClickEvent(() => this.hide());
 		this.#boxNode.addChild(this.#closeButtonNode);
@@ -292,9 +292,9 @@ export class NoticePopup extends WorldNode {
 	applyTheme(theme) {
 		this.#dimPaint.setColor(new Color(0, 0, 0, this.#baseDimAlpha * this.#animProgress));
 		this.#boxPaint.setColor(Color.createFromHEX(theme.surface));
-		this.#titleLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+		this.#titleText.setTextColor(Color.createFromHEX(theme.onSurface));
 		this.#closeButtonPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#closeButtonLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		this.#closeButtonText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		for (const card of this.#cards) {
 			card.applyTheme(theme);
 		}

@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -30,7 +30,7 @@ class TicTacToeCell extends WorldNode {
 	/** @type { string } */ mark;
 	/** @private @type { TicTacToePart } */ #board;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(board, index) {
 		super();
@@ -42,12 +42,12 @@ class TicTacToeCell extends WorldNode {
 		this.#board = board;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(12);
-		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(120);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText("");
+		this.#text.setFontSize(120);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
@@ -64,20 +64,20 @@ class TicTacToeCell extends WorldNode {
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#label.setText(this.mark);
+		this.#text.setText(this.mark);
 		if (this.mark === PLAYER_MARK) {
-			this.#label.setTextColor(Color.createFromHEX(theme.primary));
+			this.#text.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else if (this.mark === AI_MARK) {
-			this.#label.setTextColor(Color.createFromHEX(theme.error));
+			this.#text.setTextColor(Color.createFromHEX(theme.error));
 		}
 		else {
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
 	setFontSize(size) {
-		this.#label.setFontSize(size);
+		this.#text.setFontSize(size);
 	}
 
 	touchRelease(viewInputPosition) {
@@ -93,11 +93,11 @@ class TicTacToeCell extends WorldNode {
 export class TicTacToePart extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { TicTacToeCell[] } */ #cells;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { boolean } */ #isPlayerTurn;
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { number } */ #moveCount;
@@ -125,15 +125,15 @@ export class TicTacToePart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setFontSize(48);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.#statusLabel.setText("");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setFontSize(48);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.#statusText.setText("");
+		this.addChild(this.#statusTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -155,7 +155,7 @@ export class TicTacToePart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -178,14 +178,14 @@ export class TicTacToePart extends Part {
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#statusLabel) {
-			this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
 		if (this.#resetButtonPaint) {
 			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		}
-		if (this.#resetButtonLabel) {
-			this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		for (const cell of this.#cells) {
 			cell.refreshAppearance();
@@ -199,12 +199,12 @@ export class TicTacToePart extends Part {
 		for (const cell of this.#cells) {
 			cell.reset();
 		}
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 	}
 
-	refreshStatusLabel() {
+	refreshStatusText() {
 		if (this.#isGameOver) return;
-		this.#statusLabel.setText(this.#isPlayerTurn ? "당신 차례 (O)" : "AI 차례 (X)");
+		this.#statusText.setText(this.#isPlayerTurn ? "당신 차례 (O)" : "AI 차례 (X)");
 	}
 
 	layout() {
@@ -221,7 +221,7 @@ export class TicTacToePart extends Part {
 		const totalHeight = headerHeight + verticalGap + boardHeight + verticalGap + buttonHeight;
 		const top = System.Math.max((contentSize.y - totalHeight) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
 
 		const boardX = (contentSize.x - boardWidth) * 0.5;
 		const boardY = top + headerHeight + verticalGap;
@@ -250,7 +250,7 @@ export class TicTacToePart extends Part {
 		this.#moveCount += 1;
 		if (this.evaluate(PLAYER_MARK, "승리!")) return;
 		this.#isPlayerTurn = false;
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 		this.aiMove();
 	}
 
@@ -278,7 +278,7 @@ export class TicTacToePart extends Part {
 		this.#moveCount += 1;
 		if (this.evaluate(AI_MARK, "패배...")) return;
 		this.#isPlayerTurn = true;
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 	}
 
 	//==============================================================================
@@ -327,7 +327,7 @@ export class TicTacToePart extends Part {
 
 	endGame(isWon, mainMessage) {
 		this.#isGameOver = true;
-		this.#statusLabel.setText(mainMessage);
+		this.#statusText.setText(mainMessage);
 		const score = isWon ? System.Math.max(0, 100 - (this.#moveCount - 3) * 10) : 0;
 		const app = this.getApp();
 		app.showResult({

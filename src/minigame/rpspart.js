@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -29,7 +29,7 @@ class RpsButton extends WorldNode {
 	/** @type { number } */ choice;
 	/** @private @type { RpsPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, choice) {
 		super();
@@ -40,12 +40,12 @@ class RpsButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(ICONS[choice]);
-		this.#label.setFontSize(120);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(ICONS[choice]);
+		this.#text.setFontSize(120);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
@@ -54,7 +54,7 @@ class RpsButton extends WorldNode {
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -67,17 +67,17 @@ class RpsButton extends WorldNode {
 // 가위바위보 파트.
 //==============================================================================
 export class RpsPart extends Part {
-	/** @private @type { WorldNode } */ #scoreLabelNode;
-	/** @private @type { Label } */ #scoreLabel;
-	/** @private @type { WorldNode } */ #showLabelNode;
-	/** @private @type { Label } */ #showLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { WorldNode } */ #scoreTextNode;
+	/** @private @type { Text } */ #scoreText;
+	/** @private @type { WorldNode } */ #showTextNode;
+	/** @private @type { Text } */ #showText;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { RpsButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #wins;
 	/** @private @type { number } */ #losses;
 	/** @private @type { number } */ #draws;
@@ -105,18 +105,18 @@ export class RpsPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#scoreLabelNode = this.makeLabel(40);
-		this.addChild(this.#scoreLabelNode);
-		this.#scoreLabel = this.#scoreLabelNode.getComponent(Label);
+		this.#scoreTextNode = this.makeText(40);
+		this.addChild(this.#scoreTextNode);
+		this.#scoreText = this.#scoreTextNode.getComponent(Text);
 
-		this.#showLabelNode = this.makeLabel(140);
-		this.addChild(this.#showLabelNode);
-		this.#showLabel = this.#showLabelNode.getComponent(Label);
-		markUseSystemFont(this.#showLabel);
+		this.#showTextNode = this.makeText(140);
+		this.addChild(this.#showTextNode);
+		this.#showText = this.#showTextNode.getComponent(Text);
+		markUseSystemFont(this.#showText);
 
-		this.#resultLabelNode = this.makeLabel(56);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(56);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -137,21 +137,21 @@ export class RpsPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(fontSize) {
+	makeText(fontSize) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(fontSize);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(fontSize);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -162,11 +162,11 @@ export class RpsPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#scoreLabel) this.#scoreLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#showLabel) this.#showLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#scoreText) this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#showText) this.#showText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -176,36 +176,36 @@ export class RpsPart extends Part {
 		this.#draws = 0;
 		this.#round = 0;
 		this.#isGameOver = false;
-		this.#showLabel.setText("✊✌️✋");
-		this.#resultLabel.setText("선택하세요");
+		this.#showText.setText("✊✌️✋");
+		this.#resultText.setText("선택하세요");
 		this.refreshScore();
 	}
 
 	refreshScore() {
-		this.#scoreLabel.setText(`${this.#round}/${TOTAL_ROUNDS}    승 ${this.#wins}  무 ${this.#draws}  패 ${this.#losses}`);
+		this.#scoreText.setText(`${this.#round}/${TOTAL_ROUNDS}    승 ${this.#wins}  무 ${this.#draws}  패 ${this.#losses}`);
 	}
 
 	onChoice(playerChoice) {
 		if (this.#isGameOver) return;
 		const cpu = System.Math.floor(System.Math.random() * 3);
 		const theme = getCurrentGameTheme();
-		this.#showLabel.setText(`${ICONS[playerChoice]}  vs  ${ICONS[cpu]}`);
+		this.#showText.setText(`${ICONS[playerChoice]}  vs  ${ICONS[cpu]}`);
 		// 승패 판정. (player - cpu + 3) % 3 → 0=무, 1=승(player), 2=패.
 		const diff = (playerChoice - cpu + 3) % 3;
 		if (diff === 0) {
 			this.#draws += 1;
-			this.#resultLabel.setText("무승부");
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+			this.#resultText.setText("무승부");
+			this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
 		else if (diff === 1) {
 			this.#wins += 1;
-			this.#resultLabel.setText("승리!");
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
+			this.#resultText.setText("승리!");
+			this.#resultText.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else {
 			this.#losses += 1;
-			this.#resultLabel.setText("패배");
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#resultText.setText("패배");
+			this.#resultText.setTextColor(Color.createFromHEX(theme.error));
 		}
 		this.#round += 1;
 		this.refreshScore();
@@ -230,11 +230,11 @@ export class RpsPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#scoreLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + scoreH * 0.5));
+		this.#scoreTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + scoreH * 0.5));
 		cy += scoreH + vGap;
-		this.#showLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + showH * 0.5));
+		this.#showTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + showH * 0.5));
 		cy += showH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		const buttonsX = (contentSize.x - (buttonSize * 3 + gap * 2)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(buttonsX, cy));

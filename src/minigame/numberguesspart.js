@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -33,7 +33,7 @@ class KeypadKey extends WorldNode {
 	/** @type { string } */ key;
 	/** @private @type { NumberGuessPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, key, useSystemFont) {
 		super();
@@ -44,13 +44,13 @@ class KeypadKey extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(key);
-		this.#label.setFontSize(64);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(key);
+		this.#text.setFontSize(64);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		if (useSystemFont) {
-			markUseSystemFont(this.#label);
+			markUseSystemFont(this.#text);
 		}
 		this.refreshAppearance();
 	}
@@ -59,20 +59,20 @@ class KeypadKey extends WorldNode {
 		const theme = getCurrentGameTheme();
 		if (this.key === BACKSPACE) {
 			this.#paint.setColor(Color.createFromHEX(theme.error));
-			this.#label.setTextColor(Color.createFromHEX(theme.onError));
+			this.#text.setTextColor(Color.createFromHEX(theme.onError));
 		}
 		else if (this.key === ENTER) {
 			this.#paint.setColor(Color.createFromHEX(theme.primary));
-			this.#label.setTextColor(Color.createFromHEX(theme.onPrimary));
+			this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		else {
 			this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
 	setFontSize(size) {
-		this.#label.setFontSize(size);
+		this.#text.setFontSize(size);
 	}
 
 	touchRelease(viewInputPosition) {
@@ -86,19 +86,19 @@ class KeypadKey extends WorldNode {
 // 숫자맞추기 파트.
 //==============================================================================
 export class NumberGuessPart extends Part {
-	/** @private @type { WorldNode } */ #titleLabelNode;
-	/** @private @type { Label } */ #titleLabel;
-	/** @private @type { WorldNode } */ #hintLabelNode;
-	/** @private @type { Label } */ #hintLabel;
-	/** @private @type { WorldNode } */ #inputLabelNode;
-	/** @private @type { Label } */ #inputLabel;
-	/** @private @type { WorldNode } */ #rangeLabelNode;
-	/** @private @type { Label } */ #rangeLabel;
+	/** @private @type { WorldNode } */ #titleTextNode;
+	/** @private @type { Text } */ #titleText;
+	/** @private @type { WorldNode } */ #hintTextNode;
+	/** @private @type { Text } */ #hintText;
+	/** @private @type { WorldNode } */ #inputTextNode;
+	/** @private @type { Text } */ #inputText;
+	/** @private @type { WorldNode } */ #rangeTextNode;
+	/** @private @type { Text } */ #rangeText;
 	/** @private @type { WorldNode } */ #keypadNode;
 	/** @private @type { KeypadKey[] } */ #keys;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #target;
 	/** @private @type { number } */ #lowerBound;
 	/** @private @type { number } */ #upperBound;
@@ -132,45 +132,45 @@ export class NumberGuessPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#titleLabelNode = new WorldNode();
-		this.#titleLabelNode.setPivot(Pivot.middleCenter);
-		this.#titleLabelNode.setAnchor(Pivot.topLeft);
-		this.#titleLabel = this.#titleLabelNode.addComponent(Label);
-		this.#titleLabel.setFontSize(40);
-		this.#titleLabel.setTextAlign("center");
-		this.#titleLabel.setTextBaseline("middle");
-		this.#titleLabel.setText("");
-		this.addChild(this.#titleLabelNode);
+		this.#titleTextNode = new WorldNode();
+		this.#titleTextNode.setPivot(Pivot.middleCenter);
+		this.#titleTextNode.setAnchor(Pivot.topLeft);
+		this.#titleText = this.#titleTextNode.addComponent(Text);
+		this.#titleText.setFontSize(40);
+		this.#titleText.setTextAlign("center");
+		this.#titleText.setTextBaseline("middle");
+		this.#titleText.setText("");
+		this.addChild(this.#titleTextNode);
 
-		this.#hintLabelNode = new WorldNode();
-		this.#hintLabelNode.setPivot(Pivot.middleCenter);
-		this.#hintLabelNode.setAnchor(Pivot.topLeft);
-		this.#hintLabel = this.#hintLabelNode.addComponent(Label);
-		this.#hintLabel.setFontSize(56);
-		this.#hintLabel.setTextAlign("center");
-		this.#hintLabel.setTextBaseline("middle");
-		this.#hintLabel.setText("");
-		this.addChild(this.#hintLabelNode);
+		this.#hintTextNode = new WorldNode();
+		this.#hintTextNode.setPivot(Pivot.middleCenter);
+		this.#hintTextNode.setAnchor(Pivot.topLeft);
+		this.#hintText = this.#hintTextNode.addComponent(Text);
+		this.#hintText.setFontSize(56);
+		this.#hintText.setTextAlign("center");
+		this.#hintText.setTextBaseline("middle");
+		this.#hintText.setText("");
+		this.addChild(this.#hintTextNode);
 
-		this.#rangeLabelNode = new WorldNode();
-		this.#rangeLabelNode.setPivot(Pivot.middleCenter);
-		this.#rangeLabelNode.setAnchor(Pivot.topLeft);
-		this.#rangeLabel = this.#rangeLabelNode.addComponent(Label);
-		this.#rangeLabel.setFontSize(36);
-		this.#rangeLabel.setTextAlign("center");
-		this.#rangeLabel.setTextBaseline("middle");
-		this.#rangeLabel.setText("");
-		this.addChild(this.#rangeLabelNode);
+		this.#rangeTextNode = new WorldNode();
+		this.#rangeTextNode.setPivot(Pivot.middleCenter);
+		this.#rangeTextNode.setAnchor(Pivot.topLeft);
+		this.#rangeText = this.#rangeTextNode.addComponent(Text);
+		this.#rangeText.setFontSize(36);
+		this.#rangeText.setTextAlign("center");
+		this.#rangeText.setTextBaseline("middle");
+		this.#rangeText.setText("");
+		this.addChild(this.#rangeTextNode);
 
-		this.#inputLabelNode = new WorldNode();
-		this.#inputLabelNode.setPivot(Pivot.middleCenter);
-		this.#inputLabelNode.setAnchor(Pivot.topLeft);
-		this.#inputLabel = this.#inputLabelNode.addComponent(Label);
-		this.#inputLabel.setFontSize(120);
-		this.#inputLabel.setTextAlign("center");
-		this.#inputLabel.setTextBaseline("middle");
-		this.#inputLabel.setText("");
-		this.addChild(this.#inputLabelNode);
+		this.#inputTextNode = new WorldNode();
+		this.#inputTextNode.setPivot(Pivot.middleCenter);
+		this.#inputTextNode.setAnchor(Pivot.topLeft);
+		this.#inputText = this.#inputTextNode.addComponent(Text);
+		this.#inputText.setFontSize(120);
+		this.#inputText.setTextAlign("center");
+		this.#inputText.setTextBaseline("middle");
+		this.#inputText.setText("");
+		this.addChild(this.#inputTextNode);
 
 		this.#keypadNode = new WorldNode();
 		this.#keypadNode.setPivot(Pivot.topLeft);
@@ -195,7 +195,7 @@ export class NumberGuessPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -218,15 +218,15 @@ export class NumberGuessPart extends Part {
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#titleLabel) this.#titleLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#rangeLabel) this.#rangeLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-		if (this.#inputLabel) this.#inputLabel.setTextColor(Color.createFromHEX(theme.primary));
-		if (this.#hintLabel) {
-			// 힌트 색은 상황에 따라 (refreshHintLabel 에서 다시 갱신).
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#titleText) this.#titleText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#rangeText) this.#rangeText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#inputText) this.#inputText.setTextColor(Color.createFromHEX(theme.primary));
+		if (this.#hintText) {
+			// 힌트 색은 상황에 따라 (refreshHintText 에서 다시 갱신).
+			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const key of this.#keys) {
 			key.refreshAppearance();
 		}
@@ -239,25 +239,25 @@ export class NumberGuessPart extends Part {
 		this.#currentInput = "";
 		this.#guessCount = 0;
 		this.#isGameOver = false;
-		this.#hintLabel.setText("아무 숫자나 입력해 보세요");
+		this.#hintText.setText("아무 숫자나 입력해 보세요");
 		const theme = getCurrentGameTheme();
-		this.#hintLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		this.refreshTitleLabel();
-		this.refreshRangeLabel();
-		this.refreshInputLabel();
+		this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
+		this.refreshTitleText();
+		this.refreshRangeText();
+		this.refreshInputText();
 	}
 
-	refreshTitleLabel() {
+	refreshTitleText() {
 		const remaining = MAX_GUESSES - this.#guessCount;
-		this.#titleLabel.setText(`${MIN_NUMBER}~${MAX_NUMBER} 중 하나를 맞히세요  (남은 기회: ${remaining})`);
+		this.#titleText.setText(`${MIN_NUMBER}~${MAX_NUMBER} 중 하나를 맞히세요  (남은 기회: ${remaining})`);
 	}
 
-	refreshRangeLabel() {
-		this.#rangeLabel.setText(`현재 범위: ${this.#lowerBound} ~ ${this.#upperBound}`);
+	refreshRangeText() {
+		this.#rangeText.setText(`현재 범위: ${this.#lowerBound} ~ ${this.#upperBound}`);
 	}
 
-	refreshInputLabel() {
-		this.#inputLabel.setText(this.#currentInput === "" ? "_" : this.#currentInput);
+	refreshInputText() {
+		this.#inputText.setText(this.#currentInput === "" ? "_" : this.#currentInput);
 	}
 
 	layout() {
@@ -280,13 +280,13 @@ export class NumberGuessPart extends Part {
 		const top = System.Math.max((contentSize.y - totalHeight) * 0.5, 0);
 
 		let cursorY = top;
-		this.#titleLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + titleHeight * 0.5));
+		this.#titleTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + titleHeight * 0.5));
 		cursorY += titleHeight + verticalGap;
-		this.#rangeLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + rangeHeight * 0.5));
+		this.#rangeTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + rangeHeight * 0.5));
 		cursorY += rangeHeight + verticalGap;
-		this.#inputLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + inputHeight * 0.5));
+		this.#inputTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + inputHeight * 0.5));
 		cursorY += inputHeight + verticalGap;
-		this.#hintLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + hintHeight * 0.5));
+		this.#hintTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cursorY + hintHeight * 0.5));
 		cursorY += hintHeight + verticalGap;
 
 		const keypadX = (contentSize.x - keypadWidth) * 0.5;
@@ -313,7 +313,7 @@ export class NumberGuessPart extends Part {
 		if (key === BACKSPACE) {
 			if (this.#currentInput.length > 0) {
 				this.#currentInput = this.#currentInput.slice(0, -1);
-				this.refreshInputLabel();
+				this.refreshInputText();
 			}
 			return;
 		}
@@ -326,7 +326,7 @@ export class NumberGuessPart extends Part {
 		// 선행 0 방지.
 		if (this.#currentInput === "" && key === "0") return;
 		this.#currentInput += key;
-		this.refreshInputLabel();
+		this.refreshInputText();
 	}
 
 	submitGuess() {
@@ -334,39 +334,39 @@ export class NumberGuessPart extends Part {
 		const value = System.Number.parseInt(this.#currentInput, 10);
 		const theme = getCurrentGameTheme();
 		if (System.Number.isNaN(value) || value < MIN_NUMBER || value > MAX_NUMBER) {
-			this.#hintLabel.setText(`${MIN_NUMBER}~${MAX_NUMBER} 사이의 숫자만`);
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#hintText.setText(`${MIN_NUMBER}~${MAX_NUMBER} 사이의 숫자만`);
+			this.#hintText.setTextColor(Color.createFromHEX(theme.error));
 			this.#currentInput = "";
-			this.refreshInputLabel();
+			this.refreshInputText();
 			return;
 		}
 		this.#guessCount += 1;
 		this.#currentInput = "";
-		this.refreshInputLabel();
+		this.refreshInputText();
 
 		if (value === this.#target) {
-			this.#hintLabel.setText("정답!");
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.primary));
-			this.refreshTitleLabel();
+			this.#hintText.setText("정답!");
+			this.#hintText.setTextColor(Color.createFromHEX(theme.primary));
+			this.refreshTitleText();
 			this.endGame(true);
 			return;
 		}
 		if (value < this.#target) {
-			this.#hintLabel.setText(`${value} 보다 큽니다 ↑`);
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+			this.#hintText.setText(`${value} 보다 큽니다 ↑`);
+			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
 			if (value >= this.#lowerBound) this.#lowerBound = value + 1;
 		}
 		else {
-			this.#hintLabel.setText(`${value} 보다 작습니다 ↓`);
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+			this.#hintText.setText(`${value} 보다 작습니다 ↓`);
+			this.#hintText.setTextColor(Color.createFromHEX(theme.onBackground));
 			if (value <= this.#upperBound) this.#upperBound = value - 1;
 		}
-		this.refreshRangeLabel();
-		this.refreshTitleLabel();
+		this.refreshRangeText();
+		this.refreshTitleText();
 
 		if (this.#guessCount >= MAX_GUESSES) {
-			this.#hintLabel.setText(`기회 소진! 정답: ${this.#target}`);
-			this.#hintLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#hintText.setText(`기회 소진! 정답: ${this.#target}`);
+			this.#hintText.setTextColor(Color.createFromHEX(theme.error));
 			this.endGame(false);
 		}
 	}

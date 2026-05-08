@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -28,7 +28,7 @@ class ActionButton extends WorldNode {
 	/** @type { string } */ action;
 	/** @private @type { BlackjackPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, action, text, color) {
 		super();
@@ -40,15 +40,15 @@ class ActionButton extends WorldNode {
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
 		this.#paint.setColor(Color.createFromHEX(color));
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(56);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(56);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -61,19 +61,19 @@ class ActionButton extends WorldNode {
 // 블랙잭 파트.
 //==============================================================================
 export class BlackjackPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #dealerLabelNode;
-	/** @private @type { Label } */ #dealerLabel;
-	/** @private @type { WorldNode } */ #playerLabelNode;
-	/** @private @type { Label } */ #playerLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #dealerTextNode;
+	/** @private @type { Text } */ #dealerText;
+	/** @private @type { WorldNode } */ #playerTextNode;
+	/** @private @type { Text } */ #playerText;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #actionsNode;
 	/** @private @type { ActionButton[] } */ #actionButtons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number[] } */ #playerHand;
 	/** @private @type { number[] } */ #dealerHand;
 	/** @private @type { boolean } */ #playerStood;
@@ -107,21 +107,21 @@ export class BlackjackPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#dealerLabelNode = this.makeLabel(56);
-		this.addChild(this.#dealerLabelNode);
-		this.#dealerLabel = this.#dealerLabelNode.getComponent(Label);
+		this.#dealerTextNode = this.makeText(56);
+		this.addChild(this.#dealerTextNode);
+		this.#dealerText = this.#dealerTextNode.getComponent(Text);
 
-		this.#playerLabelNode = this.makeLabel(56);
-		this.addChild(this.#playerLabelNode);
-		this.#playerLabel = this.#playerLabelNode.getComponent(Label);
+		this.#playerTextNode = this.makeText(56);
+		this.addChild(this.#playerTextNode);
+		this.#playerText = this.#playerTextNode.getComponent(Text);
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(48);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#actionsNode = new WorldNode();
 		this.#actionsNode.setPivot(Pivot.topLeft);
@@ -141,21 +141,21 @@ export class BlackjackPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -166,12 +166,12 @@ export class BlackjackPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#dealerLabel) this.#dealerLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#playerLabel) this.#playerLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#dealerText) this.#dealerText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#playerText) this.#playerText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
 	resetGame() {
@@ -187,7 +187,7 @@ export class BlackjackPart extends Part {
 		this.#dealerHand = [this.drawCard(), this.drawCard()];
 		this.#playerStood = false;
 		this.#handOver = false;
-		this.refreshLabels(true);
+		this.refreshTexts(true);
 		this.refreshActions();
 		// 즉시 블랙잭 체크.
 		if (this.handValue(this.#playerHand) === 21) {
@@ -216,16 +216,16 @@ export class BlackjackPart extends Part {
 		return sum;
 	}
 
-	refreshLabels(hideDealer) {
-		this.#infoLabel.setText(`칩: ${this.#chips}    핸드 ${this.#handsPlayed}/${TOTAL_HANDS}`);
+	refreshTexts(hideDealer) {
+		this.#infoText.setText(`칩: ${this.#chips}    핸드 ${this.#handsPlayed}/${TOTAL_HANDS}`);
 		const playerVal = this.handValue(this.#playerHand);
-		this.#playerLabel.setText(`나: [${this.#playerHand.join(", ")}]  =  ${playerVal}`);
+		this.#playerText.setText(`나: [${this.#playerHand.join(", ")}]  =  ${playerVal}`);
 		if (hideDealer && !this.#handOver) {
-			this.#dealerLabel.setText(`딜러: [${this.#dealerHand[0]}, ?]`);
+			this.#dealerText.setText(`딜러: [${this.#dealerHand[0]}, ?]`);
 		}
 		else {
 			const dv = this.handValue(this.#dealerHand);
-			this.#dealerLabel.setText(`딜러: [${this.#dealerHand.join(", ")}]  =  ${dv}`);
+			this.#dealerText.setText(`딜러: [${this.#dealerHand.join(", ")}]  =  ${dv}`);
 		}
 	}
 
@@ -241,7 +241,7 @@ export class BlackjackPart extends Part {
 		if (this.#isGameOver) return;
 		if (action === "hit" && !this.#handOver) {
 			this.#playerHand.push(this.drawCard());
-			this.refreshLabels(true);
+			this.refreshTexts(true);
 			if (this.handValue(this.#playerHand) > 21) {
 				this.endHand("버스트! 패배", -BET_AMOUNT);
 			}
@@ -280,9 +280,9 @@ export class BlackjackPart extends Part {
 		this.#handsPlayed += 1;
 		const theme = getCurrentGameTheme();
 		const sign = delta > 0 ? "+" : (delta < 0 ? "" : "±");
-		this.#resultLabel.setText(`${message}  (${sign}${delta} 칩)`);
-		this.#resultLabel.setTextColor(Color.createFromHEX(delta > 0 ? theme.primary : (delta < 0 ? theme.error : theme.onBackground)));
-		this.refreshLabels(false);
+		this.#resultText.setText(`${message}  (${sign}${delta} 칩)`);
+		this.#resultText.setTextColor(Color.createFromHEX(delta > 0 ? theme.primary : (delta < 0 ? theme.error : theme.onBackground)));
+		this.refreshTexts(false);
 		this.refreshActions();
 	}
 
@@ -305,13 +305,13 @@ export class BlackjackPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#dealerLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + dealerH * 0.5));
+		this.#dealerTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + dealerH * 0.5));
 		cy += dealerH + vGap;
-		this.#playerLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + playerH * 0.5));
+		this.#playerTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + playerH * 0.5));
 		cy += playerH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		const totalActW = buttonW * buttonCount + gap * (buttonCount - 1);
 		const actX = (contentSize.x - totalActW) * 0.5;

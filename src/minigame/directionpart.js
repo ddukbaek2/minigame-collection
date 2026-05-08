@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -28,7 +28,7 @@ class DirBtn extends WorldNode {
 	/** @type { string } */ dir;
 	/** @private @type { DirectionPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, dir) {
 		super();
@@ -39,22 +39,22 @@ class DirBtn extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(ICONS[dir]);
-		this.#label.setFontSize(72);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(ICONS[dir]);
+		this.#text.setFontSize(72);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
-		this.#label.setTextColor(Color.createFromHEX(theme.onPrimary));
+		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
-	setFontSize(s) { this.#label.setFontSize(s); }
+	setFontSize(s) { this.#text.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -67,15 +67,15 @@ class DirBtn extends WorldNode {
 // 방향맞추기 파트.
 //==============================================================================
 export class DirectionPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #arrowLabelNode;
-	/** @private @type { Label } */ #arrowLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #arrowTextNode;
+	/** @private @type { Text } */ #arrowText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { DirBtn[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { string } */ #targetDir;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
@@ -105,14 +105,14 @@ export class DirectionPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#arrowLabelNode = this.makeLabel(280);
-		this.addChild(this.#arrowLabelNode);
-		this.#arrowLabel = this.#arrowLabelNode.getComponent(Label);
-		markUseSystemFont(this.#arrowLabel);
+		this.#arrowTextNode = this.makeText(280);
+		this.addChild(this.#arrowTextNode);
+		this.#arrowText = this.#arrowTextNode.getComponent(Text);
+		markUseSystemFont(this.#arrowText);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -133,21 +133,21 @@ export class DirectionPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(s) {
+	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(s);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(s);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -158,10 +158,10 @@ export class DirectionPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#arrowLabel) this.#arrowLabel.setTextColor(Color.createFromHEX(theme.primary));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#arrowText) this.#arrowText.setTextColor(Color.createFromHEX(theme.primary));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -177,12 +177,12 @@ export class DirectionPart extends Part {
 
 	nextArrow() {
 		this.#targetDir = DIRS[System.Math.floor(System.Math.random() * DIRS.length)];
-		this.#arrowLabel.setText(ICONS[this.#targetDir]);
+		this.#arrowText.setText(ICONS[this.#targetDir]);
 	}
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -223,9 +223,9 @@ export class DirectionPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#arrowLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + arrowH * 0.5));
+		this.#arrowTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + arrowH * 0.5));
 		cy += arrowH + vGap;
 		const dirsX = (contentSize.x - dirsW) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(dirsX, cy));

@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -26,7 +26,7 @@ class OEButton extends WorldNode {
 	/** @type { string } */ choice;
 	/** @private @type { OddEvenPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, choice, text) {
 		super();
@@ -37,11 +37,11 @@ class OEButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(80);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(80);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
@@ -49,10 +49,10 @@ class OEButton extends WorldNode {
 		const theme = getCurrentGameTheme();
 		const isOdd = this.choice === "odd";
 		this.#paint.setColor(Color.createFromHEX(isOdd ? theme.primary : theme.secondary));
-		this.#label.setTextColor(Color.createFromHEX(isOdd ? theme.onPrimary : theme.onSecondary));
+		this.#text.setTextColor(Color.createFromHEX(isOdd ? theme.onPrimary : theme.onSecondary));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -65,15 +65,15 @@ class OEButton extends WorldNode {
 // 홀짝 파트.
 //==============================================================================
 export class OddEvenPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #numberLabelNode;
-	/** @private @type { Label } */ #numberLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #numberTextNode;
+	/** @private @type { Text } */ #numberText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { OEButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
 	/** @private @type { number } */ #wrongCount;
@@ -103,13 +103,13 @@ export class OddEvenPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#numberLabelNode = this.makeLabel(220);
-		this.addChild(this.#numberLabelNode);
-		this.#numberLabel = this.#numberLabelNode.getComponent(Label);
+		this.#numberTextNode = this.makeText(220);
+		this.addChild(this.#numberTextNode);
+		this.#numberText = this.#numberTextNode.getComponent(Text);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -128,21 +128,21 @@ export class OddEvenPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -153,10 +153,10 @@ export class OddEvenPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#numberLabel) this.#numberLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#numberText) this.#numberText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -172,12 +172,12 @@ export class OddEvenPart extends Part {
 
 	nextNumber() {
 		this.#currentNumber = System.Math.floor(System.Math.random() * 999) + 1;
-		this.#numberLabel.setText(String(this.#currentNumber));
+		this.#numberText.setText(String(this.#currentNumber));
 	}
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -218,9 +218,9 @@ export class OddEvenPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#numberLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + numberH * 0.5));
+		this.#numberTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + numberH * 0.5));
 		cy += numberH + vGap;
 		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));

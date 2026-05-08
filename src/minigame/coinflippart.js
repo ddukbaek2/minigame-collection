@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -37,7 +37,7 @@ class CoinButton extends WorldNode {
 	/** @type { string } */ choice;
 	/** @private @type { CoinFlipPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, choice, text) {
 		super();
@@ -48,21 +48,21 @@ class CoinButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(80);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(80);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const isHead = this.choice === "head";
 		this.#paint.setColor(Color.createFromHEX(isHead ? "#eab308" : "#a16207"));
-		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
-	setFontSize(s) { this.#label.setFontSize(s); }
+	setFontSize(s) { this.#text.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -75,20 +75,20 @@ class CoinButton extends WorldNode {
 // 동전 베팅 파트.
 //==============================================================================
 export class CoinFlipPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #coinNode;
 	/** @private @type { Paint } */ #coinRimPaint;
 	/** @private @type { WorldNode } */ #coinFaceNode;
 	/** @private @type { Paint } */ #coinFacePaint;
-	/** @private @type { Label } */ #coinLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { Text } */ #coinText;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { CoinButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #chips;
 	/** @private @type { number } */ #flips;
 	/** @private @type { boolean } */ #isStarted;
@@ -114,9 +114,9 @@ export class CoinFlipPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
 		// 동전: 외곽 림(어두운 색) + 안쪽 face(밝은 색) + 텍스트. 두 Paint 모두
 		// roundSize 를 자기 크기의 절반으로 설정해 진짜 원형이 되게 한다.
@@ -132,17 +132,17 @@ export class CoinFlipPart extends Part {
 		this.#coinFaceNode.setAnchor(Pivot.topLeft);
 		this.#coinFacePaint = this.#coinFaceNode.addComponent(Paint);
 		this.#coinFacePaint.setColor(Color.createFromHEX(COIN_IDLE_FACE_COLOR));
-		this.#coinLabel = this.#coinFaceNode.addComponent(Label);
-		this.#coinLabel.setText("?");
-		this.#coinLabel.setFontSize(180);
-		this.#coinLabel.setTextAlign("center");
-		this.#coinLabel.setTextBaseline("middle");
-		this.#coinLabel.setTextColor(Color.createFromHEX(COIN_FACE_TEXT_COLOR));
+		this.#coinText = this.#coinFaceNode.addComponent(Text);
+		this.#coinText.setText("?");
+		this.#coinText.setFontSize(180);
+		this.#coinText.setTextAlign("center");
+		this.#coinText.setTextBaseline("middle");
+		this.#coinText.setTextColor(Color.createFromHEX(COIN_FACE_TEXT_COLOR));
 		this.#coinNode.addChild(this.#coinFaceNode);
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(48);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -161,21 +161,21 @@ export class CoinFlipPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(s) {
+	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(s);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(s);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -186,10 +186,10 @@ export class CoinFlipPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -215,7 +215,7 @@ export class CoinFlipPart extends Part {
 		}
 		this.#coinRimPaint.setColor(Color.createFromHEX(rimHex));
 		this.#coinFacePaint.setColor(Color.createFromHEX(faceHex));
-		this.#coinLabel.setText(text);
+		this.#coinText.setText(text);
 	}
 
 	resetGame() {
@@ -224,12 +224,12 @@ export class CoinFlipPart extends Part {
 		this.#isStarted = true;
 		this.#isGameOver = false;
 		this.setCoinFace("idle");
-		this.#resultLabel.setText(`${BET_AMOUNT} 칩 베팅 (x2)`);
+		this.#resultText.setText(`${BET_AMOUNT} 칩 베팅 (x2)`);
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`칩: ${this.#chips}    플립 ${this.#flips}/${TOTAL_FLIPS}`);
+		this.#infoText.setText(`칩: ${this.#chips}    플립 ${this.#flips}/${TOTAL_FLIPS}`);
 	}
 
 	onChoice(choice) {
@@ -242,12 +242,12 @@ export class CoinFlipPart extends Part {
 		const win = (choice === result);
 		if (win) {
 			this.#chips += BET_AMOUNT * 2;
-			this.#resultLabel.setText(`${result === "head" ? "앞면" : "뒷면"}!  +${BET_AMOUNT} 칩`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
+			this.#resultText.setText(`${result === "head" ? "앞면" : "뒷면"}!  +${BET_AMOUNT} 칩`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else {
-			this.#resultLabel.setText(`${result === "head" ? "앞면" : "뒷면"}  -${BET_AMOUNT} 칩`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#resultText.setText(`${result === "head" ? "앞면" : "뒷면"}  -${BET_AMOUNT} 칩`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.error));
 		}
 		this.#flips += 1;
 		this.refreshInfo();
@@ -272,7 +272,7 @@ export class CoinFlipPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
 		this.#coinNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + coinSize * 0.5));
 		this.#coinNode.setContentSize(Vector2.create(coinSize, coinSize));
@@ -284,9 +284,9 @@ export class CoinFlipPart extends Part {
 		this.#coinFaceNode.setContentSize(Vector2.create(faceSize, faceSize));
 		this.#coinFacePaint.setRoundSize(faceSize * 0.5);
 		// 라벨 폰트는 face 크기에 비례.
-		this.#coinLabel.setFontSize(System.Math.floor(faceSize * 0.55));
+		this.#coinText.setFontSize(System.Math.floor(faceSize * 0.55));
 		cy += coinSize + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));

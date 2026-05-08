@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -32,12 +32,12 @@ const MAX_WAIT = 4.0;
 export class ReactionTimePart extends Part {
 	/** @private @type { WorldNode } */ #panelNode;
 	/** @private @type { Paint } */ #panelPaint;
-	/** @private @type { Label } */ #panelLabel;
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { Text } */ #panelText;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { string } */ #state;
 	/** @private @type { number } */ #waitTimer;
 	/** @private @type { number } */ #goElapsed;
@@ -76,25 +76,25 @@ export class ReactionTimePart extends Part {
 		this.#panelNode.setInteractable(true);
 		this.#panelPaint = this.#panelNode.addComponent(Paint);
 		this.#panelPaint.setRoundSize(20);
-		this.#panelLabel = this.#panelNode.addComponent(Label);
-		this.#panelLabel.setFontSize(56);
-		this.#panelLabel.setTextAlign("center");
-		this.#panelLabel.setTextBaseline("middle");
-		this.#panelLabel.setText("");
+		this.#panelText = this.#panelNode.addComponent(Text);
+		this.#panelText.setFontSize(56);
+		this.#panelText.setTextAlign("center");
+		this.#panelText.setTextBaseline("middle");
+		this.#panelText.setText("");
 		this.#panelNode.touchRelease = (pos) => {
 			if (this.#panelNode.contains(pos)) this.onPanelTapped();
 		};
 		this.addChild(this.#panelNode);
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
-		this.addChild(this.#infoLabelNode);
+		this.#infoTextNode = new WorldNode();
+		this.#infoTextNode.setPivot(Pivot.middleCenter);
+		this.#infoTextNode.setAnchor(Pivot.topLeft);
+		this.#infoText = this.#infoTextNode.addComponent(Text);
+		this.#infoText.setFontSize(40);
+		this.#infoText.setTextAlign("center");
+		this.#infoText.setTextBaseline("middle");
+		this.#infoText.setText("");
+		this.addChild(this.#infoTextNode);
 
 		this.#resetButtonNode = createButtonNode(
 			"다시하기",
@@ -105,7 +105,7 @@ export class ReactionTimePart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -125,9 +125,9 @@ export class ReactionTimePart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		this.refreshPanel();
 	}
 
@@ -135,27 +135,27 @@ export class ReactionTimePart extends Part {
 		const theme = getCurrentGameTheme();
 		if (this.#state === STATE_IDLE) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.primary));
-			this.#panelLabel.setText("탭해서 시작");
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+			this.#panelText.setText("탭해서 시작");
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		else if (this.#state === STATE_WAITING) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.error));
-			this.#panelLabel.setText("기다리세요...");
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onError));
+			this.#panelText.setText("기다리세요...");
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onError));
 		}
 		else if (this.#state === STATE_GO) {
 			this.#panelPaint.setColor(Color.createFromHEX("#22c55e"));
-			this.#panelLabel.setText("탭!");
-			this.#panelLabel.setTextColor(Color.createFromHEX("#ffffff"));
+			this.#panelText.setText("탭!");
+			this.#panelText.setTextColor(Color.createFromHEX("#ffffff"));
 		}
 		else if (this.#state === STATE_RESULT) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.surface));
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
 		else if (this.#state === STATE_FOUL) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.error));
-			this.#panelLabel.setText("너무 빨라요!\n탭해서 다시");
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onError));
+			this.#panelText.setText("너무 빨라요!\n탭해서 다시");
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onError));
 		}
 	}
 
@@ -171,7 +171,7 @@ export class ReactionTimePart extends Part {
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`라운드 ${this.#round + (this.#state === STATE_RESULT ? 0 : 0)} / ${ROUNDS}    기록: ${this.#times.length}`);
+		this.#infoText.setText(`라운드 ${this.#round + (this.#state === STATE_RESULT ? 0 : 0)} / ${ROUNDS}    기록: ${this.#times.length}`);
 	}
 
 	tick(timeDelta) {
@@ -203,7 +203,7 @@ export class ReactionTimePart extends Part {
 			this.#times.push(ms);
 			this.#round += 1;
 			this.#state = STATE_RESULT;
-			this.#panelLabel.setText(`${ms}ms\n탭해서 계속`);
+			this.#panelText.setText(`${ms}ms\n탭해서 계속`);
 			this.refreshPanel();
 			this.refreshInfo();
 			if (this.#round >= ROUNDS) {
@@ -232,7 +232,7 @@ export class ReactionTimePart extends Part {
 		this.#panelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + panelHeight * 0.5));
 		this.#panelNode.setContentSize(Vector2.create(contentSize.x - margin * 2, panelHeight));
 
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + panelHeight + gap + infoHeight * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + panelHeight + gap + infoHeight * 0.5));
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + panelHeight + gap + infoHeight + gap + buttonHeight * 0.5));
 	}
 

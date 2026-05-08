@@ -6,8 +6,8 @@ import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
-import { createButtonNode, createLabelNode } from "./uihelper.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
+import { createButtonNode, createTextNode } from "./uihelper.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 
 
@@ -39,16 +39,16 @@ export class ResultPopup extends WorldNode {
 	/** @private @type { Paint } */ #dimPaint;
 	/** @private @type { WorldNode } */ #boxNode;
 	/** @private @type { Paint } */ #boxPaint;
-	/** @private @type { WorldNode } */ #titleLabelNode;
-	/** @private @type { Label } */ #titleLabel;
-	/** @private @type { WorldNode } */ #scoreLabelNode;
-	/** @private @type { Label } */ #scoreLabel;
-	/** @private @type { WorldNode[] } */ #statLabelNodes;
-	/** @private @type { Label[] } */ #statLabels;
+	/** @private @type { WorldNode } */ #titleTextNode;
+	/** @private @type { Text } */ #titleText;
+	/** @private @type { WorldNode } */ #scoreTextNode;
+	/** @private @type { Text } */ #scoreText;
+	/** @private @type { WorldNode[] } */ #statTextNodes;
+	/** @private @type { Text[] } */ #statTexts;
 	/** @private @type { WorldNode } */ #retryButtonNode;
-	/** @private @type { Label } */ #retryButtonLabel;
+	/** @private @type { Text } */ #retryButtonText;
 	/** @private @type { WorldNode } */ #exitButtonNode;
-	/** @private @type { Label } */ #exitButtonLabel;
+	/** @private @type { Text } */ #exitButtonText;
 	/** @private @type { (() => void) | null } */ #onRetry;
 	/** @private @type { (() => void) | null } */ #onExit;
 	/** @private @type { boolean } */ #isWon;
@@ -76,23 +76,23 @@ export class ResultPopup extends WorldNode {
 		this.addChild(this.#boxNode);
 
 		// 타이틀 (승리/패배 등).
-		this.#titleLabelNode = createLabelNode("", TITLE_FONT, Color.createFromHEX("#ffffff"));
-		this.#boxNode.addChild(this.#titleLabelNode);
-		this.#titleLabel = this.#titleLabelNode.getComponent(Label);
+		this.#titleTextNode = createTextNode("", TITLE_FONT, Color.createFromHEX("#ffffff"));
+		this.#boxNode.addChild(this.#titleTextNode);
+		this.#titleText = this.#titleTextNode.getComponent(Text);
 
 		// 점수 (큰 글씨).
-		this.#scoreLabelNode = createLabelNode("", SCORE_FONT, Color.createFromHEX("#ffffff"));
-		this.#boxNode.addChild(this.#scoreLabelNode);
-		this.#scoreLabel = this.#scoreLabelNode.getComponent(Label);
+		this.#scoreTextNode = createTextNode("", SCORE_FONT, Color.createFromHEX("#ffffff"));
+		this.#boxNode.addChild(this.#scoreTextNode);
+		this.#scoreText = this.#scoreTextNode.getComponent(Text);
 
 		// 통계 라인들.
-		this.#statLabelNodes = [];
-		this.#statLabels = [];
+		this.#statTextNodes = [];
+		this.#statTexts = [];
 		for (let i = 0; i < MAX_STAT_LINES; ++i) {
-			const node = createLabelNode("", STAT_FONT, Color.createFromHEX("#cccccc"));
+			const node = createTextNode("", STAT_FONT, Color.createFromHEX("#cccccc"));
 			this.#boxNode.addChild(node);
-			this.#statLabelNodes.push(node);
-			this.#statLabels.push(node.getComponent(Label));
+			this.#statTextNodes.push(node);
+			this.#statTexts.push(node.getComponent(Text));
 		}
 
 		// 다시하기 버튼.
@@ -104,7 +104,7 @@ export class ResultPopup extends WorldNode {
 			BUTTON_FONT,
 			() => { this.handleRetry(); },
 		);
-		this.#retryButtonLabel = this.#retryButtonNode.getComponent(Label);
+		this.#retryButtonText = this.#retryButtonNode.getComponent(Text);
 		this.#boxNode.addChild(this.#retryButtonNode);
 
 		// 나가기 버튼.
@@ -116,7 +116,7 @@ export class ResultPopup extends WorldNode {
 			BUTTON_FONT,
 			() => { this.handleExit(); },
 		);
-		this.#exitButtonLabel = this.#exitButtonNode.getComponent(Label);
+		this.#exitButtonText = this.#exitButtonNode.getComponent(Text);
 		this.#boxNode.addChild(this.#exitButtonNode);
 
 		this.#onRetry = null;
@@ -137,15 +137,15 @@ export class ResultPopup extends WorldNode {
 		if (this.#boxPaint) {
 			this.#boxPaint.setColor(Color.createFromHEX(theme.surface));
 		}
-		if (this.#titleLabel) {
+		if (this.#titleText) {
 			const titleColor = this.#isWon ? theme.primary : theme.error;
-			this.#titleLabel.setTextColor(Color.createFromHEX(titleColor));
+			this.#titleText.setTextColor(Color.createFromHEX(titleColor));
 		}
-		if (this.#scoreLabel) {
-			this.#scoreLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+		if (this.#scoreText) {
+			this.#scoreText.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
-		for (const label of this.#statLabels) {
-			label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		for (const text of this.#statTexts) {
+			text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
@@ -162,13 +162,13 @@ export class ResultPopup extends WorldNode {
 	show(options) {
 		options = options || {};
 		this.#isWon = !!options.isWon;
-		this.#titleLabel.setText(options.title || (this.#isWon ? "승리!" : "게임 오버"));
-		this.#scoreLabel.setText(`점수 ${options.score != null ? options.score : 0}`);
+		this.#titleText.setText(options.title || (this.#isWon ? "승리!" : "게임 오버"));
+		this.#scoreText.setText(`점수 ${options.score != null ? options.score : 0}`);
 		const stats = options.stats || [];
-		for (let i = 0; i < this.#statLabels.length; ++i) {
+		for (let i = 0; i < this.#statTexts.length; ++i) {
 			const text = stats[i] || "";
-			this.#statLabels[i].setText(text);
-			this.#statLabelNodes[i].setActive(text !== "");
+			this.#statTexts[i].setText(text);
+			this.#statTextNodes[i].setActive(text !== "");
 		}
 		this.#onRetry = options.onRetry || null;
 		this.#onExit = options.onExit || null;
@@ -213,16 +213,16 @@ export class ResultPopup extends WorldNode {
 
 		const padding = 60;
 		let cursorY = padding + TITLE_FONT * 0.5;
-		this.#titleLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
+		this.#titleTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
 
 		cursorY += TITLE_FONT * 0.5 + 24 + SCORE_FONT * 0.5;
-		this.#scoreLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
+		this.#scoreTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
 
 		// 통계 라인 (세로 누적).
 		cursorY += SCORE_FONT * 0.5 + 30;
-		for (let i = 0; i < this.#statLabels.length; ++i) {
+		for (let i = 0; i < this.#statTexts.length; ++i) {
 			cursorY += STAT_LINE_HEIGHT * 0.5;
-			this.#statLabelNodes[i].setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
+			this.#statTextNodes[i].setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
 			cursorY += STAT_LINE_HEIGHT * 0.5;
 		}
 

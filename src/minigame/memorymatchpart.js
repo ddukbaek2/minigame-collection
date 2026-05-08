@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -33,7 +33,7 @@ class MemoryCard extends WorldNode {
 	/** @type { boolean } */ isMatched;
 	/** @private @type { MemoryMatchPart } */ #board;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(board, index) {
 		super();
@@ -47,12 +47,12 @@ class MemoryCard extends WorldNode {
 		this.#board = board;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(12);
-		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(80);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText("");
+		this.#text.setFontSize(80);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
@@ -82,22 +82,22 @@ class MemoryCard extends WorldNode {
 		const theme = getCurrentGameTheme();
 		if (this.isMatched) {
 			this.#paint.setColor(Color.createFromHEX(theme.surface));
-			this.#label.setText(this.symbol);
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#text.setText(this.symbol);
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 		else if (this.isRevealed) {
 			this.#paint.setColor(Color.createFromHEX(theme.surface));
-			this.#label.setText(this.symbol);
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurface));
+			this.#text.setText(this.symbol);
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
 		else {
 			this.#paint.setColor(Color.createFromHEX(theme.primary));
-			this.#label.setText("");
+			this.#text.setText("");
 		}
 	}
 
 	setFontSize(size) {
-		this.#label.setFontSize(size);
+		this.#text.setFontSize(size);
 	}
 
 	touchRelease(viewInputPosition) {
@@ -113,11 +113,11 @@ class MemoryCard extends WorldNode {
 export class MemoryMatchPart extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { MemoryCard[] } */ #cards;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { MemoryCard | null } */ #firstPick;
 	/** @private @type { MemoryCard | null } */ #secondPick;
 	/** @private @type { number } */ #flipBackTimer;
@@ -151,15 +151,15 @@ export class MemoryMatchPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setFontSize(44);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.#statusLabel.setText("");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setFontSize(44);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.#statusText.setText("");
+		this.addChild(this.#statusTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -181,7 +181,7 @@ export class MemoryMatchPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -204,14 +204,14 @@ export class MemoryMatchPart extends Part {
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#statusLabel) {
-			this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
 		if (this.#resetButtonPaint) {
 			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		}
-		if (this.#resetButtonLabel) {
-			this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		for (const card of this.#cards) {
 			card.refreshAppearance();
@@ -240,11 +240,11 @@ export class MemoryMatchPart extends Part {
 		for (let i = 0; i < this.#cards.length; ++i) {
 			this.#cards[i].reset(pool[i]);
 		}
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 	}
 
-	refreshStatusLabel() {
-		this.#statusLabel.setText(`이동: ${this.#moveCount}    매치: ${this.#matchedPairs}/${(ROWS * COLS) / 2}`);
+	refreshStatusText() {
+		this.#statusText.setText(`이동: ${this.#moveCount}    매치: ${this.#matchedPairs}/${(ROWS * COLS) / 2}`);
 	}
 
 	tick(timeDelta) {
@@ -272,7 +272,7 @@ export class MemoryMatchPart extends Part {
 		const totalHeight = headerHeight + verticalGap + boardHeight + verticalGap + buttonHeight;
 		const top = System.Math.max((contentSize.y - totalHeight) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
 
 		const boardX = (contentSize.x - boardWidth) * 0.5;
 		const boardY = top + headerHeight + verticalGap;
@@ -305,7 +305,7 @@ export class MemoryMatchPart extends Part {
 		}
 		this.#secondPick = card;
 		this.#moveCount += 1;
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 		if (this.#firstPick.symbol === this.#secondPick.symbol) {
 			this.processPair();
 		}
@@ -324,7 +324,7 @@ export class MemoryMatchPart extends Part {
 			this.#firstPick.setMatched();
 			this.#secondPick.setMatched();
 			this.#matchedPairs += 1;
-			this.refreshStatusLabel();
+			this.refreshStatusText();
 		}
 		else {
 			this.#firstPick.flipDown();

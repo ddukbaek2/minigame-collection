@@ -4,9 +4,9 @@
 import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "./part.js";
-import { createLabelNode } from "./uihelper.js";
+import { createTextNode } from "./uihelper.js";
 import { getTheme } from "./theme.js";
 
 
@@ -41,7 +41,7 @@ export class DailyMissionPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#placeholderNode = createLabelNode("일일미션 (준비중)", 56, Color.createFromHEX("#ffffff"));
+		this.#placeholderNode = createTextNode("일일미션 (준비중)", 56, Color.createFromHEX("#ffffff"));
 		this.addChild(this.#placeholderNode);
 
 		this.applyTheme(getTheme());
@@ -53,7 +53,7 @@ export class DailyMissionPart extends Part {
 	applyTheme(theme) {
 		super.applyTheme(theme);
 		if (this.#placeholderNode) {
-			this.#placeholderNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#placeholderNode.getComponent(Text).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 

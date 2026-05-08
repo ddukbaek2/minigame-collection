@@ -6,12 +6,12 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
 import { Part, PartId } from "./part.js";
-import { createToggleButtonNode, createLabelNode } from "./uihelper.js";
+import { createToggleButtonNode, createTextNode } from "./uihelper.js";
 import { getNickname } from "./userprofile.js";
 import {
 	getAllThemeIds,
@@ -106,21 +106,21 @@ export class ConfigurationPart extends Part {
 
 		this.#sections.push(this.createSection(
 			"UI 테마",
-			getAllThemeIds().map((id) => ({ id, label: getTheme(id).displayName })),
+			getAllThemeIds().map((id) => ({ id, text: getTheme(id).displayName })),
 			() => getCurrentUIThemeId(),
 			(id) => { setCurrentUITheme(id); this.refreshAllSections(); },
 		));
 		this.#sections.push(this.createSection(
 			"게임 테마",
-			getAllThemeIds().map((id) => ({ id, label: getTheme(id).displayName })),
+			getAllThemeIds().map((id) => ({ id, text: getTheme(id).displayName })),
 			() => getCurrentGameThemeId(),
 			(id) => { setCurrentGameTheme(id); this.refreshAllSections(); },
 		));
 		this.#sections.push(this.createSection(
 			"배경음",
 			[
-				{ id: true,  label: "켜기" },
-				{ id: false, label: "끄기" },
+				{ id: true,  text: "켜기" },
+				{ id: false, text: "끄기" },
 			],
 			() => !!getSetting(SettingId.bgmEnabled),
 			(value) => { setSetting(SettingId.bgmEnabled, value); this.refreshAllSections(); },
@@ -128,8 +128,8 @@ export class ConfigurationPart extends Part {
 		this.#sections.push(this.createSection(
 			"효과음",
 			[
-				{ id: true,  label: "켜기" },
-				{ id: false, label: "끄기" },
+				{ id: true,  text: "켜기" },
+				{ id: false, text: "끄기" },
 			],
 			() => !!getSetting(SettingId.sfxEnabled),
 			(value) => { setSetting(SettingId.sfxEnabled, value); this.refreshAllSections(); },
@@ -137,8 +137,8 @@ export class ConfigurationPart extends Part {
 		this.#sections.push(this.createSection(
 			"진동",
 			[
-				{ id: true,  label: "켜기" },
-				{ id: false, label: "끄기" },
+				{ id: true,  text: "켜기" },
+				{ id: false, text: "끄기" },
 			],
 			() => !!getSetting(SettingId.vibrationEnabled),
 			(value) => { setSetting(SettingId.vibrationEnabled, value); this.refreshAllSections(); },
@@ -146,8 +146,8 @@ export class ConfigurationPart extends Part {
 		this.#sections.push(this.createSection(
 			"언어",
 			[
-				{ id: LanguageId.ko, label: "한국어" },
-				{ id: LanguageId.en, label: "English" },
+				{ id: LanguageId.ko, text: "한국어" },
+				{ id: LanguageId.en, text: "English" },
 			],
 			() => getSetting(SettingId.language),
 			(id) => { setSetting(SettingId.language, id); this.refreshAllSections(); },
@@ -173,7 +173,7 @@ export class ConfigurationPart extends Part {
 
 	//==============================================================================
 	// 한 섹션 생성. 제목 라벨 + 옵션 토글 버튼들 (라디오 그룹).
-	// - options: [{ id: any, label: string }]
+	// - options: [{ id: any, text: string }]
 	// - getCurrentValue(): 현재 선택된 id
 	// - onSelect(id): 사용자가 옵션을 선택했을 때 호출
 	//==============================================================================
@@ -185,15 +185,15 @@ export class ConfigurationPart extends Part {
 		node.setPivot(Pivot.topLeft);
 		node.setAnchor(Pivot.topLeft);
 
-		// 제목 라벨. (가운데 정렬 — createLabelNode 기본값 유지)
-		const titleNode = createLabelNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		// 제목 라벨. (가운데 정렬 — createTextNode 기본값 유지)
+		const titleNode = createTextNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
 		node.addChild(titleNode);
 
 		// 옵션 버튼들.
 		const buttons = [];
 		for (const option of options) {
 			const buttonNode = createToggleButtonNode(
-				option.label,
+				option.text,
 				Vector2.create(BUTTON_WIDTH, BUTTON_HEIGHT),
 				Color.createFromHEX("#3a3f5b"),
 				Color.createFromHEX("#ffffff"),
@@ -205,7 +205,7 @@ export class ConfigurationPart extends Part {
 				id: option.id,
 				node: buttonNode,
 				paint: buttonNode.getComponent(Paint),
-				label: buttonNode.getComponent(Label),
+				text: buttonNode.getComponent(Text),
 				button: buttonNode.getComponent(UIButton),
 			});
 		}
@@ -214,7 +214,7 @@ export class ConfigurationPart extends Part {
 			kind: "radio",
 			node,
 			titleNode,
-			titleLabel: titleNode.getComponent(Label),
+			titleText: titleNode.getComponent(Text),
 			buttons,
 			buttonWidth: BUTTON_WIDTH,
 			getCurrentValue,
@@ -239,7 +239,7 @@ export class ConfigurationPart extends Part {
 		node.setPivot(Pivot.topLeft);
 		node.setAnchor(Pivot.topLeft);
 
-		const titleNode = createLabelNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		const titleNode = createTextNode(title, SECTION_TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
 		node.addChild(titleNode);
 
 		const buttonNode = createToggleButtonNode(
@@ -256,12 +256,12 @@ export class ConfigurationPart extends Part {
 			kind,
 			node,
 			titleNode,
-			titleLabel: titleNode.getComponent(Label),
+			titleText: titleNode.getComponent(Text),
 			buttons: [{
 				id: null,
 				node: buttonNode,
 				paint: buttonNode.getComponent(Paint),
-				label: buttonNode.getComponent(Label),
+				text: buttonNode.getComponent(Text),
 				button: buttonNode.getComponent(UIButton),
 				getButtonText,
 			}],
@@ -341,17 +341,17 @@ export class ConfigurationPart extends Part {
 		const titleColor = Color.createFromHEX(theme.onBackground);
 
 		for (const section of this.#sections) {
-			if (section.titleLabel) {
-				section.titleLabel.setTextColor(titleColor);
+			if (section.titleText) {
+				section.titleText.setTextColor(titleColor);
 			}
 			if (section.kind === "action") {
 				const entry = section.buttons[0];
 				if (entry.getButtonText) {
-					entry.label.setText(entry.getButtonText());
+					entry.text.setText(entry.getButtonText());
 				}
 				entry.paint.setRoundSize(16);
 				entry.paint.setColor(onBg);
-				entry.label.setTextColor(onText);
+				entry.text.setTextColor(onText);
 				if (entry.button && typeof entry.button.collectColorTargets === "function") {
 					entry.button.collectColorTargets();
 				}
@@ -360,11 +360,11 @@ export class ConfigurationPart extends Part {
 			if (section.kind === "danger") {
 				const entry = section.buttons[0];
 				if (entry.getButtonText) {
-					entry.label.setText(entry.getButtonText());
+					entry.text.setText(entry.getButtonText());
 				}
 				entry.paint.setRoundSize(16);
 				entry.paint.setColor(dangerBg);
-				entry.label.setTextColor(dangerText);
+				entry.text.setTextColor(dangerText);
 				if (entry.button && typeof entry.button.collectColorTargets === "function") {
 					entry.button.collectColorTargets();
 				}
@@ -378,11 +378,11 @@ export class ConfigurationPart extends Part {
 				entry.paint.setRoundSize(16);
 				if (isSelected) {
 					entry.paint.setColor(onBg);
-					entry.label.setTextColor(onText);
+					entry.text.setTextColor(onText);
 				}
 				else {
 					entry.paint.setColor(offBg);
-					entry.label.setTextColor(offText);
+					entry.text.setTextColor(offText);
 				}
 				// UIButton 의 originalColor 캐시 갱신.
 				if (entry.button && typeof entry.button.collectColorTargets === "function") {

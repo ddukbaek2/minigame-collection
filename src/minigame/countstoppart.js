@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -26,16 +26,16 @@ const STATE_DONE = "done";
 // 카운트 스톱 파트.
 //==============================================================================
 export class CountStopPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #targetLabelNode;
-	/** @private @type { Label } */ #targetLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #targetTextNode;
+	/** @private @type { Text } */ #targetText;
 	/** @private @type { WorldNode } */ #panelNode;
 	/** @private @type { Paint } */ #panelPaint;
-	/** @private @type { Label } */ #panelLabel;
+	/** @private @type { Text } */ #panelText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { string } */ #state;
 	/** @private @type { number } */ #targetIndex;
 	/** @private @type { number } */ #elapsed;
@@ -64,13 +64,13 @@ export class CountStopPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#targetLabelNode = this.makeLabel(64);
-		this.addChild(this.#targetLabelNode);
-		this.#targetLabel = this.#targetLabelNode.getComponent(Label);
+		this.#targetTextNode = this.makeText(64);
+		this.addChild(this.#targetTextNode);
+		this.#targetText = this.#targetTextNode.getComponent(Text);
 
 		this.#panelNode = new WorldNode();
 		this.#panelNode.setPivot(Pivot.middleCenter);
@@ -78,11 +78,11 @@ export class CountStopPart extends Part {
 		this.#panelNode.setInteractable(true);
 		this.#panelPaint = this.#panelNode.addComponent(Paint);
 		this.#panelPaint.setRoundSize(20);
-		this.#panelLabel = this.#panelNode.addComponent(Label);
-		this.#panelLabel.setFontSize(96);
-		this.#panelLabel.setTextAlign("center");
-		this.#panelLabel.setTextBaseline("middle");
-		this.#panelLabel.setText("");
+		this.#panelText = this.#panelNode.addComponent(Text);
+		this.#panelText.setFontSize(96);
+		this.#panelText.setTextAlign("center");
+		this.#panelText.setTextBaseline("middle");
+		this.#panelText.setText("");
 		this.#panelNode.touchRelease = (pos) => {
 			if (this.#panelNode.contains(pos)) this.onPanelTapped();
 		};
@@ -97,21 +97,21 @@ export class CountStopPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(s) {
+	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(s);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(s);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -122,10 +122,10 @@ export class CountStopPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#targetLabel) this.#targetLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#targetText) this.#targetText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		this.refreshPanel();
 	}
 
@@ -133,18 +133,18 @@ export class CountStopPart extends Part {
 		const theme = getCurrentGameTheme();
 		if (this.#state === STATE_IDLE) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.primary));
-			this.#panelLabel.setText("탭해서 시작");
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+			this.#panelText.setText("탭해서 시작");
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		else if (this.#state === STATE_RUNNING) {
 			// 시간 숨김. 빈 패널.
 			this.#panelPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
-			this.#panelLabel.setText("?");
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#panelText.setText("?");
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 		else if (this.#state === STATE_DONE) {
 			this.#panelPaint.setColor(Color.createFromHEX(theme.surface));
-			this.#panelLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+			this.#panelText.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
 	}
 
@@ -161,15 +161,15 @@ export class CountStopPart extends Part {
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`라운드 ${this.#targetIndex + (this.#state === STATE_DONE ? 0 : 0)} / ${TARGETS.length}`);
+		this.#infoText.setText(`라운드 ${this.#targetIndex + (this.#state === STATE_DONE ? 0 : 0)} / ${TARGETS.length}`);
 	}
 
 	refreshTarget() {
 		if (this.#targetIndex < TARGETS.length) {
-			this.#targetLabel.setText(`정확히 ${TARGETS[this.#targetIndex]}초에 멈춰보세요`);
+			this.#targetText.setText(`정확히 ${TARGETS[this.#targetIndex]}초에 멈춰보세요`);
 		}
 		else {
-			this.#targetLabel.setText("");
+			this.#targetText.setText("");
 		}
 	}
 
@@ -195,7 +195,7 @@ export class CountStopPart extends Part {
 			this.#errors.push(error);
 			this.#targetIndex += 1;
 			this.#state = STATE_DONE;
-			this.#panelLabel.setText(`${this.#elapsed.toFixed(2)}초\n오차 ${(error * 1000).toFixed(0)}ms\n탭해서 계속`);
+			this.#panelText.setText(`${this.#elapsed.toFixed(2)}초\n오차 ${(error * 1000).toFixed(0)}ms\n탭해서 계속`);
 			this.refreshPanel();
 			this.refreshInfo();
 			this.refreshTarget();
@@ -218,9 +218,9 @@ export class CountStopPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#targetLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + targetH * 0.5));
+		this.#targetTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + targetH * 0.5));
 		cy += targetH + vGap;
 		this.#panelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + panelH * 0.5));
 		this.#panelNode.setContentSize(Vector2.create(contentSize.x - margin * 2, panelH));

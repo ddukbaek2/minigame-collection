@@ -6,9 +6,9 @@ import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIInputField } from "../libs/vanilla.js/src/ui/uiinputfield.js";
-import { createButtonNode, createLabelNode, getDefaultFontFace } from "./uihelper.js";
+import { createButtonNode, createTextNode, getDefaultFontFace } from "./uihelper.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { setNickname, NICKNAME_MAX_LENGTH } from "./userprofile.js";
 
@@ -40,13 +40,13 @@ export class NicknamePopup extends WorldNode {
 	/** @private @type { Paint } */ #dimPaint;
 	/** @private @type { WorldNode } */ #boxNode;
 	/** @private @type { Paint } */ #boxPaint;
-	/** @private @type { WorldNode } */ #titleLabelNode;
-	/** @private @type { Label } */ #titleLabel;
-	/** @private @type { WorldNode } */ #subLabelNode;
-	/** @private @type { Label } */ #subLabel;
+	/** @private @type { WorldNode } */ #titleTextNode;
+	/** @private @type { Text } */ #titleText;
+	/** @private @type { WorldNode } */ #subTextNode;
+	/** @private @type { Text } */ #subText;
 	/** @private @type { UIInputField } */ #inputField;
 	/** @private @type { WorldNode } */ #okButtonNode;
-	/** @private @type { Label } */ #okButtonLabel;
+	/** @private @type { Text } */ #okButtonText;
 	/** @private @type { (nickname: string) => void | null } */ #onConfirm;
 	/** @private @type { * } */ #engine;
 
@@ -70,13 +70,13 @@ export class NicknamePopup extends WorldNode {
 		this.#boxPaint.setRoundSize(28);
 		this.addChild(this.#boxNode);
 
-		this.#titleLabelNode = createLabelNode("닉네임을 입력해 주세요", TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
-		this.#boxNode.addChild(this.#titleLabelNode);
-		this.#titleLabel = this.#titleLabelNode.getComponent(Label);
+		this.#titleTextNode = createTextNode("닉네임을 입력해 주세요", TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		this.#boxNode.addChild(this.#titleTextNode);
+		this.#titleText = this.#titleTextNode.getComponent(Text);
 
-		this.#subLabelNode = createLabelNode(`최대 ${NICKNAME_MAX_LENGTH}자까지 입력할 수 있습니다`, SUB_FONT_SIZE, Color.createFromHEX("#cccccc"));
-		this.#boxNode.addChild(this.#subLabelNode);
-		this.#subLabel = this.#subLabelNode.getComponent(Label);
+		this.#subTextNode = createTextNode(`최대 ${NICKNAME_MAX_LENGTH}자까지 입력할 수 있습니다`, SUB_FONT_SIZE, Color.createFromHEX("#cccccc"));
+		this.#boxNode.addChild(this.#subTextNode);
+		this.#subText = this.#subTextNode.getComponent(Text);
 
 		// 캔버스 입력 위젯. 한글 IME / 모바일 키보드 필요하므로 DOM input 사용.
 		this.#inputField = new UIInputField();
@@ -100,7 +100,7 @@ export class NicknamePopup extends WorldNode {
 			BUTTON_FONT_SIZE,
 			() => this.handleOk(),
 		);
-		this.#okButtonLabel = this.#okButtonNode.getComponent(Label);
+		this.#okButtonText = this.#okButtonNode.getComponent(Text);
 		this.#boxNode.addChild(this.#okButtonNode);
 
 		this.#onConfirm = null;
@@ -128,11 +128,11 @@ export class NicknamePopup extends WorldNode {
 		if (this.#boxPaint) {
 			this.#boxPaint.setColor(Color.createFromHEX(theme.surface));
 		}
-		if (this.#titleLabel) {
-			this.#titleLabel.setTextColor(Color.createFromHEX(theme.onSurface));
+		if (this.#titleText) {
+			this.#titleText.setTextColor(Color.createFromHEX(theme.onSurface));
 		}
-		if (this.#subLabel) {
-			this.#subLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#subText) {
+			this.#subText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 		if (this.#inputField) {
 			this.#inputField.setBackgroundColor(Color.createFromHEX("#ffffff"));
@@ -195,8 +195,8 @@ export class NicknamePopup extends WorldNode {
 	layout() {
 		const contentSize = this.getContentSize();
 		this.#boxNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, contentSize.y * 0.5));
-		this.#titleLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.20));
-		this.#subLabelNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.32));
+		this.#titleTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.20));
+		this.#subTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, BOX_HEIGHT * 0.32));
 		// 입력창: 중앙 가로, 박스 세로의 55% 위치를 중심으로.
 		const inputLeft = (BOX_WIDTH - INPUT_AREA_WIDTH) * 0.5;
 		const inputTop = BOX_HEIGHT * 0.55 - INPUT_AREA_HEIGHT * 0.5;

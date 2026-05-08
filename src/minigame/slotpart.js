@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -30,7 +30,7 @@ const SPIN_DURATION = 0.8;
 class SlotReel extends WorldNode {
 	/** @type { string } */ symbol;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor() {
 		super();
@@ -39,18 +39,18 @@ class SlotReel extends WorldNode {
 		this.symbol = SYMBOLS[0];
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(this.symbol);
-		this.#label.setFontSize(160);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(this.symbol);
+		this.#text.setFontSize(160);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
 	setSymbol(s) {
 		this.symbol = s;
-		this.#label.setText(s);
+		this.#text.setText(s);
 	}
 
 	refreshAppearance() {
@@ -58,7 +58,7 @@ class SlotReel extends WorldNode {
 		this.#paint.setColor(Color.createFromHEX(theme.surface));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 }
 
 
@@ -66,18 +66,18 @@ class SlotReel extends WorldNode {
 // 슬롯머신 파트.
 //==============================================================================
 export class SlotPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #reelsNode;
 	/** @private @type { SlotReel[] } */ #reels;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #spinButtonNode;
 	/** @private @type { Paint } */ #spinButtonPaint;
-	/** @private @type { Label } */ #spinButtonLabel;
+	/** @private @type { Text } */ #spinButtonText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #chips;
 	/** @private @type { number } */ #spinsDone;
 	/** @private @type { number } */ #spinTimer;
@@ -109,9 +109,9 @@ export class SlotPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
 		this.#reelsNode = new WorldNode();
 		this.#reelsNode.setPivot(Pivot.topLeft);
@@ -123,9 +123,9 @@ export class SlotPart extends Part {
 			this.#reels.push(r);
 		}
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(48);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#spinButtonNode = createButtonNode(
 			"스핀",
@@ -136,7 +136,7 @@ export class SlotPart extends Part {
 			() => { this.spin(); },
 		);
 		this.#spinButtonPaint = this.#spinButtonNode.getComponent(Paint);
-		this.#spinButtonLabel = this.#spinButtonNode.getComponent(Label);
+		this.#spinButtonText = this.#spinButtonNode.getComponent(Text);
 		this.addChild(this.#spinButtonNode);
 
 		this.#resetButtonNode = createButtonNode(
@@ -148,21 +148,21 @@ export class SlotPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -173,12 +173,12 @@ export class SlotPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#spinButtonPaint) this.#spinButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#spinButtonLabel) this.#spinButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#spinButtonText) this.#spinButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.secondary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onSecondary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onSecondary));
 		for (const r of this.#reels) r.refreshAppearance();
 	}
 
@@ -189,12 +189,12 @@ export class SlotPart extends Part {
 		this.#isStarted = true;
 		this.#isGameOver = false;
 		for (const r of this.#reels) r.setSymbol(SYMBOLS[0]);
-		this.#resultLabel.setText("스핀 버튼을 누르세요");
+		this.#resultText.setText("스핀 버튼을 누르세요");
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`칩: ${this.#chips}    스핀 ${this.#spinsDone}/${TOTAL_SPINS}`);
+		this.#infoText.setText(`칩: ${this.#chips}    스핀 ${this.#spinsDone}/${TOTAL_SPINS}`);
 	}
 
 	spin() {
@@ -208,7 +208,7 @@ export class SlotPart extends Part {
 			SYMBOLS[System.Math.floor(System.Math.random() * SYMBOLS.length)],
 			SYMBOLS[System.Math.floor(System.Math.random() * SYMBOLS.length)],
 		];
-		this.#resultLabel.setText("스핀 중...");
+		this.#resultText.setText("스핀 중...");
 		this.refreshInfo();
 	}
 
@@ -247,8 +247,8 @@ export class SlotPart extends Part {
 			msg = `2개 매치  +${payout - BET_AMOUNT}`;
 		}
 		this.#chips += payout;
-		this.#resultLabel.setText(msg);
-		this.#resultLabel.setTextColor(Color.createFromHEX(payout > 0 ? theme.primary : theme.error));
+		this.#resultText.setText(msg);
+		this.#resultText.setTextColor(Color.createFromHEX(payout > 0 ? theme.primary : theme.error));
 		this.refreshInfo();
 		if (this.#spinsDone >= TOTAL_SPINS || this.#chips < BET_AMOUNT) {
 			this.endGame();
@@ -271,7 +271,7 @@ export class SlotPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
 		const reelsX = (contentSize.x - (reelSize * 3 + reelGap * 2)) * 0.5;
 		this.#reelsNode.setLocalPosition(Vector2.create(reelsX, cy));
@@ -283,7 +283,7 @@ export class SlotPart extends Part {
 			this.#reels[i].setFontSize(fontSize);
 		}
 		cy += reelsH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		this.#spinButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + spinH * 0.5));
 		cy += spinH + vGap;

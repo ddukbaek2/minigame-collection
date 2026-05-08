@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -55,13 +55,13 @@ class FindOddCell extends WorldNode {
 // 다른색 찾기 파트.
 //==============================================================================
 export class FindOddPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { FindOddCell[] } */ #cells;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #score;
 	/** @private @type { number } */ #level;
@@ -91,15 +91,15 @@ export class FindOddPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
-		this.addChild(this.#infoLabelNode);
+		this.#infoTextNode = new WorldNode();
+		this.#infoTextNode.setPivot(Pivot.middleCenter);
+		this.#infoTextNode.setAnchor(Pivot.topLeft);
+		this.#infoText = this.#infoTextNode.addComponent(Text);
+		this.#infoText.setFontSize(40);
+		this.#infoText.setTextAlign("center");
+		this.#infoText.setTextBaseline("middle");
+		this.#infoText.setText("");
+		this.addChild(this.#infoTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -121,7 +121,7 @@ export class FindOddPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -134,9 +134,9 @@ export class FindOddPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		this.applyRound();
 	}
 
@@ -152,7 +152,7 @@ export class FindOddPart extends Part {
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    점수: ${this.#score}    레벨: ${this.#level}`);
+		this.#infoText.setText(`시간: ${t}초    점수: ${this.#score}    레벨: ${this.#level}`);
 	}
 
 	//==============================================================================
@@ -240,7 +240,7 @@ export class FindOddPart extends Part {
 		const totalH = headerH + vGap + boardSize + vGap + buttonH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
 
 		const boardX = (contentSize.x - boardSize) * 0.5;
 		const boardY = top + headerH + vGap;

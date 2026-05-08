@@ -7,7 +7,7 @@ import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
@@ -55,15 +55,15 @@ class UIGamesPartScrollViewItem extends WorldNode {
 	/** @type { string | null } */ gameId;
 	/** @private @type { GamesPart } */ #gamesPart;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 	/** @private @type { UIButton } */ #button;
 	/** @private @type { WorldNode } */ #numberNode;
 	/** @private @type { WorldNode } */ #scoreNode;
 	/** @private @type { Paint } */ #scorePaint;
-	/** @private @type { Label } */ #scoreLabel;
+	/** @private @type { Text } */ #scoreText;
 	/** @private @type { WorldNode } */ #playCountNode;
 	/** @private @type { Paint } */ #playCountPaint;
-	/** @private @type { Label } */ #playCountLabel;
+	/** @private @type { Text } */ #playCountText;
 
 	constructor(gamesPart, text, hex, targetPartId, gameId, index) {
 		super();
@@ -78,26 +78,26 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#paint.setRoundSize(16);
 		this.#paint.setColor(Color.createFromHEX(hex));
 
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(40);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(40);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 		const font = getDefaultFontFace();
-		if (font) this.#label.setFont(font);
+		if (font) this.#text.setFont(font);
 
 		// 우측상단 번호 라벨. ("#1" "#2" ...) - setContentSize 에서 위치를 재계산.
 		this.#numberNode = new WorldNode();
 		this.#numberNode.setPivot(Pivot.topLeft);
 		this.#numberNode.setAnchor(Pivot.topLeft);
-		const numberLabel = this.#numberNode.addComponent(Label);
-		numberLabel.setText(`#${index}`);
-		numberLabel.setFontSize(NUMBER_FONT_SIZE);
-		numberLabel.setTextAlign("right");
-		numberLabel.setTextBaseline("top");
-		numberLabel.setTextColor(new Color(255, 255, 255, 0.7));
-		if (font) numberLabel.setFont(font);
+		const numberText = this.#numberNode.addComponent(Text);
+		numberText.setText(`#${index}`);
+		numberText.setFontSize(NUMBER_FONT_SIZE);
+		numberText.setTextAlign("right");
+		numberText.setTextBaseline("top");
+		numberText.setTextColor(new Color(255, 255, 255, 0.7));
+		if (font) numberText.setFont(font);
 		this.addChild(this.#numberNode);
 
 		// 하단 총점 배지. (라운드렉트 배경 + 텍스트)
@@ -107,12 +107,12 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#scorePaint = this.#scoreNode.addComponent(Paint);
 		this.#scorePaint.setRoundSize(BADGE_ROUND_SIZE);
 		this.#scorePaint.setColor(new Color(0, 0, 0, 0.32));
-		this.#scoreLabel = this.#scoreNode.addComponent(Label);
-		this.#scoreLabel.setFontSize(SCORE_BADGE_FONT_SIZE);
-		this.#scoreLabel.setTextAlign("center");
-		this.#scoreLabel.setTextBaseline("middle");
-		this.#scoreLabel.setTextColor(new Color(255, 255, 255, 0.95));
-		if (font) this.#scoreLabel.setFont(font);
+		this.#scoreText = this.#scoreNode.addComponent(Text);
+		this.#scoreText.setFontSize(SCORE_BADGE_FONT_SIZE);
+		this.#scoreText.setTextAlign("center");
+		this.#scoreText.setTextBaseline("middle");
+		this.#scoreText.setTextColor(new Color(255, 255, 255, 0.95));
+		if (font) this.#scoreText.setFont(font);
 		this.addChild(this.#scoreNode);
 
 		// 하단 플레이 횟수 배지. (점수 배지 위에 별도로 표시)
@@ -122,18 +122,18 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		this.#playCountPaint = this.#playCountNode.addComponent(Paint);
 		this.#playCountPaint.setRoundSize(BADGE_ROUND_SIZE);
 		this.#playCountPaint.setColor(new Color(0, 0, 0, 0.22));
-		this.#playCountLabel = this.#playCountNode.addComponent(Label);
-		this.#playCountLabel.setFontSize(PLAY_COUNT_BADGE_FONT_SIZE);
-		this.#playCountLabel.setTextAlign("center");
-		this.#playCountLabel.setTextBaseline("middle");
-		this.#playCountLabel.setTextColor(new Color(255, 255, 255, 0.75));
-		if (font) this.#playCountLabel.setFont(font);
+		this.#playCountText = this.#playCountNode.addComponent(Text);
+		this.#playCountText.setFontSize(PLAY_COUNT_BADGE_FONT_SIZE);
+		this.#playCountText.setTextAlign("center");
+		this.#playCountText.setTextBaseline("middle");
+		this.#playCountText.setTextColor(new Color(255, 255, 255, 0.75));
+		if (font) this.#playCountText.setFont(font);
 		this.addChild(this.#playCountNode);
 
 		this.refreshScore();
 
 		this.#button = this.addComponent(UIButton);
-		this.#button.excludeComponentFromTint(this.#label);
+		this.#button.excludeComponentFromTint(this.#text);
 		// 번호 / 총점 / 플레이 횟수 모두 트랜지션 대상에서 제외.
 		this.#button.excludeNodeFromTint(this.#numberNode);
 		this.#button.excludeNodeFromTint(this.#scoreNode);
@@ -151,13 +151,13 @@ class UIGamesPartScrollViewItem extends WorldNode {
 		const scoreVisible = total > 0;
 		this.#scoreNode.setActive(scoreVisible);
 		if (scoreVisible) {
-			this.#scoreLabel.setText(`${total.toLocaleString()}점`);
+			this.#scoreText.setText(`${total.toLocaleString()}점`);
 		}
 
 		const playCountVisible = playCount > 0;
 		this.#playCountNode.setActive(playCountVisible);
 		if (playCountVisible) {
-			this.#playCountLabel.setText(`${playCount.toLocaleString()}회`);
+			this.#playCountText.setText(`${playCount.toLocaleString()}회`);
 		}
 	}
 

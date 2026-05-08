@@ -6,10 +6,10 @@ import { Vector2 } from "../libs/vanilla.js/src/base/vector2.js";
 import { Pivot } from "../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { Part, PartId } from "./part.js";
-import { createIconTextButtonNode, createLabelNode, getDefaultFontFace } from "./uihelper.js";
+import { createIconTextButtonNode, createTextNode, getDefaultFontFace } from "./uihelper.js";
 import { getTheme } from "./theme.js";
 import { getCurrentVersion } from "./version.js";
 
@@ -35,18 +35,18 @@ export class TitlePart extends Part {
 	//==============================================================================
 	// 멤버 변수 목록.
 	//==============================================================================
-	/** @private @type { WorldNode } */ #titleLabelNode;
+	/** @private @type { WorldNode } */ #titleTextNode;
 	/** @private @type { WorldNode[] } */ #buttonNodes;
-	/** @private @type { WorldNode } */ #versionLabelNode;
+	/** @private @type { WorldNode } */ #versionTextNode;
 
 	//==============================================================================
 	// 생성.
 	//==============================================================================
 	constructor() {
 		super();
-		this.#titleLabelNode = null;
+		this.#titleTextNode = null;
 		this.#buttonNodes = [];
-		this.#versionLabelNode = null;
+		this.#versionTextNode = null;
 	}
 
 	getPartId() {
@@ -65,10 +65,10 @@ export class TitlePart extends Part {
 		this.setupBackground();
 
 		// 게임 이름. (영역 하단 정렬)
-		this.#titleLabelNode = createLabelNode("미니게임 컬렉션", TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
-		const titleLabel = this.#titleLabelNode.getComponent(Label);
-		titleLabel.setTextBaseline("bottom");
-		this.addChild(this.#titleLabelNode);
+		this.#titleTextNode = createTextNode("미니게임 컬렉션", TITLE_FONT_SIZE, Color.createFromHEX("#ffffff"));
+		const titleText = this.#titleTextNode.getComponent(Text);
+		titleText.setTextBaseline("bottom");
+		this.addChild(this.#titleTextNode);
 
 		// 메뉴 버튼들. (시작, 일일미션, 업적, 설정, 종료 순)
 		// - 텍스트에 이모지 prefix 가 있는 항목은 시스템 폰트(이모지 fallback)로 렌더.
@@ -99,23 +99,23 @@ export class TitlePart extends Part {
 		// 버전 라벨 영역. 우측 하단에 고정. 탭하면 공지 팝업.
 		// pivot=bottomRight 라서 setLocalPosition 으로 지정한 좌표가 노드의 우측 하단 꼭짓점.
 		// 노드의 contentSize 가 hit area 가 된다 (라벨은 우측 하단 정렬로 그 안에서 그려짐).
-		this.#versionLabelNode = new WorldNode();
-		this.#versionLabelNode.setPivot(Pivot.bottomRight);
-		this.#versionLabelNode.setAnchor(Pivot.topLeft);
-		this.#versionLabelNode.setContentSize(Vector2.create(VERSION_HIT_WIDTH, VERSION_HIT_HEIGHT));
-		this.#versionLabelNode.setInteractable(true);
-		const versionLabel = this.#versionLabelNode.addComponent(Label);
+		this.#versionTextNode = new WorldNode();
+		this.#versionTextNode.setPivot(Pivot.bottomRight);
+		this.#versionTextNode.setAnchor(Pivot.topLeft);
+		this.#versionTextNode.setContentSize(Vector2.create(VERSION_HIT_WIDTH, VERSION_HIT_HEIGHT));
+		this.#versionTextNode.setInteractable(true);
+		const versionText = this.#versionTextNode.addComponent(Text);
 		const currentVersion = getCurrentVersion();
-		versionLabel.setText(`v${currentVersion.getVersionString()}`);
-		versionLabel.setFontSize(VERSION_FONT_SIZE);
-		versionLabel.setTextAlign("right");
-		versionLabel.setTextBaseline("bottom");
+		versionText.setText(`v${currentVersion.getVersionString()}`);
+		versionText.setFontSize(VERSION_FONT_SIZE);
+		versionText.setTextAlign("right");
+		versionText.setTextBaseline("bottom");
 		const font = getDefaultFontFace();
-		if (font) versionLabel.setFont(font);
-		const versionButton = this.#versionLabelNode.addComponent(UIButton);
+		if (font) versionText.setFont(font);
+		const versionButton = this.#versionTextNode.addComponent(UIButton);
 		versionButton.setPressedTintColor(Color.transparent());
 		versionButton.setClickEvent(() => { app.showNotice(); });
-		this.addChild(this.#versionLabelNode);
+		this.addChild(this.#versionTextNode);
 
 		this.applyTheme(getTheme());
 	}
@@ -125,11 +125,11 @@ export class TitlePart extends Part {
 	//==============================================================================
 	applyTheme(theme) {
 		super.applyTheme(theme);
-		if (this.#titleLabelNode) {
-			this.#titleLabelNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.primary));
+		if (this.#titleTextNode) {
+			this.#titleTextNode.getComponent(Text).setTextColor(Color.createFromHEX(theme.primary));
 		}
-		if (this.#versionLabelNode) {
-			this.#versionLabelNode.getComponent(Label).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#versionTextNode) {
+			this.#versionTextNode.getComponent(Text).setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
@@ -154,7 +154,7 @@ export class TitlePart extends Part {
 		const contentSize = this.getContentSize();
 
 		// 타이틀: 상단 0 ~ TITLE_AREA_HEIGHT 영역의 하단 정렬. (세로가 늘어나도 상단 고정)
-		this.#titleLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, TITLE_AREA_HEIGHT - TITLE_BOTTOM_PADDING));
+		this.#titleTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, TITLE_AREA_HEIGHT - TITLE_BOTTOM_PADDING));
 
 		// 버튼: 타이틀 아래 나머지 영역의 가운데. (세로가 늘어나면 그 가운데로 따라감)
 		const buttonAreaTop = TITLE_AREA_HEIGHT;
@@ -170,8 +170,8 @@ export class TitlePart extends Part {
 		}
 
 		// 버전 라벨: 우측 하단.
-		if (this.#versionLabelNode) {
-			this.#versionLabelNode.setLocalPosition(Vector2.create(contentSize.x - VERSION_PADDING, contentSize.y - VERSION_PADDING));
+		if (this.#versionTextNode) {
+			this.#versionTextNode.setLocalPosition(Vector2.create(contentSize.x - VERSION_PADDING, contentSize.y - VERSION_PADDING));
 		}
 	}
 

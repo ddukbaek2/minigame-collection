@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -27,7 +27,7 @@ const GAME_DURATION = 45;
 class IconNode extends WorldNode {
 	/** @type { string } */ symbol;
 	/** @private @type { SameIconPart } */ #part;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, symbol) {
 		super();
@@ -36,15 +36,15 @@ class IconNode extends WorldNode {
 		this.setInteractable(true);
 		this.symbol = symbol;
 		this.#part = part;
-		this.#label = this.addComponent(Label);
-		this.#label.setText(symbol);
-		this.#label.setFontSize(80);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(symbol);
+		this.#text.setFontSize(80);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 	}
 
-	setFontSize(s) { this.#label.setFontSize(s); }
+	setFontSize(s) { this.#text.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -57,8 +57,8 @@ class IconNode extends WorldNode {
 // 공통아이콘 파트.
 //==============================================================================
 export class SameIconPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #cardANode;
 	/** @private @type { Paint } */ #cardAPaint;
 	/** @private @type { WorldNode } */ #cardBNode;
@@ -67,7 +67,7 @@ export class SameIconPart extends Part {
 	/** @private @type { IconNode[] } */ #cardBIcons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { string } */ #commonSymbol;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
@@ -98,15 +98,15 @@ export class SameIconPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
-		this.addChild(this.#infoLabelNode);
+		this.#infoTextNode = new WorldNode();
+		this.#infoTextNode.setPivot(Pivot.middleCenter);
+		this.#infoTextNode.setAnchor(Pivot.topLeft);
+		this.#infoText = this.#infoTextNode.addComponent(Text);
+		this.#infoText.setFontSize(40);
+		this.#infoText.setTextAlign("center");
+		this.#infoText.setTextBaseline("middle");
+		this.#infoText.setText("");
+		this.addChild(this.#infoTextNode);
 
 		this.#cardANode = this.makeCard();
 		this.#cardAPaint = this.#cardANode.getComponent(Paint);
@@ -133,7 +133,7 @@ export class SameIconPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -155,11 +155,11 @@ export class SameIconPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#cardAPaint) this.#cardAPaint.setColor(Color.createFromHEX(theme.surface));
 		if (this.#cardBPaint) this.#cardBPaint.setColor(Color.createFromHEX(theme.surface));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
 	resetGame() {
@@ -194,16 +194,16 @@ export class SameIconPart extends Part {
 		}
 		for (let i = 0; i < ICONS_PER_CARD; ++i) {
 			this.#cardAIcons[i].symbol = cardA[i];
-			this.#cardAIcons[i].getComponent(Label).setText(cardA[i]);
+			this.#cardAIcons[i].getComponent(Text).setText(cardA[i]);
 			this.#cardBIcons[i].symbol = cardB[i];
-			this.#cardBIcons[i].getComponent(Label).setText(cardB[i]);
+			this.#cardBIcons[i].getComponent(Text).setText(cardB[i]);
 		}
 		this.#commonSymbol = common;
 	}
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -241,7 +241,7 @@ export class SameIconPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
 		this.#cardANode.setLocalPosition(Vector2.create(margin, cy));
 		this.#cardANode.setContentSize(Vector2.create(cardW, cardH));

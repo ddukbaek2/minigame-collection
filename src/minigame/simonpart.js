@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -67,11 +67,11 @@ class SimonPad extends WorldNode {
 export class SimonPart extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { SimonPad[] } */ #pads;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number[] } */ #sequence;
 	/** @private @type { number } */ #playIndex;
 	/** @private @type { number } */ #userIndex;
@@ -107,15 +107,15 @@ export class SimonPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setFontSize(48);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.#statusLabel.setText("");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setFontSize(48);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.#statusText.setText("");
+		this.addChild(this.#statusTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -137,7 +137,7 @@ export class SimonPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -150,9 +150,9 @@ export class SimonPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#statusLabel) this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
 	resetGame() {
@@ -179,7 +179,7 @@ export class SimonPart extends Part {
 	}
 
 	refreshStatus() {
-		this.#statusLabel.setText(`라운드 ${this.#sequence.length}    점수 ${this.#score}`);
+		this.#statusText.setText(`라운드 ${this.#sequence.length}    점수 ${this.#score}`);
 	}
 
 	tick(timeDelta) {
@@ -250,7 +250,7 @@ export class SimonPart extends Part {
 		const totalH = headerH + verticalGap + boardSize + verticalGap + buttonH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
 
 		const boardX = (contentSize.x - boardSize) * 0.5;
 		const boardY = top + headerH + verticalGap;

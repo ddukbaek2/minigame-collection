@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -30,9 +30,9 @@ class BetButton extends WorldNode {
 	/** @private @type { DiceBetPart } */ #part;
 	/** @private @type { Paint } */ #paint;
 	/** @private @type { WorldNode } */ #titleNode;
-	/** @private @type { Label } */ #titleLabel;
+	/** @private @type { Text } */ #titleText;
 	/** @private @type { WorldNode } */ #subNode;
-	/** @private @type { Label } */ #subLabel;
+	/** @private @type { Text } */ #subText;
 
 	constructor(part, choice, title, sub) {
 		super();
@@ -47,21 +47,21 @@ class BetButton extends WorldNode {
 		this.#titleNode = new WorldNode();
 		this.#titleNode.setPivot(Pivot.middleCenter);
 		this.#titleNode.setAnchor(Pivot.middleCenter);
-		this.#titleLabel = this.#titleNode.addComponent(Label);
-		this.#titleLabel.setText(title);
-		this.#titleLabel.setFontSize(48);
-		this.#titleLabel.setTextAlign("center");
-		this.#titleLabel.setTextBaseline("middle");
+		this.#titleText = this.#titleNode.addComponent(Text);
+		this.#titleText.setText(title);
+		this.#titleText.setFontSize(48);
+		this.#titleText.setTextAlign("center");
+		this.#titleText.setTextBaseline("middle");
 		this.addChild(this.#titleNode);
 
 		this.#subNode = new WorldNode();
 		this.#subNode.setPivot(Pivot.middleCenter);
 		this.#subNode.setAnchor(Pivot.middleCenter);
-		this.#subLabel = this.#subNode.addComponent(Label);
-		this.#subLabel.setText(sub);
-		this.#subLabel.setFontSize(28);
-		this.#subLabel.setTextAlign("center");
-		this.#subLabel.setTextBaseline("middle");
+		this.#subText = this.#subNode.addComponent(Text);
+		this.#subText.setText(sub);
+		this.#subText.setFontSize(28);
+		this.#subText.setTextAlign("center");
+		this.#subText.setTextBaseline("middle");
 		this.addChild(this.#subNode);
 
 		this.refreshAppearance();
@@ -70,8 +70,8 @@ class BetButton extends WorldNode {
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#titleLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-		this.#subLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		this.#titleText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		this.#subText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
 	updateLayout() {
@@ -91,17 +91,17 @@ class BetButton extends WorldNode {
 // 주사위 베팅 파트.
 //==============================================================================
 export class DiceBetPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #diceLabelNode;
-	/** @private @type { Label } */ #diceLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #diceTextNode;
+	/** @private @type { Text } */ #diceText;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #betNode;
 	/** @private @type { BetButton[] } */ #betButtons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #chips;
 	/** @private @type { number } */ #rolls;
 	/** @private @type { boolean } */ #isStarted;
@@ -127,18 +127,18 @@ export class DiceBetPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#diceLabelNode = this.makeLabel(200);
-		this.addChild(this.#diceLabelNode);
-		this.#diceLabel = this.#diceLabelNode.getComponent(Label);
-		markUseSystemFont(this.#diceLabel);
+		this.#diceTextNode = this.makeText(200);
+		this.addChild(this.#diceTextNode);
+		this.#diceText = this.#diceTextNode.getComponent(Text);
+		markUseSystemFont(this.#diceText);
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(48);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#betNode = new WorldNode();
 		this.#betNode.setPivot(Pivot.topLeft);
@@ -158,21 +158,21 @@ export class DiceBetPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -183,11 +183,11 @@ export class DiceBetPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#diceLabel) this.#diceLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#diceText) this.#diceText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#betButtons) b.refreshAppearance();
 	}
 
@@ -196,13 +196,13 @@ export class DiceBetPart extends Part {
 		this.#rolls = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.#diceLabel.setText("⚀ ⚀");
-		this.#resultLabel.setText(`${BET_AMOUNT} 칩 베팅`);
+		this.#diceText.setText("⚀ ⚀");
+		this.#resultText.setText(`${BET_AMOUNT} 칩 베팅`);
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`칩: ${this.#chips}    라운드 ${this.#rolls}/${TOTAL_ROLLS}`);
+		this.#infoText.setText(`칩: ${this.#chips}    라운드 ${this.#rolls}/${TOTAL_ROLLS}`);
 	}
 
 	onBet(choice) {
@@ -212,7 +212,7 @@ export class DiceBetPart extends Part {
 		const d1 = System.Math.floor(System.Math.random() * 6) + 1;
 		const d2 = System.Math.floor(System.Math.random() * 6) + 1;
 		const sum = d1 + d2;
-		this.#diceLabel.setText(`${DICE_FACES[d1 - 1]} ${DICE_FACES[d2 - 1]}`);
+		this.#diceText.setText(`${DICE_FACES[d1 - 1]} ${DICE_FACES[d2 - 1]}`);
 
 		const theme = getCurrentGameTheme();
 		let win = false;
@@ -223,12 +223,12 @@ export class DiceBetPart extends Part {
 
 		if (win) {
 			this.#chips += payout;
-			this.#resultLabel.setText(`합 ${sum}  +${payout - BET_AMOUNT} 칩`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
+			this.#resultText.setText(`합 ${sum}  +${payout - BET_AMOUNT} 칩`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else {
-			this.#resultLabel.setText(`합 ${sum}  -${BET_AMOUNT} 칩`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#resultText.setText(`합 ${sum}  -${BET_AMOUNT} 칩`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.error));
 		}
 		this.#rolls += 1;
 		this.refreshInfo();
@@ -253,11 +253,11 @@ export class DiceBetPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#diceLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + diceH * 0.5));
+		this.#diceTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + diceH * 0.5));
 		cy += diceH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		const betX = (contentSize.x - (buttonW * 3 + gap * 2)) * 0.5;
 		this.#betNode.setLocalPosition(Vector2.create(betX, cy));

@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -35,7 +35,7 @@ class PuzzleTile extends WorldNode {
 	/** @type { number } */ slotIndex;
 	/** @private @type { Puzzle15Part } */ #board;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 	/** @private @type { number } */ #currentX;
 	/** @private @type { number } */ #currentY;
 	/** @private @type { number } */ #targetX;
@@ -57,22 +57,22 @@ class PuzzleTile extends WorldNode {
 		this.#isAnimating = false;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(10);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(String(value));
-		this.#label.setFontSize(80);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(String(value));
+		this.#text.setFontSize(80);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
-		this.#label.setTextColor(Color.createFromHEX(theme.onPrimary));
+		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
 	setFontSize(size) {
-		this.#label.setFontSize(size);
+		this.#text.setFontSize(size);
 	}
 
 	//==============================================================================
@@ -127,11 +127,11 @@ export class Puzzle15Part extends Part {
 	/** @private @type { PuzzleTile[] } */ #tiles;            // value 1..15 의 영구 노드 배열.
 	/** @private @type { Array<PuzzleTile|null> } */ #slotToTile; // 슬롯 인덱스 → 타일(없으면 null).
 	/** @private @type { number } */ #emptyIndex;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #moveCount;
 	/** @private @type { number } */ #elapsedSeconds;
 	/** @private @type { boolean } */ #isStarted;
@@ -169,15 +169,15 @@ export class Puzzle15Part extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setFontSize(44);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.#statusLabel.setText("");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setFontSize(44);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.#statusText.setText("");
+		this.addChild(this.#statusTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -200,7 +200,7 @@ export class Puzzle15Part extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -223,14 +223,14 @@ export class Puzzle15Part extends Part {
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#statusLabel) {
-			this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
 		if (this.#resetButtonPaint) {
 			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		}
-		if (this.#resetButtonLabel) {
-			this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		for (const tile of this.#tiles) {
 			tile.refreshAppearance();
@@ -264,23 +264,23 @@ export class Puzzle15Part extends Part {
 			lastFrom = this.#emptyIndex;
 			this.moveTileToEmpty(movingTile, true);
 		}
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 		// 셔플 직후 풀린 상태면 한 번 더.
 		if (this.isSolved()) {
 			this.resetGame();
 		}
 	}
 
-	refreshStatusLabel() {
+	refreshStatusText() {
 		const seconds = System.Math.floor(this.#elapsedSeconds);
-		this.#statusLabel.setText(`이동: ${this.#moveCount}    시간: ${seconds}초`);
+		this.#statusText.setText(`이동: ${this.#moveCount}    시간: ${seconds}초`);
 	}
 
 	tick(timeDelta) {
 		super.tick(timeDelta);
 		if (this.#isStarted && !this.#isGameOver) {
 			this.#elapsedSeconds += timeDelta;
-			this.refreshStatusLabel();
+			this.refreshStatusText();
 		}
 	}
 
@@ -344,7 +344,7 @@ export class Puzzle15Part extends Part {
 		const totalHeight = headerHeight + verticalGap + boardHeight + verticalGap + buttonHeight;
 		const top = System.Math.max((contentSize.y - totalHeight) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
 
 		const boardX = (contentSize.x - boardWidth) * 0.5;
 		const boardY = top + headerHeight + verticalGap;
@@ -375,7 +375,7 @@ export class Puzzle15Part extends Part {
 		this.moveTileToEmpty(tile, false);
 		this.#moveCount += 1;
 		if (!this.#isStarted) this.#isStarted = true;
-		this.refreshStatusLabel();
+		this.refreshStatusText();
 		if (this.isSolved()) {
 			this.endGame();
 		}

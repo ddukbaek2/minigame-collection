@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -33,7 +33,7 @@ class StroopButton extends WorldNode {
 	/** @type { string } */ choice; // "match" | "nomatch"
 	/** @private @type { StroopPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, choice, text) {
 		super();
@@ -44,11 +44,11 @@ class StroopButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(64);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(64);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
@@ -56,10 +56,10 @@ class StroopButton extends WorldNode {
 		const theme = getCurrentGameTheme();
 		const isMatch = this.choice === "match";
 		this.#paint.setColor(Color.createFromHEX(isMatch ? "#22c55e" : "#ef4444"));
-		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -72,17 +72,17 @@ class StroopButton extends WorldNode {
 // 스트룹 파트.
 //==============================================================================
 export class StroopPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #wordLabelNode;
-	/** @private @type { Label } */ #wordLabel;
-	/** @private @type { WorldNode } */ #hintLabelNode;
-	/** @private @type { Label } */ #hintLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #wordTextNode;
+	/** @private @type { Text } */ #wordText;
+	/** @private @type { WorldNode } */ #hintTextNode;
+	/** @private @type { Text } */ #hintText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { StroopButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
 	/** @private @type { number } */ #wrongCount;
@@ -112,18 +112,18 @@ export class StroopPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#hintLabelNode = this.makeLabel(36);
-		this.addChild(this.#hintLabelNode);
-		this.#hintLabel = this.#hintLabelNode.getComponent(Label);
-		this.#hintLabel.setText("단어의 '의미'와 '색'이 같으면 일치");
+		this.#hintTextNode = this.makeText(36);
+		this.addChild(this.#hintTextNode);
+		this.#hintText = this.#hintTextNode.getComponent(Text);
+		this.#hintText.setText("단어의 '의미'와 '색'이 같으면 일치");
 
-		this.#wordLabelNode = this.makeLabel(180);
-		this.addChild(this.#wordLabelNode);
-		this.#wordLabel = this.#wordLabelNode.getComponent(Label);
+		this.#wordTextNode = this.makeText(180);
+		this.addChild(this.#wordTextNode);
+		this.#wordText = this.#wordTextNode.getComponent(Text);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -142,21 +142,21 @@ export class StroopPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -167,10 +167,10 @@ export class StroopPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#hintLabel) this.#hintLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#hintText) this.#hintText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -194,13 +194,13 @@ export class StroopPart extends Part {
 				colorInfo = WORD_INFOS[System.Math.floor(System.Math.random() * WORD_INFOS.length)];
 			}
 		}
-		this.#wordLabel.setText(wordInfo.word);
-		this.#wordLabel.setTextColor(Color.createFromHEX(colorInfo.hex));
+		this.#wordText.setText(wordInfo.word);
+		this.#wordText.setTextColor(Color.createFromHEX(colorInfo.hex));
 	}
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -241,11 +241,11 @@ export class StroopPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#hintLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + hintH * 0.5));
+		this.#hintTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + hintH * 0.5));
 		cy += hintH + vGap;
-		this.#wordLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + wordH * 0.5));
+		this.#wordTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + wordH * 0.5));
 		cy += wordH + vGap;
 		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));

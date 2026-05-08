@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -33,7 +33,7 @@ const LIGHT_TEXT = "#f9f6f2";
 class Tile2048 extends WorldNode {
 	/** @type { number } */ value;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor() {
 		super();
@@ -42,11 +42,11 @@ class Tile2048 extends WorldNode {
 		this.value = 0;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(10);
-		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(72);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText("");
+		this.#text.setFontSize(72);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
@@ -59,15 +59,15 @@ class Tile2048 extends WorldNode {
 		const colorHex = TILE_COLORS[this.value] || "#3c3a32";
 		this.#paint.setColor(Color.createFromHEX(colorHex));
 		if (this.value === 0) {
-			this.#label.setText("");
+			this.#text.setText("");
 		}
 		else {
-			this.#label.setText(String(this.value));
-			this.#label.setTextColor(Color.createFromHEX(this.value <= 4 ? DARK_TEXT : LIGHT_TEXT));
+			this.#text.setText(String(this.value));
+			this.#text.setTextColor(Color.createFromHEX(this.value <= 4 ? DARK_TEXT : LIGHT_TEXT));
 		}
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 }
 
 
@@ -78,7 +78,7 @@ class DirButton extends WorldNode {
 	/** @type { string } */ dir;
 	/** @private @type { Game2048Part } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, dir, icon) {
 		super();
@@ -89,22 +89,22 @@ class DirButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(icon);
-		this.#label.setFontSize(72);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(icon);
+		this.#text.setFontSize(72);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.primary));
-		this.#label.setTextColor(Color.createFromHEX(theme.onPrimary));
+		this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -119,13 +119,13 @@ class DirButton extends WorldNode {
 export class Game2048Part extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { Tile2048[] } */ #tiles;
-	/** @private @type { WorldNode } */ #scoreLabelNode;
-	/** @private @type { Label } */ #scoreLabel;
+	/** @private @type { WorldNode } */ #scoreTextNode;
+	/** @private @type { Text } */ #scoreText;
 	/** @private @type { WorldNode } */ #dirsNode;
 	/** @private @type { DirButton[] } */ #dirButtons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #score;
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
@@ -152,15 +152,15 @@ export class Game2048Part extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#scoreLabelNode = new WorldNode();
-		this.#scoreLabelNode.setPivot(Pivot.middleCenter);
-		this.#scoreLabelNode.setAnchor(Pivot.topLeft);
-		this.#scoreLabel = this.#scoreLabelNode.addComponent(Label);
-		this.#scoreLabel.setFontSize(48);
-		this.#scoreLabel.setTextAlign("center");
-		this.#scoreLabel.setTextBaseline("middle");
-		this.#scoreLabel.setText("");
-		this.addChild(this.#scoreLabelNode);
+		this.#scoreTextNode = new WorldNode();
+		this.#scoreTextNode.setPivot(Pivot.middleCenter);
+		this.#scoreTextNode.setAnchor(Pivot.topLeft);
+		this.#scoreText = this.#scoreTextNode.addComponent(Text);
+		this.#scoreText.setFontSize(48);
+		this.#scoreText.setTextAlign("center");
+		this.#scoreText.setTextBaseline("middle");
+		this.#scoreText.setText("");
+		this.addChild(this.#scoreTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -194,7 +194,7 @@ export class Game2048Part extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -207,9 +207,9 @@ export class Game2048Part extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#scoreLabel) this.#scoreLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#scoreText) this.#scoreText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#dirButtons) b.refreshAppearance();
 	}
 
@@ -225,7 +225,7 @@ export class Game2048Part extends Part {
 	}
 
 	refreshScore() {
-		this.#scoreLabel.setText(`점수: ${this.#score}`);
+		this.#scoreText.setText(`점수: ${this.#score}`);
 	}
 
 	spawnRandom() {
@@ -325,7 +325,7 @@ export class Game2048Part extends Part {
 		const totalH = headerH + vGap + boardSize + vGap + dirsH + vGap + resetH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
-		this.#scoreLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
+		this.#scoreTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
 
 		const boardX = (contentSize.x - boardSize) * 0.5;
 		const boardY = top + headerH + vGap;

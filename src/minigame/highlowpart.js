@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -28,7 +28,7 @@ class HLButton extends WorldNode {
 	/** @type { string } */ choice;
 	/** @private @type { HighLowPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, choice, text) {
 		super();
@@ -39,21 +39,21 @@ class HLButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(20);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(text);
-		this.#label.setFontSize(64);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(text);
+		this.#text.setFontSize(64);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const isHigh = this.choice === "high";
 		this.#paint.setColor(Color.createFromHEX(isHigh ? "#22c55e" : "#ef4444"));
-		this.#label.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#text.setTextColor(Color.createFromHEX("#ffffff"));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -66,18 +66,18 @@ class HLButton extends WorldNode {
 // 하이로우 파트.
 //==============================================================================
 export class HighLowPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #cardNode;
 	/** @private @type { Paint } */ #cardPaint;
-	/** @private @type { Label } */ #cardLabel;
-	/** @private @type { WorldNode } */ #resultLabelNode;
-	/** @private @type { Label } */ #resultLabel;
+	/** @private @type { Text } */ #cardText;
+	/** @private @type { WorldNode } */ #resultTextNode;
+	/** @private @type { Text } */ #resultText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { HLButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #current;
 	/** @private @type { number } */ #round;
 	/** @private @type { number } */ #correctCount;
@@ -105,25 +105,25 @@ export class HighLowPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
 		this.#cardNode = new WorldNode();
 		this.#cardNode.setPivot(Pivot.middleCenter);
 		this.#cardNode.setAnchor(Pivot.topLeft);
 		this.#cardPaint = this.#cardNode.addComponent(Paint);
 		this.#cardPaint.setRoundSize(24);
-		this.#cardLabel = this.#cardNode.addComponent(Label);
-		this.#cardLabel.setText("");
-		this.#cardLabel.setFontSize(220);
-		this.#cardLabel.setTextAlign("center");
-		this.#cardLabel.setTextBaseline("middle");
+		this.#cardText = this.#cardNode.addComponent(Text);
+		this.#cardText.setText("");
+		this.#cardText.setFontSize(220);
+		this.#cardText.setTextAlign("center");
+		this.#cardText.setTextBaseline("middle");
 		this.addChild(this.#cardNode);
 
-		this.#resultLabelNode = this.makeLabel(48);
-		this.addChild(this.#resultLabelNode);
-		this.#resultLabel = this.#resultLabelNode.getComponent(Label);
+		this.#resultTextNode = this.makeText(48);
+		this.addChild(this.#resultTextNode);
+		this.#resultText = this.#resultTextNode.getComponent(Text);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -142,21 +142,21 @@ export class HighLowPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(size) {
+	makeText(size) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(size);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(size);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -167,12 +167,12 @@ export class HighLowPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#cardPaint) this.#cardPaint.setColor(Color.createFromHEX(theme.surface));
-		if (this.#cardLabel) this.#cardLabel.setTextColor(Color.createFromHEX(theme.onSurface));
-		if (this.#resultLabel) this.#resultLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#cardText) this.#cardText.setTextColor(Color.createFromHEX(theme.onSurface));
+		if (this.#resultText) this.#resultText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -182,13 +182,13 @@ export class HighLowPart extends Part {
 		this.#correctCount = 0;
 		this.#isStarted = true;
 		this.#isGameOver = false;
-		this.#cardLabel.setText(String(this.#current));
-		this.#resultLabel.setText("다음 카드는?");
+		this.#cardText.setText(String(this.#current));
+		this.#resultText.setText("다음 카드는?");
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
-		this.#infoLabel.setText(`라운드 ${this.#round}/${TOTAL_ROUNDS}    정답 ${this.#correctCount}`);
+		this.#infoText.setText(`라운드 ${this.#round}/${TOTAL_ROUNDS}    정답 ${this.#correctCount}`);
 	}
 
 	onChoice(choice) {
@@ -199,15 +199,15 @@ export class HighLowPart extends Part {
 		}
 		const theme = getCurrentGameTheme();
 		const correct = (choice === "high" && next > this.#current) || (choice === "low" && next < this.#current);
-		this.#cardLabel.setText(String(next));
+		this.#cardText.setText(String(next));
 		if (correct) {
 			this.#correctCount += 1;
-			this.#resultLabel.setText(`정답! (${this.#current} → ${next})`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.primary));
+			this.#resultText.setText(`정답! (${this.#current} → ${next})`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.primary));
 		}
 		else {
-			this.#resultLabel.setText(`오답 (${this.#current} → ${next})`);
-			this.#resultLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#resultText.setText(`오답 (${this.#current} → ${next})`);
+			this.#resultText.setTextColor(Color.createFromHEX(theme.error));
 		}
 		this.#current = next;
 		this.#round += 1;
@@ -234,12 +234,12 @@ export class HighLowPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
 		this.#cardNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + cardH * 0.5));
 		this.#cardNode.setContentSize(Vector2.create(cardW, cardH));
 		cy += cardH + vGap;
-		this.#resultLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
+		this.#resultTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + resultH * 0.5));
 		cy += resultH + vGap;
 		const btnX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(btnX, cy));

@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -27,7 +27,7 @@ class AnswerButton extends WorldNode {
 	/** @type { number } */ value;
 	/** @private @type { QuickMathPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part) {
 		super();
@@ -38,27 +38,27 @@ class AnswerButton extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText("");
-		this.#label.setFontSize(72);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText("");
+		this.#text.setFontSize(72);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	setValue(v) {
 		this.value = v;
-		this.#label.setText(String(v));
+		this.#text.setText(String(v));
 		this.refreshAppearance();
 	}
 
 	refreshAppearance() {
 		const theme = getCurrentGameTheme();
 		this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-		this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -71,15 +71,15 @@ class AnswerButton extends WorldNode {
 // 빠른계산 파트.
 //==============================================================================
 export class QuickMathPart extends Part {
-	/** @private @type { WorldNode } */ #questionLabelNode;
-	/** @private @type { Label } */ #questionLabel;
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #questionTextNode;
+	/** @private @type { Text } */ #questionText;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #buttonsNode;
 	/** @private @type { AnswerButton[] } */ #buttons;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #correctCount;
 	/** @private @type { number } */ #wrongCount;
@@ -109,25 +109,25 @@ export class QuickMathPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
-		this.addChild(this.#infoLabelNode);
+		this.#infoTextNode = new WorldNode();
+		this.#infoTextNode.setPivot(Pivot.middleCenter);
+		this.#infoTextNode.setAnchor(Pivot.topLeft);
+		this.#infoText = this.#infoTextNode.addComponent(Text);
+		this.#infoText.setFontSize(40);
+		this.#infoText.setTextAlign("center");
+		this.#infoText.setTextBaseline("middle");
+		this.#infoText.setText("");
+		this.addChild(this.#infoTextNode);
 
-		this.#questionLabelNode = new WorldNode();
-		this.#questionLabelNode.setPivot(Pivot.middleCenter);
-		this.#questionLabelNode.setAnchor(Pivot.topLeft);
-		this.#questionLabel = this.#questionLabelNode.addComponent(Label);
-		this.#questionLabel.setFontSize(120);
-		this.#questionLabel.setTextAlign("center");
-		this.#questionLabel.setTextBaseline("middle");
-		this.#questionLabel.setText("");
-		this.addChild(this.#questionLabelNode);
+		this.#questionTextNode = new WorldNode();
+		this.#questionTextNode.setPivot(Pivot.middleCenter);
+		this.#questionTextNode.setAnchor(Pivot.topLeft);
+		this.#questionText = this.#questionTextNode.addComponent(Text);
+		this.#questionText.setFontSize(120);
+		this.#questionText.setTextAlign("center");
+		this.#questionText.setTextBaseline("middle");
+		this.#questionText.setText("");
+		this.addChild(this.#questionTextNode);
 
 		this.#buttonsNode = new WorldNode();
 		this.#buttonsNode.setPivot(Pivot.topLeft);
@@ -148,7 +148,7 @@ export class QuickMathPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -161,10 +161,10 @@ export class QuickMathPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#questionLabel) this.#questionLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#questionText) this.#questionText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const b of this.#buttons) b.refreshAppearance();
 	}
 
@@ -180,7 +180,7 @@ export class QuickMathPart extends Part {
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
+		this.#infoText.setText(`시간: ${t}초    정답 ${this.#correctCount}    오답 ${this.#wrongCount}`);
 	}
 
 	nextQuestion() {
@@ -203,7 +203,7 @@ export class QuickMathPart extends Part {
 			ans = a * b;
 		}
 		this.#correctAnswer = ans;
-		this.#questionLabel.setText(`${a} ${op} ${b} = ?`);
+		this.#questionText.setText(`${a} ${op} ${b} = ?`);
 
 		// 4지선다 (정답 + 오답 3개).
 		const choices = new System.Set([ans]);
@@ -265,9 +265,9 @@ export class QuickMathPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#questionLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + questionH * 0.5));
+		this.#questionTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + questionH * 0.5));
 		cy += questionH + vGap;
 		const buttonsX = (contentSize.x - (buttonW * 2 + gap)) * 0.5;
 		this.#buttonsNode.setLocalPosition(Vector2.create(buttonsX, cy));

@@ -7,9 +7,9 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
-import { createButtonNode, createLabelNode, markUseSystemFont } from "../uihelper.js";
+import { createButtonNode, createTextNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
 
 
@@ -84,7 +84,7 @@ class MinesweeperTile extends WorldNode {
 	/** @private @type { boolean } */ #longPressTriggered;
 	/** @private @type { MinesweeperPart } */ #board;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(board, row, col) {
 		super();
@@ -105,12 +105,12 @@ class MinesweeperTile extends WorldNode {
 
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(8);
-		this.#label = this.addComponent(Label);
-		this.#label.setFontSize(48);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		this.#label.setText("");
-		markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setFontSize(48);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		this.#text.setText("");
+		markUseSystemFont(this.#text);
 
 		this.refreshAppearance();
 	}
@@ -132,43 +132,43 @@ class MinesweeperTile extends WorldNode {
 		if (this.isRevealed) {
 			if (this.isMine) {
 				this.#paint.setColor(Color.createFromHEX(theme.error));
-				this.#label.setText(MINE_EMOJI);
-				this.#label.setTextColor(Color.createFromHEX(theme.onError));
+				this.#text.setText(MINE_EMOJI);
+				this.#text.setTextColor(Color.createFromHEX(theme.onError));
 			}
 			else if (this.neighborCount > 0) {
 				this.#paint.setColor(Color.createFromHEX(theme.surface));
-				this.#label.setText(String(this.neighborCount));
-				this.#label.setTextColor(Color.createFromHEX(NUMBER_COLORS[this.neighborCount]));
+				this.#text.setText(String(this.neighborCount));
+				this.#text.setTextColor(Color.createFromHEX(NUMBER_COLORS[this.neighborCount]));
 			}
 			else {
 				this.#paint.setColor(Color.createFromHEX(theme.surface));
-				this.#label.setText("");
+				this.#text.setText("");
 			}
 		}
 		else if (this.isFlagged) {
 			this.#paint.setColor(Color.createFromHEX(theme.secondary));
-			this.#label.setText(FLAG_EMOJI);
-			this.#label.setTextColor(Color.createFromHEX(theme.onSecondary));
+			this.#text.setText(FLAG_EMOJI);
+			this.#text.setTextColor(Color.createFromHEX(theme.onSecondary));
 		}
 		else if (this.#isPressed && this.#longPressTriggered) {
 			// 깃발이 부족할 때는 미리보기 안 함 (board 가 결정).
 			if (this.#board.canPlaceFlag()) {
 				this.#paint.setColor(Color.createFromHEX(theme.secondary));
-				this.#label.setText(FLAG_EMOJI);
-				this.#label.setTextColor(Color.createFromHEX(theme.onSecondary));
+				this.#text.setText(FLAG_EMOJI);
+				this.#text.setTextColor(Color.createFromHEX(theme.onSecondary));
 			}
 			else {
 				this.#paint.setColor(blendColor(theme.error, theme.surfaceVariant, 0.5));
-				this.#label.setText("");
+				this.#text.setText("");
 			}
 		}
 		else if (this.#isPressed) {
 			this.#paint.setColor(blendColor(theme.primary, theme.surfaceVariant, 0.5));
-			this.#label.setText("");
+			this.#text.setText("");
 		}
 		else {
 			this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-			this.#label.setText("");
+			this.#text.setText("");
 		}
 	}
 
@@ -230,7 +230,7 @@ class MinesweeperTile extends WorldNode {
 	}
 
 	setFontSize(size) {
-		this.#label.setFontSize(size);
+		this.#text.setFontSize(size);
 	}
 }
 
@@ -241,13 +241,13 @@ class MinesweeperTile extends WorldNode {
 export class MinesweeperPart extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { MinesweeperTile[] } */ #tiles;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
-	/** @private @type { WorldNode } */ #messageLabelNode;
-	/** @private @type { Label } */ #messageLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
+	/** @private @type { WorldNode } */ #messageTextNode;
+	/** @private @type { Text } */ #messageText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { boolean } */ #isStarted;
 	/** @private @type { boolean } */ #isGameOver;
 	/** @private @type { boolean } */ #isWon;
@@ -258,13 +258,13 @@ export class MinesweeperPart extends Part {
 		super();
 		this.#boardNode = null;
 		this.#tiles = [];
-		this.#statusLabelNode = null;
-		this.#statusLabel = null;
-		this.#messageLabelNode = null;
-		this.#messageLabel = null;
+		this.#statusTextNode = null;
+		this.#statusText = null;
+		this.#messageTextNode = null;
+		this.#messageText = null;
 		this.#resetButtonNode = null;
 		this.#resetButtonPaint = null;
-		this.#resetButtonLabel = null;
+		this.#resetButtonText = null;
 		this.#isStarted = false;
 		this.#isGameOver = false;
 		this.#isWon = false;
@@ -298,25 +298,25 @@ export class MinesweeperPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setText("");
-		this.#statusLabel.setFontSize(44);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setText("");
+		this.#statusText.setFontSize(44);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.addChild(this.#statusTextNode);
 
-		this.#messageLabelNode = new WorldNode();
-		this.#messageLabelNode.setPivot(Pivot.middleCenter);
-		this.#messageLabelNode.setAnchor(Pivot.topLeft);
-		this.#messageLabel = this.#messageLabelNode.addComponent(Label);
-		this.#messageLabel.setText("");
-		this.#messageLabel.setFontSize(60);
-		this.#messageLabel.setTextAlign("center");
-		this.#messageLabel.setTextBaseline("middle");
-		this.addChild(this.#messageLabelNode);
+		this.#messageTextNode = new WorldNode();
+		this.#messageTextNode.setPivot(Pivot.middleCenter);
+		this.#messageTextNode.setAnchor(Pivot.topLeft);
+		this.#messageText = this.#messageTextNode.addComponent(Text);
+		this.#messageText.setText("");
+		this.#messageText.setFontSize(60);
+		this.#messageText.setTextAlign("center");
+		this.#messageText.setTextBaseline("middle");
+		this.addChild(this.#messageTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -340,7 +340,7 @@ export class MinesweeperPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -364,20 +364,20 @@ export class MinesweeperPart extends Part {
 		if (backgroundPaint) {
 			backgroundPaint.setColor(Color.createFromHEX(theme.background));
 		}
-		if (this.#statusLabel) {
-			this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) {
+			this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		}
-		if (this.#messageLabel) {
+		if (this.#messageText) {
 			const messageColor = this.#isGameOver
 				? (this.#isWon ? theme.primary : theme.error)
 				: theme.onBackground;
-			this.#messageLabel.setTextColor(Color.createFromHEX(messageColor));
+			this.#messageText.setTextColor(Color.createFromHEX(messageColor));
 		}
 		if (this.#resetButtonPaint) {
 			this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
 		}
-		if (this.#resetButtonLabel) {
-			this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) {
+			this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		for (const tile of this.#tiles) {
 			tile.refreshAppearance();
@@ -390,11 +390,11 @@ export class MinesweeperPart extends Part {
 			this.#remainingTime -= timeDelta;
 			if (this.#remainingTime <= 0) {
 				this.#remainingTime = 0;
-				this.refreshStatusLabel();
+				this.refreshStatusText();
 				this.endGame(false, "시간 초과");
 				return;
 			}
-			this.refreshStatusLabel();
+			this.refreshStatusText();
 		}
 	}
 
@@ -414,18 +414,18 @@ export class MinesweeperPart extends Part {
 		for (const tile of this.#tiles) {
 			tile.reset();
 		}
-		this.#messageLabel.setText("");
-		this.#messageLabel.setTextColor(Color.createFromHEX(getCurrentGameTheme().onBackground));
-		this.refreshStatusLabel();
+		this.#messageText.setText("");
+		this.#messageText.setTextColor(Color.createFromHEX(getCurrentGameTheme().onBackground));
+		this.refreshStatusText();
 	}
 
 	//==============================================================================
 	// 상태 라벨 갱신. ("남은 깃발: K    시간: T초")
 	//==============================================================================
-	refreshStatusLabel() {
+	refreshStatusText() {
 		const seconds = System.Math.ceil(this.#remainingTime);
 		const text = `남은 깃발: ${this.#remainingFlags}    시간: ${seconds}초`;
-		this.#statusLabel.setText(text);
+		this.#statusText.setText(text);
 	}
 
 	//==============================================================================
@@ -446,7 +446,7 @@ export class MinesweeperPart extends Part {
 		const totalHeight = headerHeight + verticalGap + boardHeight + verticalGap + messageHeight + verticalGap + buttonHeight;
 		const top = System.Math.max((contentSize.y - totalHeight) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerHeight * 0.5));
 
 		const boardX = (contentSize.x - boardWidth) * 0.5;
 		const boardY = top + headerHeight + verticalGap;
@@ -463,7 +463,7 @@ export class MinesweeperPart extends Part {
 		}
 
 		const messageY = boardY + boardHeight + verticalGap + messageHeight * 0.5;
-		this.#messageLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, messageY));
+		this.#messageTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, messageY));
 
 		const buttonY = messageY + messageHeight * 0.5 + verticalGap + buttonHeight * 0.5;
 		this.#resetButtonNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, buttonY));
@@ -489,8 +489,8 @@ export class MinesweeperPart extends Part {
 				() => { this.openFlaggedTile(tile); },
 				null,
 				{
-					yesLabel: "열기",
-					noLabel: "취소",
+					yesText: "열기",
+					noText: "취소",
 					subMessage: "소모된 깃발은 돌아오지 않습니다.",
 				},
 			);
@@ -505,7 +505,7 @@ export class MinesweeperPart extends Part {
 			tile.isFlagged = true;
 			this.#remainingFlags -= 1;
 			tile.refreshAppearance();
-			this.refreshStatusLabel();
+			this.refreshStatusText();
 			return;
 		}
 
@@ -647,9 +647,9 @@ export class MinesweeperPart extends Part {
 		const score = isWon ? System.Math.max(0, multiplier * baseScore) : 0;
 
 		// 메시지 라벨에도 결과 표시.
-		this.#messageLabel.setText(`${mainMessage} (점수 ${score})`);
+		this.#messageText.setText(`${mainMessage} (점수 ${score})`);
 		const theme = getCurrentGameTheme();
-		this.#messageLabel.setTextColor(Color.createFromHEX(isWon ? theme.primary : theme.error));
+		this.#messageText.setTextColor(Color.createFromHEX(isWon ? theme.primary : theme.error));
 
 		// 결과 팝업. (메시지팝업이 아닌 전용 ResultPopup 사용)
 		const app = this.getApp();

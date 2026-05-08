@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode, markUseSystemFont } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -32,7 +32,7 @@ class NMKey extends WorldNode {
 	/** @type { string } */ key;
 	/** @private @type { NumberMemoryPart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, key, useSystemFont) {
 		super();
@@ -43,12 +43,12 @@ class NMKey extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(16);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(key);
-		this.#label.setFontSize(56);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
-		if (useSystemFont) markUseSystemFont(this.#label);
+		this.#text = this.addComponent(Text);
+		this.#text.setText(key);
+		this.#text.setFontSize(56);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
+		if (useSystemFont) markUseSystemFont(this.#text);
 		this.refreshAppearance();
 	}
 
@@ -56,19 +56,19 @@ class NMKey extends WorldNode {
 		const theme = getCurrentGameTheme();
 		if (this.key === BACKSPACE) {
 			this.#paint.setColor(Color.createFromHEX(theme.error));
-			this.#label.setTextColor(Color.createFromHEX(theme.onError));
+			this.#text.setTextColor(Color.createFromHEX(theme.onError));
 		}
 		else if (this.key === ENTER) {
 			this.#paint.setColor(Color.createFromHEX(theme.primary));
-			this.#label.setTextColor(Color.createFromHEX(theme.onPrimary));
+			this.#text.setTextColor(Color.createFromHEX(theme.onPrimary));
 		}
 		else {
 			this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
-	setFontSize(s) { this.#label.setFontSize(s); }
+	setFontSize(s) { this.#text.setFontSize(s); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -81,17 +81,17 @@ class NMKey extends WorldNode {
 // 숫자기억 파트.
 //==============================================================================
 export class NumberMemoryPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
-	/** @private @type { WorldNode } */ #showLabelNode;
-	/** @private @type { Label } */ #showLabel;
-	/** @private @type { WorldNode } */ #inputLabelNode;
-	/** @private @type { Label } */ #inputLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
+	/** @private @type { WorldNode } */ #showTextNode;
+	/** @private @type { Text } */ #showText;
+	/** @private @type { WorldNode } */ #inputTextNode;
+	/** @private @type { Text } */ #inputText;
 	/** @private @type { WorldNode } */ #keypadNode;
 	/** @private @type { NMKey[] } */ #keys;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { string } */ #target;
 	/** @private @type { string } */ #input;
 	/** @private @type { string } */ #state;
@@ -123,17 +123,17 @@ export class NumberMemoryPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = this.makeLabel(40);
-		this.addChild(this.#infoLabelNode);
-		this.#infoLabel = this.#infoLabelNode.getComponent(Label);
+		this.#infoTextNode = this.makeText(40);
+		this.addChild(this.#infoTextNode);
+		this.#infoText = this.#infoTextNode.getComponent(Text);
 
-		this.#showLabelNode = this.makeLabel(140);
-		this.addChild(this.#showLabelNode);
-		this.#showLabel = this.#showLabelNode.getComponent(Label);
+		this.#showTextNode = this.makeText(140);
+		this.addChild(this.#showTextNode);
+		this.#showText = this.#showTextNode.getComponent(Text);
 
-		this.#inputLabelNode = this.makeLabel(96);
-		this.addChild(this.#inputLabelNode);
-		this.#inputLabel = this.#inputLabelNode.getComponent(Label);
+		this.#inputTextNode = this.makeText(96);
+		this.addChild(this.#inputTextNode);
+		this.#inputText = this.#inputTextNode.getComponent(Text);
 
 		this.#keypadNode = new WorldNode();
 		this.#keypadNode.setPivot(Pivot.topLeft);
@@ -156,21 +156,21 @@ export class NumberMemoryPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
 	}
 
-	makeLabel(s) {
+	makeText(s) {
 		const node = new WorldNode();
 		node.setPivot(Pivot.middleCenter);
 		node.setAnchor(Pivot.topLeft);
-		const label = node.addComponent(Label);
-		label.setFontSize(s);
-		label.setTextAlign("center");
-		label.setTextBaseline("middle");
-		label.setText("");
+		const text = node.addComponent(Text);
+		text.setFontSize(s);
+		text.setTextAlign("center");
+		text.setTextBaseline("middle");
+		text.setText("");
 		return node;
 	}
 
@@ -181,11 +181,11 @@ export class NumberMemoryPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
-		if (this.#showLabel) this.#showLabel.setTextColor(Color.createFromHEX(theme.primary));
-		if (this.#inputLabel) this.#inputLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#showText) this.#showText.setTextColor(Color.createFromHEX(theme.primary));
+		if (this.#inputText) this.#inputText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const k of this.#keys) k.refreshAppearance();
 	}
 
@@ -206,14 +206,14 @@ export class NumberMemoryPart extends Part {
 		this.#input = "";
 		this.#state = STATE_SHOWING;
 		this.#showTimer = SHOW_DURATION_BASE + len * SHOW_DURATION_PER_DIGIT;
-		this.#showLabel.setText(s);
-		this.#inputLabel.setText("");
+		this.#showText.setText(s);
+		this.#inputText.setText("");
 		this.refreshInfo();
 	}
 
 	refreshInfo() {
 		const len = this.#target.length;
-		this.#infoLabel.setText(`레벨 ${this.#level}    자릿수 ${len}`);
+		this.#infoText.setText(`레벨 ${this.#level}    자릿수 ${len}`);
 	}
 
 	tick(timeDelta) {
@@ -222,8 +222,8 @@ export class NumberMemoryPart extends Part {
 			this.#showTimer -= timeDelta;
 			if (this.#showTimer <= 0) {
 				this.#state = STATE_INPUT;
-				this.#showLabel.setText("?");
-				this.#inputLabel.setText("_");
+				this.#showText.setText("?");
+				this.#inputText.setText("_");
 			}
 		}
 	}
@@ -234,7 +234,7 @@ export class NumberMemoryPart extends Part {
 		if (key === BACKSPACE) {
 			if (this.#input.length > 0) {
 				this.#input = this.#input.slice(0, -1);
-				this.#inputLabel.setText(this.#input === "" ? "_" : this.#input);
+				this.#inputText.setText(this.#input === "" ? "_" : this.#input);
 			}
 			return;
 		}
@@ -244,25 +244,25 @@ export class NumberMemoryPart extends Part {
 		}
 		if (this.#input.length >= this.#target.length) return;
 		this.#input += key;
-		this.#inputLabel.setText(this.#input);
+		this.#inputText.setText(this.#input);
 	}
 
 	checkAnswer() {
 		const theme = getCurrentGameTheme();
 		if (this.#input === this.#target) {
 			this.#level += 1;
-			this.#showLabel.setText("정답!");
-			this.#showLabel.setTextColor(Color.createFromHEX(theme.primary));
+			this.#showText.setText("정답!");
+			this.#showText.setTextColor(Color.createFromHEX(theme.primary));
 			System.setTimeout(() => {
 				if (!this.#isGameOver) {
-					this.#showLabel.setTextColor(Color.createFromHEX(theme.primary));
+					this.#showText.setTextColor(Color.createFromHEX(theme.primary));
 					this.startRound();
 				}
 			}, 700);
 		}
 		else {
-			this.#showLabel.setText(this.#target);
-			this.#showLabel.setTextColor(Color.createFromHEX(theme.error));
+			this.#showText.setText(this.#target);
+			this.#showText.setTextColor(Color.createFromHEX(theme.error));
 			this.endGame();
 		}
 	}
@@ -286,11 +286,11 @@ export class NumberMemoryPart extends Part {
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
 		let cy = top;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
-		this.#showLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + showH * 0.5));
+		this.#showTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + showH * 0.5));
 		cy += showH + vGap;
-		this.#inputLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + inputH * 0.5));
+		this.#inputTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + inputH * 0.5));
 		cy += inputH + vGap;
 		const keypadX = (contentSize.x - keypadW) * 0.5;
 		this.#keypadNode.setLocalPosition(Vector2.create(keypadX, cy));

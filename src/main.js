@@ -14,7 +14,7 @@ import { TouchRaycaster } from "../libs/vanilla.js/src/core/touchraycaster.js";
 import { TouchRecognizer } from "../libs/vanilla.js/src/core/touchrecognizer.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { DEVTools } from "../libs/vanilla.js/src/misc/devtools.js";
 import { ImageAsset } from "../libs/vanilla.js/src/resource/imageasset.js";
@@ -93,7 +93,7 @@ export class MainScene extends Scene {
 	/** @private @type { WorldNode } */ #navigationNode;
 	/** @private @type { WorldNode } */ #navigationBackButtonNode;
 	/** @private @type { WorldNode } */ #navigationTitleNode;
-	/** @private @type { Label } */ #navigationTitleLabel;
+	/** @private @type { Text } */ #navigationTitleText;
 	/** @private @type { System.Map<string, import("./part.js").Part> } */ #parts;
 	/** @private @type { string[] } */ #partStack;
 	/** @private @type { Rect } */ #lastSafeAreaRect;
@@ -105,7 +105,7 @@ export class MainScene extends Scene {
 	/** @private @type { Paint | null } */ #backgroundPaint;
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
-	/** @private @type { Label | null } */ #navigationBackButtonLabel;
+	/** @private @type { Text | null } */ #navigationBackButtonText;
 	/** @private @type { number } */ #lastViewSizeX;
 	/** @private @type { number } */ #lastViewSizeY;
 	/** @private @type { ImageAsset | null } */ #ciImageAsset;
@@ -266,7 +266,7 @@ export class MainScene extends Scene {
 		this.createParts();
 
 		// 모든 라벨에 기본 폰트 일괄 적용. (uihelper로 안 만든 라벨들 포함)
-		this.applyDefaultFontToAllLabels(this.getRoot());
+		this.applyDefaultFontToAllTexts(this.getRoot());
 
 		// 테마 변경 리스너 + 현재 테마 즉시 적용.
 		addThemeChangeListener((theme) => this.applyTheme(theme));
@@ -306,8 +306,8 @@ export class MainScene extends Scene {
 		if (this.#navigationBackButtonPaint) {
 			this.#navigationBackButtonPaint.setColor(Color.createFromHEX(theme.surface));
 		}
-		if (this.#navigationTitleLabel) {
-			this.#navigationTitleLabel.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		if (this.#navigationTitleText) {
+			this.#navigationTitleText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
 		}
 	}
 
@@ -317,14 +317,14 @@ export class MainScene extends Scene {
 	/**
 	 * @param { WorldNode } node
 	 */
-	applyDefaultFontToAllLabels(node) {
+	applyDefaultFontToAllTexts(node) {
 		if (!this.#defaultFontFace || !node) {
 			return;
 		}
 		if (typeof node.getAllComponents === "function") {
 			const components = node.getAllComponents();
 			for (const component of components) {
-				if (component instanceof Label && !isUseSystemFont(component)) {
+				if (component instanceof Text && !isUseSystemFont(component)) {
 					component.setFont(this.#defaultFontFace);
 				}
 			}
@@ -332,7 +332,7 @@ export class MainScene extends Scene {
 		if (typeof node.getChildren === "function") {
 			const children = node.getChildren();
 			for (const child of children) {
-				this.applyDefaultFontToAllLabels(child);
+				this.applyDefaultFontToAllTexts(child);
 			}
 		}
 	}
@@ -382,13 +382,13 @@ export class MainScene extends Scene {
 		this.#navigationBackButtonNode.setInteractable(true);
 		this.#navigationBackButtonPaint = this.#navigationBackButtonNode.addComponent(Paint);
 		this.#navigationBackButtonPaint.setRoundSize(12);
-		this.#navigationBackButtonLabel = this.#navigationBackButtonNode.addComponent(Label);
-		this.#navigationBackButtonLabel.setText("🔙");
-		this.#navigationBackButtonLabel.setFontSize(56);
-		this.#navigationBackButtonLabel.setTextColor(Color.createFromHEX("#ffffff"));
-		this.#navigationBackButtonLabel.setTextAlign("center");
-		this.#navigationBackButtonLabel.setTextBaseline("middle");
-		markUseSystemFont(this.#navigationBackButtonLabel);
+		this.#navigationBackButtonText = this.#navigationBackButtonNode.addComponent(Text);
+		this.#navigationBackButtonText.setText("🔙");
+		this.#navigationBackButtonText.setFontSize(56);
+		this.#navigationBackButtonText.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#navigationBackButtonText.setTextAlign("center");
+		this.#navigationBackButtonText.setTextBaseline("middle");
+		markUseSystemFont(this.#navigationBackButtonText);
 		const backButton = this.#navigationBackButtonNode.addComponent(UIButton);
 		backButton.setClickEvent(() => { this.popPart(); });
 		this.#navigationNode.addChild(this.#navigationBackButtonNode);
@@ -398,12 +398,12 @@ export class MainScene extends Scene {
 		this.#navigationTitleNode.setName("navTitle");
 		this.#navigationTitleNode.setPivot(Pivot.middleCenter);
 		this.#navigationTitleNode.setAnchor(Pivot.topLeft);
-		this.#navigationTitleLabel = this.#navigationTitleNode.addComponent(Label);
-		this.#navigationTitleLabel.setText("");
-		this.#navigationTitleLabel.setFontSize(56);
-		this.#navigationTitleLabel.setTextColor(Color.createFromHEX("#ffffff"));
-		this.#navigationTitleLabel.setTextAlign("center");
-		this.#navigationTitleLabel.setTextBaseline("middle");
+		this.#navigationTitleText = this.#navigationTitleNode.addComponent(Text);
+		this.#navigationTitleText.setText("");
+		this.#navigationTitleText.setFontSize(56);
+		this.#navigationTitleText.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#navigationTitleText.setTextAlign("center");
+		this.#navigationTitleText.setTextBaseline("middle");
 		this.#navigationNode.addChild(this.#navigationTitleNode);
 
 		// 메시지 팝업. (safeArea 의 마지막 자식 = 가장 위에 그려지고 raycast 에서 가장 먼저 hit)
@@ -567,7 +567,7 @@ export class MainScene extends Scene {
 	 * @param { string } message
 	 * @param { (() => void) | null } onYes
 	 * @param { (() => void) | null } [onNo]
-	 * @param { { yesLabel?: string, noLabel?: string, subMessage?: string } } [options]
+	 * @param { { yesText?: string, noText?: string, subMessage?: string } } [options]
 	 */
 	showConfirm(message, onYes, onNo, options) {
 		this.#popup.setLocalPosition(Vector2.zero());
@@ -581,7 +581,7 @@ export class MainScene extends Scene {
 	/**
 	 * @param { string } message
 	 * @param { (() => void) | null } [onOk]
-	 * @param { { okLabel?: string, subMessage?: string } } [options]
+	 * @param { { okText?: string, subMessage?: string } } [options]
 	 */
 	showAlert(message, onOk, options) {
 		this.#popup.setLocalPosition(Vector2.zero());
@@ -713,14 +713,14 @@ export class MainScene extends Scene {
 		const canPop = this.#partStack.length > 1;
 		this.#navigationBackButtonNode.setActive(canPop);
 		// 활성 파트가 지정한 아이콘 적용 (기본 🔙, 모달이면 ❌ 등).
-		if (activePart && this.#navigationBackButtonLabel) {
-			this.#navigationBackButtonLabel.setText(activePart.getNavigationBackIcon());
+		if (activePart && this.#navigationBackButtonText) {
+			this.#navigationBackButtonText.setText(activePart.getNavigationBackIcon());
 		}
 
 		// 네비게이션 타이틀.
 		this.#navigationTitleNode.setLocalPosition(Vector2.create(safeAreaRect.size.x * 0.5, NAVIGATION_HEIGHT * 0.5));
 		const titleText = activePart && activePart.hasNavigation() ? activePart.getNavigationTitle() : "";
-		this.#navigationTitleLabel.setText(titleText);
+		this.#navigationTitleText.setText(titleText);
 
 		// 컨텐트 영역. (네비게이션이 있으면 그 아래로, 없으면 세이프 에어리어 전체)
 		const contentY = showNavigation ? NAVIGATION_HEIGHT : 0;

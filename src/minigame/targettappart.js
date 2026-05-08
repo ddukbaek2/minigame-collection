@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -61,14 +61,14 @@ class Target extends WorldNode {
 // 표적탭 파트.
 //==============================================================================
 export class TargetTapPart extends Part {
-	/** @private @type { WorldNode } */ #infoLabelNode;
-	/** @private @type { Label } */ #infoLabel;
+	/** @private @type { WorldNode } */ #infoTextNode;
+	/** @private @type { Text } */ #infoText;
 	/** @private @type { WorldNode } */ #fieldNode;
 	/** @private @type { Paint } */ #fieldPaint;
 	/** @private @type { Target | null } */ #current;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #remainingTime;
 	/** @private @type { number } */ #hits;
 	/** @private @type { number } */ #misses;
@@ -96,15 +96,15 @@ export class TargetTapPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#infoLabelNode = new WorldNode();
-		this.#infoLabelNode.setPivot(Pivot.middleCenter);
-		this.#infoLabelNode.setAnchor(Pivot.topLeft);
-		this.#infoLabel = this.#infoLabelNode.addComponent(Label);
-		this.#infoLabel.setFontSize(40);
-		this.#infoLabel.setTextAlign("center");
-		this.#infoLabel.setTextBaseline("middle");
-		this.#infoLabel.setText("");
-		this.addChild(this.#infoLabelNode);
+		this.#infoTextNode = new WorldNode();
+		this.#infoTextNode.setPivot(Pivot.middleCenter);
+		this.#infoTextNode.setAnchor(Pivot.topLeft);
+		this.#infoText = this.#infoTextNode.addComponent(Text);
+		this.#infoText.setFontSize(40);
+		this.#infoText.setTextAlign("center");
+		this.#infoText.setTextBaseline("middle");
+		this.#infoText.setText("");
+		this.addChild(this.#infoTextNode);
 
 		this.#fieldNode = new WorldNode();
 		this.#fieldNode.setPivot(Pivot.topLeft);
@@ -127,7 +127,7 @@ export class TargetTapPart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -140,10 +140,10 @@ export class TargetTapPart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#infoLabel) this.#infoLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#infoText) this.#infoText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#fieldPaint) this.#fieldPaint.setColor(Color.createFromHEX(theme.surfaceVariant));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		if (this.#current) this.#current.refreshAppearance();
 	}
 
@@ -176,7 +176,7 @@ export class TargetTapPart extends Part {
 
 	refreshInfo() {
 		const t = System.Math.ceil(this.#remainingTime);
-		this.#infoLabel.setText(`시간: ${t}초    명중 ${this.#hits}    빗나감 ${this.#misses}`);
+		this.#infoText.setText(`시간: ${t}초    명중 ${this.#hits}    빗나감 ${this.#misses}`);
 	}
 
 	tick(timeDelta) {
@@ -226,7 +226,7 @@ export class TargetTapPart extends Part {
 		const vGap = 24;
 		const fieldH = contentSize.y - infoH - resetH - vGap * 2 - margin * 2;
 		let cy = margin;
-		this.#infoLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
+		this.#infoTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, cy + infoH * 0.5));
 		cy += infoH + vGap;
 		this.#fieldNode.setLocalPosition(Vector2.create(margin, cy));
 		this.#fieldNode.setContentSize(Vector2.create(contentSize.x - margin * 2, fieldH));

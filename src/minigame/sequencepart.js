@@ -7,7 +7,7 @@ import { Pivot } from "../../libs/vanilla.js/src/base/pivot.js";
 import { Color } from "../../libs/vanilla.js/src/base/color.js";
 import { WorldNode } from "../../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../../libs/vanilla.js/src/core/component/paint.js";
-import { Label } from "../../libs/vanilla.js/src/core/component/label.js";
+import { Text } from "../../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "../part.js";
 import { createButtonNode } from "../uihelper.js";
 import { getCurrentGameTheme, addGameThemeChangeListener } from "../theme.js";
@@ -28,7 +28,7 @@ class SeqCell extends WorldNode {
 	/** @type { boolean } */ isCleared;
 	/** @private @type { SequencePart } */ #part;
 	/** @private @type { Paint } */ #paint;
-	/** @private @type { Label } */ #label;
+	/** @private @type { Text } */ #text;
 
 	constructor(part, value) {
 		super();
@@ -40,18 +40,18 @@ class SeqCell extends WorldNode {
 		this.#part = part;
 		this.#paint = this.addComponent(Paint);
 		this.#paint.setRoundSize(8);
-		this.#label = this.addComponent(Label);
-		this.#label.setText(String(value));
-		this.#label.setFontSize(64);
-		this.#label.setTextAlign("center");
-		this.#label.setTextBaseline("middle");
+		this.#text = this.addComponent(Text);
+		this.#text.setText(String(value));
+		this.#text.setFontSize(64);
+		this.#text.setTextAlign("center");
+		this.#text.setTextBaseline("middle");
 		this.refreshAppearance();
 	}
 
 	setValue(v) {
 		this.value = v;
 		this.isCleared = false;
-		this.#label.setText(String(v));
+		this.#text.setText(String(v));
 		this.refreshAppearance();
 	}
 
@@ -64,12 +64,12 @@ class SeqCell extends WorldNode {
 		const theme = getCurrentGameTheme();
 		if (this.isCleared) {
 			this.#paint.setColor(Color.createFromHEX(theme.surface));
-			this.#label.setText("");
+			this.#text.setText("");
 		}
 		else {
 			this.#paint.setColor(Color.createFromHEX(theme.surfaceVariant));
-			this.#label.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
-			this.#label.setText(String(this.value));
+			this.#text.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+			this.#text.setText(String(this.value));
 		}
 	}
 
@@ -79,7 +79,7 @@ class SeqCell extends WorldNode {
 		System.setTimeout(() => this.refreshAppearance(), 200);
 	}
 
-	setFontSize(size) { this.#label.setFontSize(size); }
+	setFontSize(size) { this.#text.setFontSize(size); }
 
 	touchRelease(viewInputPosition) {
 		if (!this.contains(viewInputPosition)) return;
@@ -94,11 +94,11 @@ class SeqCell extends WorldNode {
 export class SequencePart extends Part {
 	/** @private @type { WorldNode } */ #boardNode;
 	/** @private @type { SeqCell[] } */ #cells;
-	/** @private @type { WorldNode } */ #statusLabelNode;
-	/** @private @type { Label } */ #statusLabel;
+	/** @private @type { WorldNode } */ #statusTextNode;
+	/** @private @type { Text } */ #statusText;
 	/** @private @type { WorldNode } */ #resetButtonNode;
 	/** @private @type { Paint } */ #resetButtonPaint;
-	/** @private @type { Label } */ #resetButtonLabel;
+	/** @private @type { Text } */ #resetButtonText;
 	/** @private @type { number } */ #nextNumber;
 	/** @private @type { number } */ #elapsed;
 	/** @private @type { number } */ #wrongCount;
@@ -126,15 +126,15 @@ export class SequencePart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#statusLabelNode = new WorldNode();
-		this.#statusLabelNode.setPivot(Pivot.middleCenter);
-		this.#statusLabelNode.setAnchor(Pivot.topLeft);
-		this.#statusLabel = this.#statusLabelNode.addComponent(Label);
-		this.#statusLabel.setFontSize(44);
-		this.#statusLabel.setTextAlign("center");
-		this.#statusLabel.setTextBaseline("middle");
-		this.#statusLabel.setText("");
-		this.addChild(this.#statusLabelNode);
+		this.#statusTextNode = new WorldNode();
+		this.#statusTextNode.setPivot(Pivot.middleCenter);
+		this.#statusTextNode.setAnchor(Pivot.topLeft);
+		this.#statusText = this.#statusTextNode.addComponent(Text);
+		this.#statusText.setFontSize(44);
+		this.#statusText.setTextAlign("center");
+		this.#statusText.setTextBaseline("middle");
+		this.#statusText.setText("");
+		this.addChild(this.#statusTextNode);
 
 		this.#boardNode = new WorldNode();
 		this.#boardNode.setPivot(Pivot.topLeft);
@@ -156,7 +156,7 @@ export class SequencePart extends Part {
 			() => { this.resetGame(); },
 		);
 		this.#resetButtonPaint = this.#resetButtonNode.getComponent(Paint);
-		this.#resetButtonLabel = this.#resetButtonNode.getComponent(Label);
+		this.#resetButtonText = this.#resetButtonNode.getComponent(Text);
 		this.addChild(this.#resetButtonNode);
 
 		this.applyGameTheme(getCurrentGameTheme());
@@ -169,9 +169,9 @@ export class SequencePart extends Part {
 	applyGameTheme(theme) {
 		const bg = this.getBackgroundPaint();
 		if (bg) bg.setColor(Color.createFromHEX(theme.background));
-		if (this.#statusLabel) this.#statusLabel.setTextColor(Color.createFromHEX(theme.onBackground));
+		if (this.#statusText) this.#statusText.setTextColor(Color.createFromHEX(theme.onBackground));
 		if (this.#resetButtonPaint) this.#resetButtonPaint.setColor(Color.createFromHEX(theme.primary));
-		if (this.#resetButtonLabel) this.#resetButtonLabel.setTextColor(Color.createFromHEX(theme.onPrimary));
+		if (this.#resetButtonText) this.#resetButtonText.setTextColor(Color.createFromHEX(theme.onPrimary));
 		for (const c of this.#cells) c.refreshAppearance();
 	}
 
@@ -197,7 +197,7 @@ export class SequencePart extends Part {
 
 	refreshStatus() {
 		const sec = this.#elapsed.toFixed(1);
-		this.#statusLabel.setText(`다음: ${this.#nextNumber}    시간: ${sec}초    오답: ${this.#wrongCount}`);
+		this.#statusText.setText(`다음: ${this.#nextNumber}    시간: ${sec}초    오답: ${this.#wrongCount}`);
 	}
 
 	tick(timeDelta) {
@@ -238,7 +238,7 @@ export class SequencePart extends Part {
 		const totalH = headerH + vGap + boardSize + vGap + buttonH;
 		const top = System.Math.max((contentSize.y - totalH) * 0.5, 0);
 
-		this.#statusLabelNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
+		this.#statusTextNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, top + headerH * 0.5));
 
 		const boardX = (contentSize.x - boardSize) * 0.5;
 		const boardY = top + headerH + vGap;
