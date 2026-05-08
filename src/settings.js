@@ -49,12 +49,6 @@ const listeners = new System.Set();
 //==============================================================================
 try {
 	const saved = System.localStorage.getItem(STORAGE_KEY);
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } saved
-	 */
 	if (saved) {
 		const parsed = JSON.parse(saved);
 		if (parsed && typeof parsed === "object") {
@@ -78,12 +72,6 @@ function persist() {
 	try {
 		System.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
-	//==============================================================================
-	// catch.
-	//==============================================================================
-	/**
-	 * @param { * } error
-	 */
 	catch (error) {
 		// 무시.
 	}
@@ -113,23 +101,12 @@ export function setSetting(key, value) {
 	if (!(key in DEFAULTS)) {
 		return;
 	}
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } state[key]
-	 */
 	if (state[key] === value) {
 		return;
 	}
 	state[key] = value;
 	persist();
-	//==============================================================================
-	// for.
-	//==============================================================================
-	/**
-	 * @param { * } const listener of listeners
-	 */
+
 	for (const listener of listeners) {
 		try {
 			listener(key, value);
@@ -144,52 +121,81 @@ export function setSetting(key, value) {
 //==============================================================================
 // 편의 getter / setter.
 //==============================================================================
-export function isBgmEnabled() { return !!state[SettingId.bgmEnabled]; }
+export function isBgmEnabled() {
+	return !!state[SettingId.bgmEnabled];
+}
+
+
 //==============================================================================
 // isSfxEnabled.
 //==============================================================================
-export function isSfxEnabled() { return !!state[SettingId.sfxEnabled]; }
+export function isSfxEnabled() {
+	return !!state[SettingId.sfxEnabled];
+}
+
+
 //==============================================================================
 // isVibrationEnabled.
 //==============================================================================
-export function isVibrationEnabled() { return !!state[SettingId.vibrationEnabled]; }
+export function isVibrationEnabled() {
+	return !!state[SettingId.vibrationEnabled];
+}
+
+
 //==============================================================================
 // getLanguage.
 //==============================================================================
-export function getLanguage() { return state[SettingId.language]; }
+export function getLanguage() {
+	return state[SettingId.language];
+}
+
 
 //==============================================================================
 // setBgmEnabled.
 //==============================================================================
 /**
- * @param { * } enabled
+ * @param { boolean } enabled
  */
-export function setBgmEnabled(enabled) { setSetting(SettingId.bgmEnabled, !!enabled); }
+export function setBgmEnabled(enabled) {
+	setSetting(SettingId.bgmEnabled, !!enabled);
+}
+
+
 //==============================================================================
 // setSfxEnabled.
 //==============================================================================
 /**
- * @param { * } enabled
+ * @param { boolean } enabled
  */
-export function setSfxEnabled(enabled) { setSetting(SettingId.sfxEnabled, !!enabled); }
+export function setSfxEnabled(enabled) {
+	setSetting(SettingId.sfxEnabled, !!enabled);
+}
+
+
 //==============================================================================
 // setVibrationEnabled.
 //==============================================================================
 /**
- * @param { * } enabled
+ * @param { boolean } enabled
  */
-export function setVibrationEnabled(enabled) { setSetting(SettingId.vibrationEnabled, !!enabled); }
+export function setVibrationEnabled(enabled) {
+	setSetting(SettingId.vibrationEnabled, !!enabled);
+}
+
+
 //==============================================================================
 // setLanguage.
 //==============================================================================
 /**
  * @param { * } languageId
  */
-export function setLanguage(languageId) { setSetting(SettingId.language, languageId); }
+export function setLanguage(languageId) {
+	setSetting(SettingId.language, languageId);
+}
 
 
 //==============================================================================
-// 리스너 등록 / 해제.
+// 리스너 등록.
 //==============================================================================
 /**
  * @param { (key: string, value: any) => void } listener
@@ -198,14 +204,12 @@ export function addSettingChangeListener(listener) {
 	listeners.add(listener);
 }
 
+
+//==============================================================================
+// 리스너 해제.
+//==============================================================================
 /**
  * @param { (key: string, value: any) => void } listener
- */
-//==============================================================================
-// removeSettingChangeListener.
-//==============================================================================
-/**
- * @param { * } listener
  */
 export function removeSettingChangeListener(listener) {
 	listeners.delete(listener);

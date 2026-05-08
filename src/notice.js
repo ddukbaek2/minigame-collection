@@ -6,12 +6,8 @@
 // - getNotices() 는 date 내림차순 (최신이 가장 위) 으로 정렬해서 반환.
 //==============================================================================
 const System = globalThis;
-
-
 const DEFAULT_URL = "./assets/data/notices.json";
-
-/** @type { Array<object> | null } */
-let entries = null;
+/** @type { Array<object> | null } */ let entries = null;
 
 
 //==============================================================================
@@ -22,15 +18,11 @@ let entries = null;
  * @returns { Promise<Array<object>> }
  */
 export async function loadNotices(url) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } entries
-	 */
 	if (entries) {
 		return entries;
-	}	try {
+	}
+	
+	try {
 		const response = await System.fetch(url || DEFAULT_URL);
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}`);
@@ -38,12 +30,6 @@ export async function loadNotices(url) {
 		const raw = (json && System.Array.isArray(json.notices)) ? json.notices : [];
 		entries = raw.filter((entry) => entry && typeof entry.date === "string" && typeof entry.content === "string");
 	}
-	//==============================================================================
-	// catch.
-	//==============================================================================
-	/**
-	 * @param { * } error
-	 */
 	catch (error) {
 		console.error("[notice] 로드 실패:", error);
 		entries = [];
@@ -59,15 +45,11 @@ export async function loadNotices(url) {
  * @returns { Array<object> }
  */
 export function getNotices() {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } !entries
-	 */
 	if (!entries) {
 		return [];
-	}	return entries.slice().sort((a, b) => {
+	}
+	
+	return entries.slice().sort((a, b) => {
 		if (a.date < b.date) {
 			return 1;
 		}

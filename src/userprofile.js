@@ -30,12 +30,6 @@ const listeners = new System.Set();
 //==============================================================================
 try {
 	const saved = System.localStorage.getItem(STORAGE_KEY);
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } saved
-	 */
 	if (saved) {
 		const parsed = JSON.parse(saved);
 		if (parsed && typeof parsed === "object" && typeof parsed.nickname === "string") {
@@ -55,12 +49,6 @@ function persist() {
 	try {
 		System.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
-	//==============================================================================
-	// catch.
-	//==============================================================================
-	/**
-	 * @param { * } error
-	 */
 	catch (error) {
 		// 무시.
 	}
@@ -92,23 +80,11 @@ export function hasNickname() {
 export function setNickname(nickname) {
 	const raw = typeof nickname === "string" ? nickname : "";
 	const trimmed = raw.trim().slice(0, NICKNAME_MAX_LENGTH);
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } state.nickname
-	 */
 	if (state.nickname === trimmed) {
 		return;
 	}
 	state.nickname = trimmed;
 	persist();
-	//==============================================================================
-	// for.
-	//==============================================================================
-	/**
-	 * @param { * } const listener of listeners
-	 */
 	for (const listener of listeners) {
 		try {
 			listener(trimmed);

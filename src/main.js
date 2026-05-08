@@ -11,7 +11,7 @@ import { Graphic } from "../libs/vanilla.js/src/core/graphic.js";
 import { Scene } from "../libs/vanilla.js/src/core/scene.js";
 import { ViewScaleMode } from "../libs/vanilla.js/src/core/viewmanager.js";
 import { TouchRaycaster } from "../libs/vanilla.js/src/core/touchraycaster.js";
-import { TouchRecognizer } from "../libs/vanilla.js/src/core/touchrecognizer.js";
+import { TouchRecognizer } from "../libs/vanilla.js/src/ui/touchrecognizer.js";
 import { WorldNode } from "../libs/vanilla.js/src/core/node/worldnode.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
 import { Text } from "../libs/vanilla.js/src/core/component/text.js";
@@ -980,5 +980,8 @@ engineConfiguration.referenceResolutionSize = Vector2.create(REFERENCE_WIDTH, RE
 engineConfiguration.useStatistics = false;
 engineConfiguration.title = "미니게임 컬렉션";
 const engine = new Engine(engineConfiguration);
-const scene = new MainScene();
+// const scene = new MainScene();
+
+import { UITestScene } from "./uitest.js";
+const scene = new UITestScene();
 engine.run(scene);

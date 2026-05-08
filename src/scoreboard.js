@@ -20,8 +20,7 @@ const STORAGE_KEY = "minigame-collection.scoreboard";
 // - playCounts[gameId]  = 플레이 횟수.
 //==============================================================================
 const state = { totals: {}, playCounts: {} };
-/** @type { Set<(gameId: string) => void> } */
-const listeners = new System.Set();
+/** @type { Set<(gameId: string) => void> } */ const listeners = new System.Set();
 
 
 //==============================================================================
@@ -29,12 +28,6 @@ const listeners = new System.Set();
 //==============================================================================
 try {
 	const saved = System.localStorage.getItem(STORAGE_KEY);
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } saved
-	 */
 	if (saved) {
 		const parsed = JSON.parse(saved);
 		if (parsed && typeof parsed === "object") {
@@ -69,12 +62,6 @@ function persist() {
 	try {
 		System.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
-	//==============================================================================
-	// catch.
-	//==============================================================================
-	/**
-	 * @param { * } error
-	 */
 	catch (error) {
 		// 무시.
 	}
@@ -102,12 +89,6 @@ export function getTotalScore(gameId) {
  * @param { number } score
  */
 export function addScore(gameId, score) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } !gameId
-	 */
 	if (!gameId) {
 		return;
 	}	const numeric = System.Number(score);
@@ -125,12 +106,6 @@ export function addScore(gameId, score) {
  * @param { string } gameId
  */
 export function addPlay(gameId) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } !gameId
-	 */
 	if (!gameId) {
 		return;
 	}	state.playCounts[gameId] = getPlayCount(gameId) + 1;
@@ -156,12 +131,6 @@ export function getPlayCount(gameId) {
 // 변경 알림.
 //==============================================================================
 function notify(gameId) {
-	//==============================================================================
-	// for.
-	//==============================================================================
-	/**
-	 * @param { * } const listener of listeners
-	 */
 	for (const listener of listeners) {
 		try {
 			listener(gameId);
@@ -182,7 +151,7 @@ export function getAllTotals() {
 
 
 //==============================================================================
-// 변경 리스너 등록 / 해제.
+// 변경 리스너 등록.
 //==============================================================================
 /**
  * @param { (gameId: string, total: number) => void } listener
@@ -191,14 +160,12 @@ export function addScoreChangeListener(listener) {
 	listeners.add(listener);
 }
 
+
+//==============================================================================
+// 변경 리스너 해제.
+//==============================================================================
 /**
  * @param { (gameId: string, total: number) => void } listener
- */
-//==============================================================================
-// removeScoreChangeListener.
-//==============================================================================
-/**
- * @param { * } listener
  */
 export function removeScoreChangeListener(listener) {
 	listeners.delete(listener);

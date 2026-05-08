@@ -2,9 +2,10 @@
 // 포함 모듈 목록.
 //==============================================================================
 const System = globalThis;
+import { Vector2 } from "../libs/vanilla.js/import.js";
 import { Color } from "../libs/vanilla.js/src/base/color.js";
 import { Paint } from "../libs/vanilla.js/src/core/component/paint.js";
-import { UINode } from "../libs/vanilla.js/src/core/node/uinode.js";
+import { UINode } from "../libs/vanilla.js/src/ui/uinode.js";
 import { UIScene } from "../libs/vanilla.js/src/ui/uiscene.js";
 
 

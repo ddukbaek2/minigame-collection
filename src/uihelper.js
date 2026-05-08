@@ -48,12 +48,6 @@ export function getDefaultFontFace() {
  * @param { Text } text
  */
 export function markUseSystemFont(text) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } text
-	 */
 	if (text) {
 		text.useSystemFont = true;
 	}
@@ -164,12 +158,6 @@ export function createTextNode(text, fontSize, color) {
 	textComponent.setTextColor(color);
 	textComponent.setTextAlign("center");
 	textComponent.setTextBaseline("middle");
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } defaultFontFace
-	 */
 	if (defaultFontFace) {
 		textComponent.setFont(defaultFontFace);
 	}
@@ -221,12 +209,6 @@ export function createToggleButtonNode(text, size, backgroundColor, textColor, f
 	textComponent.setTextColor(textColor);
 	textComponent.setTextAlign("center");
 	textComponent.setTextBaseline("middle");
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } defaultFontFace
-	 */
 	if (defaultFontFace) {
 		textComponent.setFont(defaultFontFace);
 	}
@@ -256,19 +238,6 @@ export function createToggleButtonNode(text, size, backgroundColor, textColor, f
  * @param { (button: UIButton) => void } onClick
  * @param { number } [gap]
  * @returns { WorldNode }
- */
-//==============================================================================
-// createIconTextButtonNode.
-//==============================================================================
-/**
- * @param { * } icon
- * @param { * } text
- * @param { * } size
- * @param { * } backgroundColor
- * @param { * } textColor
- * @param { * } fontSize
- * @param { * } onClick
- * @param { * } gap
  */
 export function createIconTextButtonNode(icon, text, size, backgroundColor, textColor, fontSize, onClick, gap) {
 	const node = new WorldNode();
@@ -310,12 +279,7 @@ export function createIconTextButtonNode(icon, text, size, backgroundColor, text
 	textComponent.setTextColor(textColor);
 	textComponent.setTextAlign("left");
 	textComponent.setTextBaseline("middle");
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } defaultFontFace
-	 */
+
 	if (defaultFontFace) {
 		textComponent.setFont(defaultFontFace);
 	}
@@ -340,17 +304,6 @@ export function createIconTextButtonNode(icon, text, size, backgroundColor, text
  * @param { (button: UIButton) => void } onClick
  * @returns { WorldNode }
  */
-//==============================================================================
-// createButtonNode.
-//==============================================================================
-/**
- * @param { * } text
- * @param { * } size
- * @param { * } backgroundColor
- * @param { * } textColor
- * @param { * } fontSize
- * @param { * } onClick
- */
 export function createButtonNode(text, size, backgroundColor, textColor, fontSize, onClick) {
 	const node = new WorldNode();
 	node.setPivot(Pivot.middleCenter);
@@ -368,12 +321,6 @@ export function createButtonNode(text, size, backgroundColor, textColor, fontSiz
 	textComponent.setTextColor(textColor);
 	textComponent.setTextAlign("center");
 	textComponent.setTextBaseline("middle");
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } defaultFontFace
-	 */
 	if (defaultFontFace) {
 		textComponent.setFont(defaultFontFace);
 	}

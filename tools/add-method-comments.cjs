@@ -13,6 +13,17 @@ const fs = require("fs");
 
 const SECTION_LINE = "//==============================================================================";
 
+// 메서드/함수 이름 자리에 와서는 안 되는 JS 키워드. 문법적으로 식별자와 모양이 같지만
+// `if (...) {` 같은 제어문이 메서드로 오인되는 것을 막는 안전망.
+const RESERVED_NAMES = new Set([
+	"if", "else", "for", "while", "do", "switch", "case", "default",
+	"try", "catch", "finally", "throw",
+	"return", "break", "continue",
+	"new", "delete", "typeof", "instanceof", "in", "of", "void",
+	"class", "function", "var", "let", "const", "import", "export",
+	"this", "super", "yield", "await",
+]);
+
 function processFile(filePath) {
 	const original = fs.readFileSync(filePath, "utf8");
 	const lines = original.split(/\r?\n/);
@@ -21,10 +32,11 @@ function processFile(filePath) {
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		const matchClassMethod = line.match(/^(\t)((?:static\s+|async\s+|get\s+|set\s+)*)([a-zA-Z_$#][a-zA-Z0-9_$]*)\s*\(([^)]*)\)\s*\{/);
-		const matchExportFunction = line.match(/^()(export\s+(?:async\s+)?function\s+)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(([^)]*)\)\s*\{/);
+		// 메서드 이름 직후 공백 없음(`\(`)을 강제해 `if (cond) {` 같은 제어문이 매치되지 않게 한다.
+		const matchClassMethod = line.match(/^(\t)((?:static\s+|async\s+|get\s+|set\s+)*)([a-zA-Z_$#][a-zA-Z0-9_$]*)\(([^)]*)\)\s*\{/);
+		const matchExportFunction = line.match(/^()(export\s+(?:async\s+)?function\s+)([a-zA-Z_$][a-zA-Z0-9_$]*)\(([^)]*)\)\s*\{/);
 		const m = matchClassMethod || matchExportFunction;
-		if (m) {
+		if (m && !RESERVED_NAMES.has(m[3])) {
 			const indent = m[1];
 			const modifiers = m[2] || "";
 			const methodName = m[3];

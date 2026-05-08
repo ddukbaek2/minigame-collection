@@ -20,8 +20,7 @@ const DEFAULT_CATALOG_URL = "./assets/data/games.json";
 //==============================================================================
 // 모듈 로컬 캐시.
 //==============================================================================
-/** @type { Array<object> | null } */
-let catalog = null;
+/** @type { Array<object> | null } */ let catalog = null;
 
 
 //==============================================================================
@@ -32,27 +31,18 @@ let catalog = null;
  * @returns { Promise<Array<object>> }
  */
 export async function loadGamesCatalog(url) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } catalog
-	 */
+
 	if (catalog) {
 		return catalog;
-	}	try {
+	}
+	
+	try {
 		const response = await System.fetch(url || DEFAULT_CATALOG_URL);
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}`);
 		}		const json = await response.json();
 		catalog = (json && System.Array.isArray(json.games)) ? json.games : [];
 	}
-	//==============================================================================
-	// catch.
-	//==============================================================================
-	/**
-	 * @param { * } error
-	 */
 	catch (error) {
 		console.error("[gamescatalog] 로드 실패:", error);
 		catalog = [];
@@ -91,14 +81,10 @@ export function getVisibleGames() {
  * @returns { string | null }
  */
 export function getGameIdForPartId(partId) {
-	//==============================================================================
-	// if.
-	//==============================================================================
-	/**
-	 * @param { * } !catalog || !partId
-	 */
 	if (!catalog || !partId) {
 		return null;
-	}	const found = catalog.find((entry) => entry && entry.partId === partId);
+	}
+	
+	const found = catalog.find((entry) => entry && entry.partId === partId);
 	return found ? found.id : null;
 }
