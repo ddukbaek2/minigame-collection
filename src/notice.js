@@ -48,7 +48,7 @@ export function getNotices() {
 	if (!entries) {
 		return [];
 	}
-	
+
 	return entries.slice().sort((a, b) => {
 		if (a.date < b.date) {
 			return 1;
@@ -57,4 +57,84 @@ export function getNotices() {
 			return -1;
 		}		return 0;
 	});
+}
+
+
+//==============================================================================
+// 사용자가 마지막으로 확인한 공지 날짜 LocalStorage 키.
+//==============================================================================
+const SEEN_STORAGE_KEY = "minigame-collection.notice.lastSeenDate";
+
+
+//==============================================================================
+// 가장 최근 공지의 날짜 반환. 공지가 없으면 null.
+//==============================================================================
+/**
+ * @returns { string | null }
+ */
+function getLatestNoticeDate() {
+	const notices = getNotices();
+	if (notices.length === 0) {
+		return null;
+	}
+	return notices[0].date;
+}
+
+
+//==============================================================================
+// 마지막으로 확인한 공지 날짜 반환. 저장된 값이 없으면 null.
+//==============================================================================
+/**
+ * @returns { string | null }
+ */
+function getLastSeenNoticeDate() {
+	try {
+		const value = System.localStorage.getItem(SEEN_STORAGE_KEY);
+		if (typeof value === "string" && value.length > 0) {
+			return value;
+		}
+	}
+	catch (error) {
+		// 무시.
+	}
+	return null;
+}
+
+
+//==============================================================================
+// 사용자가 아직 보지 않은 새 공지가 있는지 여부.
+// - 공지 자체가 없으면 false.
+// - 마지막 확인 날짜가 없으면(첫 실행) 공지가 하나라도 있으면 true.
+// - 가장 최근 공지의 날짜가 마지막 확인 날짜보다 크면 true.
+//==============================================================================
+/**
+ * @returns { boolean }
+ */
+export function hasNewNotice() {
+	const latestDate = getLatestNoticeDate();
+	if (latestDate === null) {
+		return false;
+	}
+	const lastSeenDate = getLastSeenNoticeDate();
+	if (lastSeenDate === null) {
+		return true;
+	}
+	return latestDate > lastSeenDate;
+}
+
+
+//==============================================================================
+// 모든 공지를 본 것으로 표시. 가장 최근 공지의 날짜를 LocalStorage 에 저장한다.
+//==============================================================================
+export function markNoticesAsSeen() {
+	const latestDate = getLatestNoticeDate();
+	if (latestDate === null) {
+		return;
+	}
+	try {
+		System.localStorage.setItem(SEEN_STORAGE_KEY, latestDate);
+	}
+	catch (error) {
+		// 무시.
+	}
 }

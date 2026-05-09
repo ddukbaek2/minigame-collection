@@ -12,6 +12,8 @@ import { Part, PartId } from "./part.js";
 import { createIconTextButtonNode, createTextNode, getDefaultFontFace } from "./uihelper.js";
 import { getTheme } from "./theme.js";
 import { getCurrentVersion } from "./version.js";
+import { NewBadge } from "./newbadge.js";
+import { hasNewNotice } from "./notice.js";
 
 
 //==============================================================================
@@ -30,6 +32,11 @@ const VERSION_FONT_SIZE = 24;
 const VERSION_PADDING = 24;
 const VERSION_HIT_WIDTH = 220;
 const VERSION_HIT_HEIGHT = 60;
+const NEW_BADGE_SIZE = 32;
+const NEW_BADGE_GAP = 8;
+// 버전 텍스트는 baseline=bottom 으로 노드 하단에 정렬되므로, 시각적 중심은
+// baseline 에서 fontSize 의 절반만큼 위쪽이라고 근사한다.
+const NEW_BADGE_VERTICAL_OFFSET = VERSION_FONT_SIZE * 0.5;
 
 export class TitlePart extends Part {
 	//==============================================================================
@@ -38,6 +45,7 @@ export class TitlePart extends Part {
 	/** @private @type { WorldNode } */ #titleTextNode;
 	/** @private @type { WorldNode[] } */ #buttonNodes;
 	/** @private @type { WorldNode } */ #versionTextNode;
+	/** @private @type { NewBadge } */ #versionNewBadge;
 
 	//==============================================================================
 	// 생성.
@@ -47,6 +55,7 @@ export class TitlePart extends Part {
 		this.#titleTextNode = null;
 		this.#buttonNodes = [];
 		this.#versionTextNode = null;
+		this.#versionNewBadge = null;
 	}
 
 	//==============================================================================
@@ -124,7 +133,32 @@ export class TitlePart extends Part {
 		versionButton.setClickEvent(() => { app.showNotice(); });
 		this.addChild(this.#versionTextNode);
 
+		// 새 공지 뱃지: 버전 hit 영역의 우측 외부에 배치하고 텍스트 시각적 중심에 수직 정렬.
+		// 새 공지가 있을 때만 활성화.
+		this.#versionNewBadge = new NewBadge();
+		this.#versionNewBadge.setAnchor(Pivot.topLeft);
+		this.#versionNewBadge.setPivot(Pivot.middleLeft);
+		this.#versionNewBadge.setLocalPosition(Vector2.create(VERSION_HIT_WIDTH + NEW_BADGE_GAP, VERSION_HIT_HEIGHT - NEW_BADGE_VERTICAL_OFFSET));
+		this.#versionNewBadge.setActive(hasNewNotice());
+		this.#versionTextNode.addChild(this.#versionNewBadge);
+
 		this.applyTheme(getTheme());
+	}
+
+	//==============================================================================
+	// 매 프레임: 새 공지 여부에 따라 버전 옆 N 뱃지 활성 상태 갱신.
+	// - 공지 팝업을 열면 markNoticesAsSeen() 이 호출되므로 그 다음 프레임에 자동으로 사라진다.
+	// - 활성 상태가 바뀌면 버전 텍스트 위치도 갱신해야 하므로 layout() 을 다시 호출한다.
+	//==============================================================================
+	tick(timeDelta) {
+		super.tick(timeDelta);
+		if (this.#versionNewBadge) {
+			const shouldShow = hasNewNotice();
+			if (this.#versionNewBadge.isActive() !== shouldShow) {
+				this.#versionNewBadge.setActive(shouldShow);
+				this.layout();
+			}
+		}
 	}
 
 	//==============================================================================
@@ -176,9 +210,15 @@ export class TitlePart extends Part {
 			y += BUTTON_HEIGHT + BUTTON_GAP;
 		}
 
-		// 버전 라벨: 우측 하단.
+		// 버전 라벨: 우측 하단. N 뱃지가 보일 때만 그 공간만큼 좌측으로 들여쓰고,
+		// 사라지면 우측 끝까지 당긴다. (N 뱃지는 versionTextNode 의 자식이라 같이 따라 이동)
 		if (this.#versionTextNode) {
-			this.#versionTextNode.setLocalPosition(Vector2.create(contentSize.x - VERSION_PADDING, contentSize.y - VERSION_PADDING));
+			const showsNewBadge = this.#versionNewBadge && this.#versionNewBadge.isActive();
+			const newBadgeInset = showsNewBadge ? (NEW_BADGE_SIZE + NEW_BADGE_GAP) : 0;
+			this.#versionTextNode.setLocalPosition(Vector2.create(
+				contentSize.x - VERSION_PADDING - newBadgeInset,
+				contentSize.y - VERSION_PADDING,
+			));
 		}
 	}
 

@@ -8,6 +8,7 @@ import { Text } from "../libs/vanilla.js/src/core/component/text.js";
 import { Part, PartId } from "./part.js";
 import { createTextNode } from "./uihelper.js";
 import { getTheme } from "./theme.js";
+import { getTotalStars, addScoreChangeListener } from "./scoreboard.js";
 
 
 //==============================================================================
@@ -17,6 +18,8 @@ export class AchievementPart extends Part {
 	//==============================================================================
 	// 멤버 변수 목록.
 	//==============================================================================
+	/** @private @type { WorldNode } */ #starsNode;
+	/** @private @type { Text } */ #starsText;
 	/** @private @type { WorldNode } */ #placeholderNode;
 
 	//==============================================================================
@@ -24,7 +27,10 @@ export class AchievementPart extends Part {
 	//==============================================================================
 	constructor() {
 		super();
+		this.#starsNode = null;
+		this.#starsText = null;
 		this.#placeholderNode = null;
+		addScoreChangeListener(() => this.refreshStars());
 	}
 
 	//==============================================================================
@@ -47,10 +53,24 @@ export class AchievementPart extends Part {
 	onBuild() {
 		this.setupBackground();
 
-		this.#placeholderNode = createTextNode("업적 (준비중)", 56, Color.createFromHEX("#ffffff"));
+		this.#starsNode = createTextNode("⭐ 0", 96, Color.createFromHEX("#ffd700"));
+		this.#starsText = this.#starsNode.getComponent(Text);
+		this.addChild(this.#starsNode);
+
+		this.#placeholderNode = createTextNode("업적 (준비중)", 40, Color.createFromHEX("#ffffff"));
 		this.addChild(this.#placeholderNode);
 
+		this.refreshStars();
 		this.applyTheme(getTheme());
+	}
+
+	//==============================================================================
+	// 별 합계 갱신.
+	//==============================================================================
+	refreshStars() {
+		if (this.#starsText) {
+			this.#starsText.setText(`⭐ ${getTotalStars()}`);
+		}
 	}
 
 	//==============================================================================
@@ -67,6 +87,7 @@ export class AchievementPart extends Part {
 	// 진입.
 	//==============================================================================
 	enter() {
+		this.refreshStars();
 		this.layout();
 	}
 
@@ -82,6 +103,9 @@ export class AchievementPart extends Part {
 	//==============================================================================
 	layout() {
 		const contentSize = this.getContentSize();
-		this.#placeholderNode.setLocalPosition(Vector2.create(contentSize.x * 0.5, contentSize.y * 0.5));
+		const centerX = contentSize.x * 0.5;
+		const centerY = contentSize.y * 0.5;
+		this.#starsNode.setLocalPosition(Vector2.create(centerX, centerY - 80));
+		this.#placeholderNode.setLocalPosition(Vector2.create(centerX, centerY + 80));
 	}
 }

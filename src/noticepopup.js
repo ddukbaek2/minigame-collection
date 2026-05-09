@@ -12,7 +12,7 @@ import { UIScrollView, ScrollMode } from "../libs/vanilla.js/src/ui/uiscrollview
 import { UIButton } from "../libs/vanilla.js/src/ui/uibutton.js";
 import { addThemeChangeListener, getCurrentTheme } from "./theme.js";
 import { getDefaultFontFace, markUseSystemFont } from "./uihelper.js";
-import { getNotices } from "./notice.js";
+import { getNotices, markNoticesAsSeen } from "./notice.js";
 
 
 //==============================================================================
@@ -307,6 +307,8 @@ export class NoticePopup extends WorldNode {
 		if (this.#scrollView) {
 			this.#scrollView.setScrollOffset(Vector2.zero());
 		}		this.applyAnimation();
+		// 팝업이 열렸으므로 모든 공지를 본 것으로 표시.
+		markNoticesAsSeen();
 	}
 
 	//==============================================================================

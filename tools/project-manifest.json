@@ -1,6 +1,6 @@
 {
 	"web": {
-		"canvasMaxWidth": "800px"
+		"canvasMaxWidth": "none"
 	},
 	"appintoss": {
 		"appName": "com.ddukbaek2.minigamecollection",

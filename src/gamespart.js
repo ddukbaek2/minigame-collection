@@ -91,7 +91,7 @@ class UIGamesPartScrollViewItem extends WorldNode {
 
 		this.#text = this.addComponent(Text);
 		this.#text.setText(text);
-		this.#text.setFontSize(40);
+		this.#text.setFontSize(34);
 		this.#text.setTextAlign("center");
 		this.#text.setTextBaseline("middle");
 		this.#text.setTextColor(Color.createFromHEX("#ffffff"));

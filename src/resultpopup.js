@@ -163,7 +163,11 @@ export class ResultPopup extends WorldNode {
 		options = options || {};
 		this.#isWon = !!options.isWon;
 		this.#titleText.setText(options.title || (this.#isWon ? "승리!" : "게임 오버"));
-		this.#scoreText.setText(`점수 ${options.score != null ? options.score : 0}`);
+		const hasScore = options.score != null;
+		this.#scoreTextNode.setActive(hasScore);
+		if (hasScore) {
+			this.#scoreText.setText(`점수 ${options.score}`);
+		}
 		const stats = options.stats || [];
 		for (let i = 0; i < this.#statTexts.length; ++i) {
 			const text = stats[i] || "";
@@ -225,11 +229,14 @@ export class ResultPopup extends WorldNode {
 		let cursorY = padding + TITLE_FONT * 0.5;
 		this.#titleTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
 
-		cursorY += TITLE_FONT * 0.5 + 24 + SCORE_FONT * 0.5;
-		this.#scoreTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
+		cursorY += TITLE_FONT * 0.5 + 24;
+		if (this.#scoreTextNode.isActive()) {
+			cursorY += SCORE_FONT * 0.5;
+			this.#scoreTextNode.setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));
+			cursorY += SCORE_FONT * 0.5 + 30;
+		}
 
 		// 통계 라인 (세로 누적).
-		cursorY += SCORE_FONT * 0.5 + 30;
 		for (let i = 0; i < this.#statTexts.length; ++i) {
 			cursorY += STAT_LINE_HEIGHT * 0.5;
 			this.#statTextNodes[i].setLocalPosition(Vector2.create(BOX_WIDTH * 0.5, cursorY));

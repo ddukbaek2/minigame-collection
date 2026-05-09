@@ -18,8 +18,10 @@ const STORAGE_KEY = "minigame-collection.scoreboard";
 // 상태.
 // - totals[gameId]      = 누적 총점.
 // - playCounts[gameId]  = 플레이 횟수.
+// - clearCounts[gameId] = 다맞춘(클리어) 횟수. (게임마다 의미가 있을 때만 사용)
+// - stars[gameId]       = 게임이 지급한 별 수. (업적 별로 합산)
 //==============================================================================
-const state = { totals: {}, playCounts: {} };
+const state = { totals: {}, playCounts: {}, clearCounts: {}, stars: {} };
 /** @type { Set<(gameId: string) => void> } */ const listeners = new System.Set();
 
 
@@ -44,6 +46,22 @@ try {
 					const value = System.Number(parsed.playCounts[key]);
 					if (System.Number.isFinite(value)) {
 						state.playCounts[key] = value;
+					}
+				}
+			}
+			if (parsed.clearCounts && typeof parsed.clearCounts === "object") {
+				for (const key of System.Object.keys(parsed.clearCounts)) {
+					const value = System.Number(parsed.clearCounts[key]);
+					if (System.Number.isFinite(value)) {
+						state.clearCounts[key] = value;
+					}
+				}
+			}
+			if (parsed.stars && typeof parsed.stars === "object") {
+				for (const key of System.Object.keys(parsed.stars)) {
+					const value = System.Number(parsed.stars[key]);
+					if (System.Number.isFinite(value)) {
+						state.stars[key] = value;
 					}
 				}
 			}
@@ -124,6 +142,83 @@ export function addPlay(gameId) {
 export function getPlayCount(gameId) {
 	const value = state.playCounts[gameId];
 	return System.Number.isFinite(value) ? value : 0;
+}
+
+
+//==============================================================================
+// 클리어(다맞춤) 횟수 가산. (게임이 명시적으로 호출할 때만 +1)
+//==============================================================================
+/**
+ * @param { string } gameId
+ */
+export function addClear(gameId) {
+	if (!gameId) {
+		return;
+	}	state.clearCounts[gameId] = getClearCount(gameId) + 1;
+	persist();
+	notify(gameId);
+}
+
+
+//==============================================================================
+// 클리어 횟수 반환.
+//==============================================================================
+/**
+ * @param { string } gameId
+ * @returns { number }
+ */
+export function getClearCount(gameId) {
+	const value = state.clearCounts[gameId];
+	return System.Number.isFinite(value) ? value : 0;
+}
+
+
+//==============================================================================
+// 별 가산. (음수/0/NaN/유효하지 않은 gameId 는 무시)
+//==============================================================================
+/**
+ * @param { string } gameId
+ * @param { number } count
+ */
+export function addStars(gameId, count) {
+	if (!gameId) {
+		return;
+	}	const numeric = System.Number(count);
+	if (!System.Number.isFinite(numeric) || numeric <= 0) return;
+	state.stars[gameId] = getStars(gameId) + numeric;
+	persist();
+	notify(gameId);
+}
+
+
+//==============================================================================
+// GameId 의 별 개수 반환.
+//==============================================================================
+/**
+ * @param { string } gameId
+ * @returns { number }
+ */
+export function getStars(gameId) {
+	const value = state.stars[gameId];
+	return System.Number.isFinite(value) ? value : 0;
+}
+
+
+//==============================================================================
+// 모든 게임의 별 합계 반환.
+//==============================================================================
+/**
+ * @returns { number }
+ */
+export function getTotalStars() {
+	let total = 0;
+	for (const key of System.Object.keys(state.stars)) {
+		const value = state.stars[key];
+		if (System.Number.isFinite(value)) {
+			total += value;
+		}
+	}
+	return total;
 }
 
 

@@ -83,8 +83,8 @@ const THEMES = {
 const STORAGE_KEY_UI = "minigame-collection.theme.ui";
 const STORAGE_KEY_GAME = "minigame-collection.theme.game";
 
-let currentUIThemeId = ThemeId.dark;
-let currentGameThemeId = ThemeId.dark;
+let currentUIThemeId = ThemeId.vanilla;
+let currentGameThemeId = ThemeId.vanilla;
 
 /** @type { Set<(theme: object) => void> } */
 const uiListeners = new System.Set();

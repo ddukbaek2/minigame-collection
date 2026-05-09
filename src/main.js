@@ -71,6 +71,9 @@ const NAVIGATION_HEIGHT = 140;
 const NAVIGATION_BACK_BUTTON_WIDTH = 120;
 const NAVIGATION_BACK_BUTTON_HEIGHT = 100;
 const NAVIGATION_PADDING = 24;
+const NAVIGATION_ICON_BUTTON_WIDTH = 100;
+const NAVIGATION_ICON_BUTTON_HEIGHT = 100;
+const NAVIGATION_ICON_BUTTON_GAP = 16;
 
 
 //==============================================================================
@@ -106,6 +109,12 @@ export class MainScene extends Scene {
 	/** @private @type { Paint | null } */ #navigationPaint;
 	/** @private @type { Paint | null } */ #navigationBackButtonPaint;
 	/** @private @type { Text | null } */ #navigationBackButtonText;
+	/** @private @type { WorldNode } */ #navigationMenuButtonNode;
+	/** @private @type { Paint | null } */ #navigationMenuButtonPaint;
+	/** @private @type { Text | null } */ #navigationMenuButtonText;
+	/** @private @type { WorldNode } */ #navigationHelpButtonNode;
+	/** @private @type { Paint | null } */ #navigationHelpButtonPaint;
+	/** @private @type { Text | null } */ #navigationHelpButtonText;
 	/** @private @type { number } */ #lastViewSizeX;
 	/** @private @type { number } */ #lastViewSizeY;
 	/** @private @type { ImageAsset | null } */ #ciImageAsset;
@@ -310,8 +319,40 @@ export class MainScene extends Scene {
 		if (this.#navigationBackButtonPaint) {
 			this.#navigationBackButtonPaint.setColor(Color.createFromHEX(theme.surface));
 		}
+		if (this.#navigationMenuButtonPaint) {
+			this.#navigationMenuButtonPaint.setColor(Color.createFromHEX(theme.surface));
+		}
+		if (this.#navigationHelpButtonPaint) {
+			this.#navigationHelpButtonPaint.setColor(Color.createFromHEX(theme.surface));
+		}
 		if (this.#navigationTitleText) {
 			this.#navigationTitleText.setTextColor(Color.createFromHEX(theme.onSurfaceVariant));
+		}
+	}
+
+	//==============================================================================
+	// 메뉴 버튼 클릭. (활성 게임 파트가 메뉴 텍스트를 제공할 수 있음)
+	//==============================================================================
+	handleMenuButton() {
+		const activePart = this.getActivePart();
+		const message = (activePart && typeof activePart.getMenuText === "function")
+			? activePart.getMenuText()
+			: "메뉴 (준비중)";
+		if (this.#popup) {
+			this.#popup.showAlert(message);
+		}
+	}
+
+	//==============================================================================
+	// 헬프 버튼 클릭. (활성 게임 파트가 헬프 텍스트를 제공할 수 있음)
+	//==============================================================================
+	handleHelpButton() {
+		const activePart = this.getActivePart();
+		const message = (activePart && typeof activePart.getHelpText === "function")
+			? activePart.getHelpText()
+			: "도움말 (준비중)";
+		if (this.#popup) {
+			this.#popup.showAlert(message);
 		}
 	}
 
@@ -409,6 +450,46 @@ export class MainScene extends Scene {
 		this.#navigationTitleText.setTextAlign("center");
 		this.#navigationTitleText.setTextBaseline("middle");
 		this.#navigationNode.addChild(this.#navigationTitleNode);
+
+		// 네비게이션 헬프 버튼. (게임 헤더 우측, 메뉴 버튼 왼쪽)
+		this.#navigationHelpButtonNode = new WorldNode();
+		this.#navigationHelpButtonNode.setName("helpButton");
+		this.#navigationHelpButtonNode.setPivot(Pivot.middleCenter);
+		this.#navigationHelpButtonNode.setAnchor(Pivot.topLeft);
+		this.#navigationHelpButtonNode.setContentSize(Vector2.create(NAVIGATION_ICON_BUTTON_WIDTH, NAVIGATION_ICON_BUTTON_HEIGHT));
+		this.#navigationHelpButtonNode.setInteractable(true);
+		this.#navigationHelpButtonPaint = this.#navigationHelpButtonNode.addComponent(Paint);
+		this.#navigationHelpButtonPaint.setRoundSize(12);
+		this.#navigationHelpButtonText = this.#navigationHelpButtonNode.addComponent(Text);
+		this.#navigationHelpButtonText.setText("❓");
+		this.#navigationHelpButtonText.setFontSize(56);
+		this.#navigationHelpButtonText.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#navigationHelpButtonText.setTextAlign("center");
+		this.#navigationHelpButtonText.setTextBaseline("middle");
+		markUseSystemFont(this.#navigationHelpButtonText);
+		const helpButton = this.#navigationHelpButtonNode.addComponent(UIButton);
+		helpButton.setClickEvent(() => { this.handleHelpButton(); });
+		this.#navigationNode.addChild(this.#navigationHelpButtonNode);
+
+		// 네비게이션 메뉴 버튼. (게임 헤더 우측 끝)
+		this.#navigationMenuButtonNode = new WorldNode();
+		this.#navigationMenuButtonNode.setName("menuButton");
+		this.#navigationMenuButtonNode.setPivot(Pivot.middleCenter);
+		this.#navigationMenuButtonNode.setAnchor(Pivot.topLeft);
+		this.#navigationMenuButtonNode.setContentSize(Vector2.create(NAVIGATION_ICON_BUTTON_WIDTH, NAVIGATION_ICON_BUTTON_HEIGHT));
+		this.#navigationMenuButtonNode.setInteractable(true);
+		this.#navigationMenuButtonPaint = this.#navigationMenuButtonNode.addComponent(Paint);
+		this.#navigationMenuButtonPaint.setRoundSize(12);
+		this.#navigationMenuButtonText = this.#navigationMenuButtonNode.addComponent(Text);
+		this.#navigationMenuButtonText.setText("☰");
+		this.#navigationMenuButtonText.setFontSize(56);
+		this.#navigationMenuButtonText.setTextColor(Color.createFromHEX("#ffffff"));
+		this.#navigationMenuButtonText.setTextAlign("center");
+		this.#navigationMenuButtonText.setTextBaseline("middle");
+		markUseSystemFont(this.#navigationMenuButtonText);
+		const menuButton = this.#navigationMenuButtonNode.addComponent(UIButton);
+		menuButton.setClickEvent(() => { this.handleMenuButton(); });
+		this.#navigationNode.addChild(this.#navigationMenuButtonNode);
 
 		// 메시지 팝업. (safeArea 의 마지막 자식 = 가장 위에 그려지고 raycast 에서 가장 먼저 hit)
 		this.#popup = new MessagePopup();
@@ -727,6 +808,17 @@ export class MainScene extends Scene {
 		this.#navigationTitleNode.setLocalPosition(Vector2.create(safeAreaRect.size.x * 0.5, NAVIGATION_HEIGHT * 0.5));
 		const titleText = activePart && activePart.hasNavigation() ? activePart.getNavigationTitle() : "";
 		this.#navigationTitleText.setText(titleText);
+
+		// 네비게이션 우측 아이콘 버튼: 메뉴 / 헬프. 게임 파트(GameId 매핑되는 파트) 에서만 노출.
+		const activeGameId = activePart ? getGameIdForPartId(activePart.getPartId()) : null;
+		const showIconButtons = !!activeGameId;
+		const menuButtonY = NAVIGATION_HEIGHT * 0.5;
+		const menuButtonX = safeAreaRect.size.x - NAVIGATION_PADDING - NAVIGATION_ICON_BUTTON_WIDTH * 0.5;
+		const helpButtonX = menuButtonX - NAVIGATION_ICON_BUTTON_WIDTH - NAVIGATION_ICON_BUTTON_GAP;
+		this.#navigationMenuButtonNode.setLocalPosition(Vector2.create(menuButtonX, menuButtonY));
+		this.#navigationHelpButtonNode.setLocalPosition(Vector2.create(helpButtonX, menuButtonY));
+		this.#navigationMenuButtonNode.setActive(showIconButtons);
+		this.#navigationHelpButtonNode.setActive(showIconButtons);
 
 		// 컨텐트 영역. (네비게이션이 있으면 그 아래로, 없으면 세이프 에어리어 전체)
 		const contentY = showNavigation ? NAVIGATION_HEIGHT : 0;
